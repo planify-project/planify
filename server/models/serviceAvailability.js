@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const ServiceAvailability = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const ServiceAvailability = sequelize.define('ServiceAvailability', {
     id: {
       type: DataTypes.INTEGER,
@@ -16,12 +14,8 @@ const ServiceAvailability = (sequelize, DataTypes) => {
       }
     },
     day_of_week: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 0,
-        max: 6
-      }
+      type: DataTypes.ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
+      allowNull: false
     },
     start_time: {
       type: DataTypes.TIME,
@@ -30,11 +24,6 @@ const ServiceAvailability = (sequelize, DataTypes) => {
     end_time: {
       type: DataTypes.TIME,
       allowNull: false
-    },
-    is_available: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
     }
   }, {
     tableName: 'service_availability'
@@ -42,5 +31,3 @@ const ServiceAvailability = (sequelize, DataTypes) => {
 
   return ServiceAvailability;
 };
-
-module.exports = ServiceAvailability; 

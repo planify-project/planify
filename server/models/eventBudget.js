@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const EventBudget = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const EventBudget = sequelize.define('EventBudget', {
     id: {
       type: DataTypes.INTEGER,
@@ -13,28 +11,24 @@ const EventBudget = (sequelize, DataTypes) => {
       references: {
         model: 'events',
         key: 'id'
-      },
-      unique: 'event_category_unique'
+      }
     },
     category: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: 'event_category_unique'
+      allowNull: false
     },
-    allocated_amount: {
+    estimated: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false
     },
-    actual_spent: {
+    actual: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      defaultValue: 0
+      allowNull: true
     }
   }, {
-    tableName: 'event_budgets'
+    tableName: 'event_budgets',
+    timestamps: false
   });
 
   return EventBudget;
 };
-
-module.exports = EventBudget; 

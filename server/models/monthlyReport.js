@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const MonthlyReport = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const MonthlyReport = sequelize.define('MonthlyReport', {
     id: {
       type: DataTypes.INTEGER,
@@ -8,34 +6,29 @@ const MonthlyReport = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     month: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    year: {
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     total_events: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
+      allowNull: false
     },
-    total_revenue: {
+    revenue: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      defaultValue: 0
+      allowNull: false
     },
     avg_rating: {
-      type: DataTypes.DECIMAL(3, 2),
-      allowNull: true
+      type: DataTypes.FLOAT,
+      allowNull: false
     }
   }, {
     tableName: 'monthly_reports',
-    indexes: [
-      {
-        unique: true,
-        fields: ['month']
-      }
-    ]
+    timestamps: false
   });
 
   return MonthlyReport;
 };
-
-module.exports = MonthlyReport; 

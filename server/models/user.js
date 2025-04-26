@@ -1,7 +1,3 @@
-const bcrypt = require('bcryptjs');
-const { DataTypes } = require('sequelize');
-
-
 const User = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
     id: {
@@ -32,6 +28,10 @@ const User = (sequelize, DataTypes) => {
     profile_picture: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    contact_details: {
+      type: DataTypes.JSON,
+      allowNull: true
     }
   }, {
     tableName: 'users',
@@ -47,4 +47,4 @@ const User = (sequelize, DataTypes) => {
   return User;
 };
 
-module.exports = User; 
+module.exports = User;

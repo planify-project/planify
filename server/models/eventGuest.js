@@ -15,22 +15,22 @@ const EventGuest = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
       validate: {
         isEmail: true
       }
     },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    status: {
+    rsvp_status: {
       type: DataTypes.ENUM('pending', 'confirmed', 'declined'),
       allowNull: false,
       defaultValue: 'pending'
@@ -42,4 +42,4 @@ const EventGuest = (sequelize, DataTypes) => {
   return EventGuest;
 };
 
-module.exports = EventGuest; 
+module.exports = EventGuest;

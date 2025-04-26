@@ -1,30 +1,31 @@
 module.exports = (sequelize, DataTypes) => {
-  const AuditLog = sequelize.define('AuditLog', {
+  const Admin = sequelize.define('Admin', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    admin_id: {
+    user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'admin',
+        model: 'users',
         key: 'id'
       }
     },
-    action_type: {
-      type: DataTypes.STRING,
-      allowNull: false
+    super_admin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: false
+    permissions: {
+      type: DataTypes.JSON,
+      allowNull: true
     }
   }, {
-    tableName: 'audit_logs',
+    tableName: 'admin',
     timestamps: false
   });
 
-  return AuditLog;
+  return Admin;
 };

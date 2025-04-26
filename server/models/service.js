@@ -1,27 +1,17 @@
-const { DataTypes } = require('sequelize');
-
-const Service = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const Service = sequelize.define('Service', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    price: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
-    },
-    duration: {
-      type: DataTypes.INTEGER, // Duration in minutes
-      allowNull: false
+    provider_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     category_id: {
       type: DataTypes.INTEGER,
@@ -31,10 +21,17 @@ const Service = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
     }
   }, {
     tableName: 'services'
@@ -42,5 +39,3 @@ const Service = (sequelize, DataTypes) => {
 
   return Service;
 };
-
-module.exports = Service;

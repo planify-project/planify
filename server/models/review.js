@@ -1,11 +1,17 @@
-const { DataTypes } = require('sequelize');
-
-const Review = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const Review = sequelize.define('Review', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },
+    reviewer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     service_id: {
       type: DataTypes.INTEGER,
@@ -15,31 +21,23 @@ const Review = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
     rating: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 1,
-        max: 5
-      }
+      allowNull: false
     },
     comment: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'reviews'
+    tableName: 'reviews',
+    timestamps: false
   });
 
   return Review;
 };
-
-module.exports = Review; 

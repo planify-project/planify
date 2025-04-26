@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const EventUser = sequelize.define('EventUser', {
+  const EventService = sequelize.define('EventService', {
     event_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -8,22 +8,23 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    user_id: {
+    service_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'users',
+        model: 'services',
         key: 'id'
       }
     },
-    role: {
-      type: DataTypes.ENUM('organizer', 'co-host'),
-      allowNull: false
+    status: {
+      type: DataTypes.ENUM('booked', 'pending', 'canceled'),
+      allowNull: false,
+      defaultValue: 'pending'
     }
   }, {
-    tableName: 'event_users',
+    tableName: 'event_services',
     timestamps: false
   });
 
-  return EventUser;
+  return EventService;
 };

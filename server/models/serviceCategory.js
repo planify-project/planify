@@ -1,7 +1,4 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-
-const ServiceCategory = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const ServiceCategory = sequelize.define('ServiceCategory', {
     id: {
       type: DataTypes.INTEGER,
@@ -10,12 +7,7 @@ const ServiceCategory = (sequelize, DataTypes) => {
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
+      allowNull: false
     }
   }, {
     tableName: 'service_categories'
@@ -23,5 +15,3 @@ const ServiceCategory = (sequelize, DataTypes) => {
 
   return ServiceCategory;
 };
-
-module.exports = ServiceCategory; 
