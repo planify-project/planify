@@ -1,30 +1,25 @@
 module.exports = (sequelize, DataTypes) => {
-  const AuditLog = sequelize.define('AuditLog', {
+  const Wishlist = sequelize.define('Wishlist', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    admin_id: {
+    user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'admin',
+        model: 'users',
         key: 'id'
       }
     },
-    action_type: {
+    name: {
       type: DataTypes.STRING,
-      allowNull: false
-    },
-    description: {
-      type: DataTypes.TEXT,
       allowNull: false
     }
   }, {
-    tableName: 'audit_logs',
-    timestamps: false
+    tableName: 'wishlists'
   });
 
-  return AuditLog;
+  return Wishlist;
 };

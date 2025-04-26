@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const Payment = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const Payment = sequelize.define('Payment', {
     id: {
       type: DataTypes.INTEGER,
@@ -17,9 +15,17 @@ const Payment = (sequelize, DataTypes) => {
     },
     event_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'events',
+        key: 'id'
+      }
+    },
+    service_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'services',
         key: 'id'
       }
     },
@@ -28,19 +34,18 @@ const Payment = (sequelize, DataTypes) => {
       allowNull: false
     },
     method: {
-      type: DataTypes.ENUM('cash', 'transfer'),
+      type: DataTypes.STRING,
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('paid', 'pending'),
+      type: DataTypes.ENUM('pending', 'completed', 'failed', 'refunded'),
       allowNull: false,
       defaultValue: 'pending'
     }
   }, {
-    tableName: 'payments'
+    tableName: 'payments',
+    timestamps: false
   });
 
   return Payment;
 };
-
-module.exports = Payment; 

@@ -41,6 +41,43 @@ const Event = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('draft', 'confirmed', 'cancelled'),
       allowNull: false,
       defaultValue: 'draft'
+    },
+    is_self_planned: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    visibility: {
+      type: DataTypes.ENUM('public', 'private'),
+      allowNull: false,
+      defaultValue: 'public'
+    },
+    is_free: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
+    },
+    attendees_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    available_spots: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     }
   }, {
     tableName: 'events'

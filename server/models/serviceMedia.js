@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const ServiceMedia = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const ServiceMedia = sequelize.define('ServiceMedia', {
     id: {
       type: DataTypes.INTEGER,
@@ -15,18 +13,13 @@ const ServiceMedia = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    url: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
     type: {
       type: DataTypes.ENUM('image', 'video'),
       allowNull: false
     },
-    is_primary: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
+    url: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
   }, {
     tableName: 'service_media'
@@ -34,5 +27,3 @@ const ServiceMedia = (sequelize, DataTypes) => {
 
   return ServiceMedia;
 };
-
-module.exports = ServiceMedia; 

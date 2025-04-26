@@ -1,11 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
-  const Message = sequelize.define('Message', {
+  const Booking = sequelize.define('Booking', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    from_user_id: {
+    user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
@@ -13,25 +13,26 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    to_user_id: {
+    service_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'users',
+        model: 'services',
         key: 'id'
       }
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false
     },
     event_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: true, 
       references: {
         model: 'events',
         key: 'id'
       }
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'confirmed', 'cancelled'),
+      allowNull: false,
+      defaultValue: 'pending'
     },
     created_at: {
       type: DataTypes.DATE,
@@ -39,9 +40,9 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'messages',
+    tableName: 'bookings',
     timestamps: false
   });
 
-  return Message;
+  return Booking;
 };

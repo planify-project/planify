@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const Notification = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const Notification = sequelize.define('Notification', {
     id: {
       type: DataTypes.INTEGER,
@@ -23,36 +21,19 @@ const Notification = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    type: {
-      type: DataTypes.ENUM('system', 'alert'),
-      allowNull: false
-    },
     is_read: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
     },
-    read_at: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    metadata: {
-      type: DataTypes.JSON,
-      allowNull: true
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
   }, {
     tableName: 'notifications',
-    indexes: [
-      {
-        fields: ['user_id']
-      },
-      {
-        fields: ['read_at']
-      }
-    ]
+    timestamps: false
   });
 
   return Notification;
 };
-
-module.exports = Notification; 

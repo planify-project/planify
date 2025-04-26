@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-
-const Feedback = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
   const Feedback = sequelize.define('Feedback', {
     id: {
       type: DataTypes.INTEGER,
@@ -15,23 +13,14 @@ const Feedback = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
-    subject: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
     message: {
       type: DataTypes.TEXT,
       allowNull: false
-    },
-    status: {
-      type: DataTypes.ENUM('pending', 'reviewed', 'resolved'),
-      defaultValue: 'pending'
     }
   }, {
-    tableName: 'feedbacks'
+    tableName: 'feedback',
+    timestamps: false
   });
 
   return Feedback;
 };
-
-module.exports = Feedback; 
