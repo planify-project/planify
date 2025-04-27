@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 require('./database')
+const db = require('./database');
+const { Event } = db;
+const eventsRouter = require('./routes/events');
 
 
 const app = express();
@@ -15,6 +18,9 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
+
+// Paginated events endpoint
+app.use('/api/events', eventsRouter);
 
 // Database connection and server start
 
