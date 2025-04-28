@@ -1,25 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
-  const WishlistItem = sequelize.define('WishlistItem', {
-    wishlist_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'wishlists',
-        key: 'id'
-      }
-    },
-    item_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    item_type: {
-      type: DataTypes.ENUM('event', 'service', 'equipment', 'eventSpace'),
-      allowNull: false
-    }
+  return sequelize.define('wishlist_item', {
+    wishlist_id: { type: DataTypes.INTEGER, primaryKey: true },
+    item_id: DataTypes.INTEGER,
+    item_type: DataTypes.ENUM('event', 'service', 'equipment', 'eventSpace')
   }, {
-    tableName: 'wishlist_items',
-    timestamps: false
+    underscored: true,
+    timestamps: true
   });
-
-  return WishlistItem;
 };

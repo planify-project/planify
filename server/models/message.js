@@ -1,47 +1,15 @@
 module.exports = (sequelize, DataTypes) => {
-  const Message = sequelize.define('Message', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    from_user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    to_user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    event_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    }
+  return sequelize.define('message', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    from_user_id: DataTypes.INTEGER,
+    to_user_id: DataTypes.INTEGER,
+    content: DataTypes.TEXT,
+    event_id: DataTypes.INTEGER,
+    created_at: DataTypes.DATE
   }, {
-    tableName: 'messages',
-    timestamps: false
+    underscored: true,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false
   });
-
-  return Message;
 };

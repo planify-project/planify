@@ -1,29 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
-  const ServiceMedia = sequelize.define('ServiceMedia', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    service_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'services',
-        key: 'id'
-      }
-    },
-    type: {
-      type: DataTypes.ENUM('image', 'video'),
-      allowNull: false
-    },
-    url: {
-      type: DataTypes.STRING,
-      allowNull: false
-    }
+  return sequelize.define('service_media', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    service_id: DataTypes.INTEGER,
+    type: DataTypes.ENUM('image', 'video'),
+    url: DataTypes.STRING
   }, {
-    tableName: 'service_media'
+    underscored: true,
+    timestamps: true
   });
-
-  return ServiceMedia;
 };
