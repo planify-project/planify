@@ -9,7 +9,6 @@ import { Ionicons } from '@expo/vector-icons';
 // Screens
 import AllEventsScreen from './screens/AllEventsScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
-import HomeScreen from './screens/HomeScreen';
 import PopularEventsScreen from './screens/PopularEventsScreen';
 import HomeScreen from './screens/HomeScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
@@ -59,7 +58,6 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <StatusBar hidden />
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {
@@ -68,7 +66,7 @@ export default function App() {
             if (route.name === 'Home') {
               iconName = 'home-outline';
             } else if (route.name === 'Schedule') {
-              iconName = 'schedule-outline';
+              iconName = 'calendar-outline';
             } else if (route.name === 'Wishlist') {
               iconName = 'heart-outline';
             } else if (route.name === 'Settings') {
