@@ -5,12 +5,50 @@ import * as Location from 'expo-location';
 import EventCard from '../components/EventCard';
 import { Modal, Pressable } from 'react-native';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const popularEvents = [
+    {
+      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+      title: "Pool party",
+      location: "Les grottes, Bizerte",
+      price: "20 DT",
+      rating: "5.0",
+      per: "person"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1560185127-6ed189bf02c5",
+      title: "Golden Palace",
+      location: "Cite Hasan, Nabeul",
+      price: "175 DT",
+      rating: "4.5",
+      per: "night"
+    }
+  ];
+
+  const allEvents = [
+    {
+      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      title: "Beach outing",
+      location: "Coco beach Ghar El Milh, Bizerte",
+      price: "80 DT",
+      rating: "5.0",
+      per: "person"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+      title: "Pool party",
+      location: "Les grottes, Bizerte",
+      price: "20 DT",
+      rating: "5.0",
+      per: "person"
+    }
+  ];
 
   // Extracted getLocation function
   const getLocation = async () => {
@@ -71,6 +109,12 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
+      {/* Title */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>Home</Text>
+        {/* <Text style={styles.subtitle}>Find amazing events near you</Text> */}
+      </View>
+
       {/* Location and Notification */}
       <View style={styles.header}>
         <View>
@@ -90,6 +134,14 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.notificationBtn}>
           <Ionicons name="notifications-outline" size={24} color="#000" />
         </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.notificationBtn}
+            onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+          >
+            <Ionicons name="person-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Location Picker Modal */}
@@ -136,50 +188,97 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Near Location */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Near Location</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See all</Text>
-        </TouchableOpacity>
-      </View>
+{/* Near Location See All */}
+<View style={styles.sectionHeader}>
+  <Text style={styles.sectionTitle}>Near Location</Text>
+  <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
+    <Text style={styles.seeAllText}>See all</Text>
+  </TouchableOpacity>
+</View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <EventCard
-          image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-          title="Pool party"
-          location="Les grottes, Bizerte"
-          price="20 DT"
-          rating="5.0"
-          per="person"
-        />
-        <EventCard
-          image="https://images.unsplash.com/photo-1560185127-6ed189bf02c5"
-          title="Golden Palace"
-          location="Cite Hasan, Nabeul"
-          price="175 DT"
-          rating="4.5"
-          per="night"
-        />
-      </ScrollView>
+<View style={{ height: normalize(250) }}>
+  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <EventCard
+      image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
+      title="Pool party"
+      location="Les grottes, Bizerte"
+      price="20 DT"
+      rating="5.0"
+      per="person"
+      onPress={() => navigation.navigate('EventDetail', { event: {
+        image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+        title: "Pool party",
+        location: "Les grottes, Bizerte",
+        price: "20 DT",
+        rating: "5.0",
+        per: "person"
+      }})}
+    />
+    <EventCard
+      image="https://images.unsplash.com/photo-1560185127-6ed189bf02c5"
+      title="Golden Palace"
+      location="Cite Hasan, Nabeul"
+      price="175 DT"
+      rating="4.5"
+      per="night"
+      onPress={() => navigation.navigate('EventDetail', { event: {
+        image: "https://images.unsplash.com/photo-1560185127-6ed189bf02c5",
+        title: "Golden Palace",
+        location: "Cite Hasan, Nabeul",
+        price: "175 DT",
+        rating: "4.5",
+        per: "night"
+      }})}
+    />
+  </ScrollView>
+</View>
 
-      {/* Popular Events */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Popular Events</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See all</Text>
-        </TouchableOpacity>
-      </View>
+{/* Popular Events See All */}
+<View style={styles.sectionHeader}>
+  <Text style={styles.sectionTitle}>Popular Events</Text>
+  <TouchableOpacity onPress={() => navigation.navigate('Calendar', { screen: 'PopularEvents' })}>
+    <Text style={styles.seeAllText}>See all</Text>
+  </TouchableOpacity>
+</View>
 
-      <EventCard
-        image="https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
-        title="Beach outing"
-        location="Coco beach Ghar El Milh, Bizerte"
-        price="80 DT"
-        rating="5.0"
-        per="person"
-        horizontal
-      />
+<View style={styles.popularEvents}>
+  {popularEvents.map((event, index) => (
+    <EventCard
+      key={index}
+      image={event.image}
+      title={event.title}
+      location={event.location}
+      price={event.price}
+      rating={event.rating}
+      per={event.per}
+      onPress={() => navigation.navigate('EventDetail', { event })}
+    />
+  ))}
+</View>
+
+{/* All Events See All */}
+<View style={styles.sectionHeader}>
+  <Text style={styles.sectionTitle}>All Events</Text>
+  <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
+    <Text style={styles.seeAllText}>See all</Text>
+  </TouchableOpacity>
+</View>
+
+<View style={styles.allEvents}>
+  {allEvents.map((event, index) => (
+    <EventCard
+      key={index}
+      image={event.image}
+      title={event.title}
+      location={event.location}
+      price={event.price}
+      rating={event.rating}
+      per={event.per}
+      horizontal
+      onPress={() => navigation.navigate('EventDetail', { event })}
+    />
+  ))}
+</View>
     </ScrollView>
   );
 }
@@ -192,19 +291,112 @@ function normalize(size) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  smallText: { fontSize: normalize(12), color: 'gray' },
-  locationText: { fontSize: normalize(16), fontWeight: 'bold', marginLeft: normalize(4) },
-  notificationBtn: { backgroundColor: '#fff', padding: normalize(8), borderRadius: normalize(12) },
-  createEventButton: { marginTop: normalize(16), flexDirection: 'row', backgroundColor: '#5D5FEE', padding: normalize(12), borderRadius: normalize(12), justifyContent: 'center', alignItems: 'center' },
-  createEventText: { color: '#fff', marginLeft: normalize(8), fontWeight: 'bold', fontSize: normalize(16) },
-  tabs: { flexDirection: 'row', marginTop: normalize(20), marginBottom: normalize(10) },
-  tab: { flex: 1, paddingVertical: normalize(12), backgroundColor: '#eee', marginHorizontal: normalize(5), borderRadius: normalize(10), alignItems: 'center' },
-  activeTab: { backgroundColor: '#5D5FEE' },
-  tabText: { marginTop: normalize(4), color: '#000', fontSize: normalize(14) },
-  tabTextActive: { marginTop: normalize(4), color: '#fff', fontWeight: 'bold', fontSize: normalize(14) },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: normalize(20), marginBottom: normalize(10) },
-  sectionTitle: { fontSize: normalize(18), fontWeight: 'bold' },
-  seeAllText: { color: '#5D5FEE', fontSize: normalize(14) },
+  container: {
+    flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
+  titleContainer: {
+    marginTop: normalize(16),
+    marginBottom: normalize(14),
+  },
+  title: {
+    fontSize: normalize(21),
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: normalize(4),
+  },
+  subtitle: {
+    fontSize: normalize(16),
+    color: '#666',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding
+  },
+  smallText: {
+    fontSize: normalize(12),
+    color: 'gray',
+  },
+  locationText: {
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    marginLeft: normalize(4),
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationBtn: {
+    backgroundColor: '#fff',
+    padding: normalize(8),
+    borderRadius: normalize(12),
+    marginLeft: normalize(8),
+  },
+  createEventButton: {
+    marginTop: normalize(16),
+    flexDirection: 'row',
+    backgroundColor: '#5D5FEE',
+    padding: normalize(12),
+    borderRadius: normalize(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  createEventText: {
+    color: '#fff',
+    marginLeft: normalize(8),
+    fontWeight: 'bold',
+    fontSize: normalize(16),
+  },
+  tabs: {
+    flexDirection: 'row',
+    marginTop: normalize(20),
+    marginBottom: normalize(10),
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: normalize(12),
+    backgroundColor: '#eee',
+    marginHorizontal: normalize(5),
+    borderRadius: normalize(10),
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#5D5FEE',
+  },
+  tabText: {
+    marginTop: normalize(4),
+    color: '#000',
+    fontSize: normalize(14),
+  },
+  tabTextActive: {
+    marginTop: normalize(4),
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: normalize(14),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: normalize(20),
+    marginBottom: normalize(10),
+  },
+  sectionTitle: {
+    fontSize: normalize(18),
+    fontWeight: 'bold',
+  },
+  seeAllText: {
+    color: '#5D5FEE',
+    fontSize: normalize(14),
+  },
+  popularEvents: {
+    flexDirection: 'row',
+    marginTop: normalize(10),
+    marginBottom: normalize(10),
+  },
+  allEvents: {
+    flexDirection: 'row',
+    marginTop: normalize(10),
+    marginBottom: normalize(10),
+  },
 });

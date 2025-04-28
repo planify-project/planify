@@ -9,9 +9,15 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-export default function EventCard({ image, title, location, price, rating, per, horizontal }) {
+export default function EventCard({ image, title, location, price, rating, per, horizontal, onPress }) {
   return (
-    <TouchableOpacity style={[styles.card, horizontal && styles.horizontal]}>
+    <TouchableOpacity 
+      style={[styles.card, horizontal && styles.horizontal]}
+      onPress={onPress}
+      activeOpacity={0.5}
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+      delayPressIn={0}
+    >
       <Image source={{ uri: image }} style={[styles.image, horizontal && styles.horizontalImage]} />
       <View style={styles.info}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -32,16 +38,59 @@ export default function EventCard({ image, title, location, price, rating, per, 
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: normalize(16), overflow: 'hidden', marginRight: normalize(16), width: normalize(220) },
-  horizontal: { flexDirection: 'row', width: '100%', marginVertical: normalize(10) },
-  image: { width: '100%', height: normalize(120) },
-  horizontalImage: { width: normalize(100), height: normalize(100) },
-  info: { padding: normalize(8), flex: 1 },
-  title: { fontSize: normalize(16), fontWeight: 'bold' },
-  location: { fontSize: normalize(12), color: 'gray', marginVertical: normalize(4) },
-  bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  price: { fontSize: normalize(14), fontWeight: 'bold', color: '#5D5FEE' },
-  per: { fontSize: normalize(12), color: 'gray' },
-  rating: { flexDirection: 'row', alignItems: 'center' },
-  ratingText: { fontSize: normalize(12), marginLeft: normalize(4) },
-});
+  card: { 
+    backgroundColor: '#fff', 
+    borderRadius: normalize(16), 
+    overflow: 'hidden', 
+    marginRight: normalize(16), 
+    width: normalize(220) 
+  },
+  horizontal: { 
+    flexDirection: 'row', 
+    width: '100%', 
+    marginVertical: normalize(10) 
+  },
+  image: { 
+    width: '100%', 
+    height: normalize(120) 
+  },
+  horizontalImage: { 
+    width: normalize(100), 
+    height: normalize(100) 
+  },
+  info: { 
+    padding: normalize(8), 
+    flex: 1 
+  },
+  title: { 
+    fontSize: normalize(16), 
+    fontWeight: 'bold' 
+  },
+  location: { 
+    fontSize: normalize(12), 
+    color: 'gray', 
+    marginVertical: normalize(4) 
+  },
+  bottomRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
+  price: { 
+    fontSize: normalize(14), 
+    fontWeight: 'bold', 
+    color: '#5D5FEE' 
+  },
+  per: { 
+    fontSize: normalize(12), 
+    color: 'gray' 
+  },
+  rating: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  ratingText: { 
+    fontSize: normalize(12), 
+    marginLeft: normalize(4) 
+  },
+}); 
