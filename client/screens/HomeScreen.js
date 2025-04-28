@@ -1,5 +1,5 @@
 import {React, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import EventCard from '../components/EventCard';
@@ -184,20 +184,27 @@ export default function HomeScreen() {
   );
 }
 
+const { width } = Dimensions.get('window');
+const scale = width / 375; // 375 is a common base width (iPhone 11)
+
+function normalize(size) {
+  return Math.round(scale * size);
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f9f9f9' },
+  container: { flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  smallText: { fontSize: 12, color: 'gray' },
-  locationText: { fontSize: 16, fontWeight: 'bold', marginLeft: 4 },
-  notificationBtn: { backgroundColor: '#fff', padding: 8, borderRadius: 12 },
-  createEventButton: { marginTop: 16, flexDirection: 'row', backgroundColor: '#5D5FEE', padding: 12, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  createEventText: { color: '#fff', marginLeft: 8, fontWeight: 'bold' },
-  tabs: { flexDirection: 'row', marginTop: 20, marginBottom: 10 },
-  tab: { flex: 1, paddingVertical: 12, backgroundColor: '#eee', marginHorizontal: 5, borderRadius: 10, alignItems: 'center' },
+  smallText: { fontSize: normalize(12), color: 'gray' },
+  locationText: { fontSize: normalize(16), fontWeight: 'bold', marginLeft: normalize(4) },
+  notificationBtn: { backgroundColor: '#fff', padding: normalize(8), borderRadius: normalize(12) },
+  createEventButton: { marginTop: normalize(16), flexDirection: 'row', backgroundColor: '#5D5FEE', padding: normalize(12), borderRadius: normalize(12), justifyContent: 'center', alignItems: 'center' },
+  createEventText: { color: '#fff', marginLeft: normalize(8), fontWeight: 'bold', fontSize: normalize(16) },
+  tabs: { flexDirection: 'row', marginTop: normalize(20), marginBottom: normalize(10) },
+  tab: { flex: 1, paddingVertical: normalize(12), backgroundColor: '#eee', marginHorizontal: normalize(5), borderRadius: normalize(10), alignItems: 'center' },
   activeTab: { backgroundColor: '#5D5FEE' },
-  tabText: { marginTop: 4, color: '#000' },
-  tabTextActive: { marginTop: 4, color: '#fff', fontWeight: 'bold' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold' },
-  seeAllText: { color: '#5D5FEE' },
+  tabText: { marginTop: normalize(4), color: '#000', fontSize: normalize(14) },
+  tabTextActive: { marginTop: normalize(4), color: '#fff', fontWeight: 'bold', fontSize: normalize(14) },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: normalize(20), marginBottom: normalize(10) },
+  sectionTitle: { fontSize: normalize(18), fontWeight: 'bold' },
+  seeAllText: { color: '#5D5FEE', fontSize: normalize(14) },
 });
