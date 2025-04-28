@@ -168,7 +168,6 @@ const AuthNavigator = () => {
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isLogin, setIsLogin] = useState(true); // Add this state
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -203,7 +202,7 @@ const AuthNavigator = () => {
     setError('');
     try {
       if (!username || !email || !password) {
-        setError('Username, email and password are required');
+        setError('Username, email, and password are required');
         return;
       }
       if (password.length < 6) {
@@ -211,6 +210,7 @@ const AuthNavigator = () => {
         return;
       }
       await createUserWithEmailAndPassword(auth, email, password);
+      console.log('User registered successfully');
     } catch (error) {
       console.error(error.message);
       if (error.code === 'auth/invalid-email') {
@@ -232,12 +232,10 @@ const AuthNavigator = () => {
   };
 
   const switchToLogin = () => {
-    setIsLogin(true); // Toggle to login screen
     setError('');
   };
 
   const switchToSignUp = () => {
-    setIsLogin(false); // Toggle to sign-up screen
     setError('');
   };
 
@@ -252,42 +250,48 @@ const AuthNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
       {user ? (
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Home">
+          {(props) => (
+            <HomeScreen
+              {...props}
+              handleLogout={handleLogout}
+            />
+          )}
+        </Stack.Screen>
       ) : (
         <>
-          {isLogin ? (
-            <Stack.Screen name="Login">
-              {(props) => (
-                <LoginScreen
-                  {...props}
-                  email={email}
-                  setEmail={setEmail}
-                  password={password}
-                  setPassword={setPassword}
-                  handleLogin={handleLogin}
-                  error={error}
-                  switchToSignUp={switchToSignUp} // Pass the function
-                />
-              )}
-            </Stack.Screen>
-          ) : (
-            <Stack.Screen name="SignUp">
-              {(props) => (
-                <SignUpScreen
-                  {...props}
-                  username={username}
-                  setUsername={setUsername}
-                  email={email}
-                  setEmail={setEmail}
-                  password={password}
-                  setPassword={setPassword}
-                  handleSignUp={handleSignUp}
-                  error={error}
-                  switchToLogin={switchToLogin} // Pass the function
-                />
-              )}
-            </Stack.Screen>
-          )}
+          <Stack.Screen name="Login">
+            {(props) => (
+              <LoginScreen
+                {...props}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                handleLogin={handleLogin}
+                error={error}
+                setError={setError}
+                switchToSignUp={switchToSignUp}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="SignUp">
+            {(props) => (
+              <SignUpScreen
+                {...props}
+                username={username}
+                setUsername={setUsername}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                handleSignUp={handleSignUp}
+                error={error}
+                setError={setError}
+                switchToLogin={switchToLogin}
+              />
+            )}
+          </Stack.Screen>
         </>
       )}
     </Stack.Navigator>
