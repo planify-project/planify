@@ -9,8 +9,11 @@ import { Ionicons } from '@expo/vector-icons';
 // Screens
 import AllEventsScreen from './screens/AllEventsScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
-import HomeScreen from './screens/HomeScreen';
 import PopularEventsScreen from './screens/PopularEventsScreen';
+import HomeScreen from './screens/HomeScreen';
+import ScheduleScreen from './screens/ScheduleScreen';
+import WishlistScreen from './screens/WishlistScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 // Stack and Tab Navigators
 const Stack = createNativeStackNavigator();
@@ -55,7 +58,6 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <StatusBar hidden />
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {
@@ -63,11 +65,11 @@ export default function App() {
 
             if (route.name === 'Home') {
               iconName = 'home-outline';
-            } else if (route.name === 'Calendar') {
+            } else if (route.name === 'Schedule') {
               iconName = 'calendar-outline';
             } else if (route.name === 'Wishlist') {
               iconName = 'heart-outline';
-            } else if (route.name === 'Profile') {
+            } else if (route.name === 'Settings') {
               iconName = 'person-outline';
             }
 
@@ -81,9 +83,9 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeStack} />
-        <Tab.Screen name="Calendar" component={CalendarStack} />
-        <Tab.Screen name="Wishlist" component={HomeScreen} />
-        <Tab.Screen name="Profile" component={HomeScreen} />
+        <Tab.Screen name="Schedule" component={ScheduleScreen} />
+        <Tab.Screen name="Wishlist" component={WishlistScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

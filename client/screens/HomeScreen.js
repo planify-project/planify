@@ -131,6 +131,9 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        <TouchableOpacity style={styles.notificationBtn}>
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.notificationBtn}
@@ -289,9 +292,7 @@ function normalize(size) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F6F7FB',
-  },
+    flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
   titleContainer: {
     marginTop: normalize(16),
     marginBottom: normalize(14),
@@ -310,7 +311,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: normalize(16),
   },
   smallText: {
     fontSize: normalize(12),

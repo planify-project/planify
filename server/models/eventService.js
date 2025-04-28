@@ -1,30 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
-  const EventService = sequelize.define('EventService', {
-    event_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
-    },
-    service_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'services',
-        key: 'id'
-      }
-    },
-    status: {
-      type: DataTypes.ENUM('booked', 'pending', 'canceled'),
-      allowNull: false,
-      defaultValue: 'pending'
-    }
+  return sequelize.define('event_service', {
+    event_id: { type: DataTypes.INTEGER, primaryKey: true },
+    service_id: { type: DataTypes.INTEGER, primaryKey: true },
+    status: DataTypes.STRING
   }, {
-    tableName: 'event_services',
-    timestamps: false
+    underscored: true,
+    timestamps: true
   });
-
-  return EventService;
 };
