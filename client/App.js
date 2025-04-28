@@ -54,8 +54,7 @@ function CalendarStack() {
     >
       <Stack.Screen name="PopularEvents" component={PopularEventsScreen} />
     </Stack.Navigator>
-  );
-}
+  
 
 // Main App
 export default function App() {
