@@ -1,187 +1,96 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const sampleFeatures = [
-  { icon: '📶', label: 'Free Wifi' },
-  { icon: '🍳', label: 'Free Breakfast' },
-  { icon: '⭐', label: '5.0' },
-];
+// Responsive scaling
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
-export default function EventCard({ event }) {
-  const navigation = useNavigation();
-  const [isFavorite, setIsFavorite] = useState(false);
-
+export default function EventCard({ image, title, location, price, rating, per, horizontal, onPress }) {
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('EventDetail', { eventId: event.id })}
-      activeOpacity={0.93}
+    <TouchableOpacity 
+      style={[styles.card, horizontal && styles.horizontal]}
+      onPress={onPress}
+      activeOpacity={0.5}
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+      delayPressIn={0}
     >
-      {/* Image with favorite button overlay */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: event.image }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <TouchableOpacity
-          style={styles.favoriteBtn}
-          onPress={() => setIsFavorite(!isFavorite)}
-        >
-          <Text style={{ fontSize: 22 }}>{isFavorite ? '❤️' : '🤍'}</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Features row */}
-      <View style={styles.featuresRow}>
-        {sampleFeatures.map((f, idx) => (
-          <View key={idx} style={styles.featureTag}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
-            <Text style={styles.featureText}>{f.label}</Text>
+      <Image source={{ uri: image }} style={[styles.image, horizontal && styles.horizontalImage]} />
+      <View style={styles.info}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={styles.title}>{title}</Text>
+          <Ionicons name="heart-outline" size={normalize(20)} color="red" />
+        </View>
+        <Text style={styles.location}>{location}</Text>
+        <View style={styles.bottomRow}>
+          <Text style={styles.price}>{price}<Text style={styles.per}>/{per}</Text></Text>
+          <View style={styles.rating}>
+            <Ionicons name="star" size={normalize(14)} color="#FFD700" />
+            <Text style={styles.ratingText}>{rating}</Text>
           </View>
-        ))}
+        </View>
       </View>
-      {/* Title, Price, Location */}
-      <View style={styles.infoRow}>
-        <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
-        <Text style={styles.eventPrice}>{event.is_free ? 'Free' : `$${event.price}`}</Text>
-      </View>
-      <View style={styles.locationRow}>
-        <Text style={styles.locationDot}>•</Text>
-        <Text style={styles.locationText} numberOfLines={1}>{event.location}</Text>
-      </View>
-      {/* Description */}
-      <Text style={styles.sectionTitle}>Description</Text>
-      <Text style={styles.description} numberOfLines={2}>
-        {event.description}
-      </Text>
-      {/* Join Event Button */}
-      <TouchableOpacity style={styles.joinBtn} onPress={() => navigation.navigate('EventDetail', { eventId: event.id })}>
-        <Text style={styles.joinBtnText}>Join Event</Text>
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#F6F7FB',
-    borderRadius: 16,
-    marginBottom: 24,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.13,
-    shadowRadius: 8,
-    elevation: 4,
-    paddingBottom: 12,
+  card: { 
+    backgroundColor: '#fff', 
+    borderRadius: normalize(16), 
+    overflow: 'hidden', 
+    marginRight: normalize(16), 
+    width: normalize(220) 
   },
-  imageContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    margin: 12,
-    marginBottom: 0,
-    elevation: 2,
+  horizontal: { 
+    flexDirection: 'row', 
+    width: '100%', 
+    marginVertical: normalize(10) 
   },
-  image: {
-    width: '100%',
-    height: 160,
-    borderRadius: 16,
+  image: { 
+    width: '100%', 
+    height: normalize(120) 
   },
-  favoriteBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 6,
-    elevation: 3,
+  horizontalImage: { 
+    width: normalize(100), 
+    height: normalize(100) 
   },
-  featuresRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
+  info: { 
+    padding: normalize(8), 
+    flex: 1 
   },
-  featureTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F2F4F7',
-    borderRadius: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 8,
+  title: { 
+    fontSize: normalize(16), 
+    fontWeight: 'bold' 
   },
-  featureIcon: {
-    fontSize: 16,
-    marginRight: 4,
+  location: { 
+    fontSize: normalize(12), 
+    color: 'gray', 
+    marginVertical: normalize(4) 
   },
-  featureText: {
-    fontSize: 13,
-    color: '#222',
+  bottomRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
   },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 8,
+  price: { 
+    fontSize: normalize(14), 
+    fontWeight: 'bold', 
+    color: '#5D5FEE' 
   },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#222',
+  per: { 
+    fontSize: normalize(12), 
+    color: 'gray' 
   },
-  eventPrice: {
-    fontSize: 15,
-    color: '#2D9CDB',
-    fontWeight: '500',
+  rating: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  locationDot: {
-    fontSize: 18,
-    color: '#2D9CDB',
-    marginRight: 4,
-  },
-  locationText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: '#444',
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  joinBtn: {
-    backgroundColor: '#4F7CAC',
-    marginHorizontal: 16,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  joinBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  ratingText: { 
+    fontSize: normalize(12), 
+    marginLeft: normalize(4) 
   },
 }); 

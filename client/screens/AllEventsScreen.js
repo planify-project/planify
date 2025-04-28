@@ -1,61 +1,138 @@
 import React from 'react';
-import { View, FlatList, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import EventCard from '../components/EventCard';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
+// Responsive scaling
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
 const DUMMY_EVENTS = [
   {
     id: 1,
-    title: 'Sample Pool Party',
-    location: 'City Pool',
-    date: new Date().toISOString(),
-    description: 'A fun pool party for all ages!',
-    is_free: false,
-    price: 20,
-    available_spots: 20,
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'
+    title: 'Pool party',
+    location: 'Les grottes, Bizerte',
+    price: '20 DT',
+    rating: '5.0',
+    per: 'person',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'
   },
   {
     id: 2,
-    title: 'Sample Beach Festival',
-    location: 'Sunny Beach',
-    date: new Date().toISOString(),
-    description: 'Enjoy music and games at the beach.',
-    is_free: true,
-    price: null,
-    available_spots: 50,
-    image: 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd'
+    title: 'Golden Palace',
+    location: 'Cite Hasan, Nabeul',
+    price: '175 DT',
+    rating: '4.5',
+    per: 'night',
+    image: 'https://images.unsplash.com/photo-1560185127-6ed189bf02c5'
   },
   {
     id: 3,
-    title: 'Sample Sunset Yoga',
-    location: 'Central Park',
-    date: new Date().toISOString(),
-    description: 'Relax and unwind with sunset yoga.',
-    is_free: true,
-    price: null,
-    available_spots: 10,
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca'
+    title: 'Beach outing',
+    location: 'Coco beach Ghar El Milh, Bizerte',
+    price: '80 DT',
+    rating: '5.0',
+    per: 'person',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'
   }
 ];
 
 export default function AllEventsScreen() {
+  const navigation = useNavigation();
+
+  const handleEventPress = (event) => {
+    navigation.navigate('EventDetail', { event });
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
-      {/* Custom Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 40, paddingBottom: 8, backgroundColor: 'transparent' }}>
-        <View style={{ width: 32 }} />
-        <Text style={{ fontSize: 18, fontWeight: '600', color: '#222', textAlign: 'center' }}>All Events</Text>
-        <TouchableOpacity style={{ padding: 8 }}>
-          <Text style={{ fontSize: 22, color: '#222' }}>⋯</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>All Events</Text>
+        <View style={styles.headerBtn} />
       </View>
-      <FlatList
-        data={DUMMY_EVENTS}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => <EventCard event={item} />}
-        ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>No events found.</Text>}
-        contentContainerStyle={{ padding: 16 }}
-      />
+
+      {/* Title Section */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>Explore Eents</Text>
+        <Text style={styles.subtitle}>Find your next adventure</Text>
+      </View>
+
+      {/* Events List */}
+      <ScrollView style={styles.eventsContainer}>
+        {DUMMY_EVENTS.map((event) => (
+          <View key={event.id} style={styles.eventCardContainer}>
+            <EventCard
+              image={event.image}
+              title={event.title}
+              location={event.location}
+              price={event.price}
+              rating={event.rating}
+              per={event.per}
+              horizontal={true}
+              onPress={() => handleEventPress(event)}
+            />
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F7FB',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F6F7FB',
+  },
+  headerBtn: {
+    padding: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+  },
+  titleContainer: {
+    padding: 16,
+    backgroundColor: '#F6F7FB',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  eventsContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  eventCardContainer: {
+    marginBottom: 16,
+  },
+}); 
