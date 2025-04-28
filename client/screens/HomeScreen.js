@@ -1,54 +1,3 @@
-import { getAuth, signOut } from 'firebase/auth';
-
-const HomeScreen = () => {
-  const auth = getAuth();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.welcomeTitle}>Welcome</Text>
-      <Text style={styles.emailText}>{auth.currentUser?.email}</Text>
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  emailText: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  logoutButton: {
-    padding: 10,
-  },
-  logoutButtonText: {
-    color: 'red',
-    fontSize: 16,
-  },
-});
-
-export default HomeScreen;
-
 import {React, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -182,9 +131,14 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationBtn}>
-          <Ionicons name="notifications-outline" size={24} color="#000" />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.notificationBtn}
+            onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+          >
+            <Ionicons name="person-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Location Picker Modal */}
@@ -334,7 +288,10 @@ function normalize(size) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F7FB',
+  },
   titleContainer: {
     marginTop: normalize(16),
     marginBottom: normalize(14),
@@ -349,20 +306,96 @@ const styles = StyleSheet.create({
     fontSize: normalize(16),
     color: '#666',
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  smallText: { fontSize: normalize(12), color: 'gray' },
-  locationText: { fontSize: normalize(16), fontWeight: 'bold', marginLeft: normalize(4) },
-  notificationBtn: { backgroundColor: '#fff', padding: normalize(8), borderRadius: normalize(12) },
-  createEventButton: { marginTop: normalize(16), flexDirection: 'row', backgroundColor: '#5D5FEE', padding: normalize(12), borderRadius: normalize(12), justifyContent: 'center', alignItems: 'center' },
-  createEventText: { color: '#fff', marginLeft: normalize(8), fontWeight: 'bold', fontSize: normalize(16) },
-  tabs: { flexDirection: 'row', marginTop: normalize(20), marginBottom: normalize(10) },
-  tab: { flex: 1, paddingVertical: normalize(12), backgroundColor: '#eee', marginHorizontal: normalize(5), borderRadius: normalize(10), alignItems: 'center' },
-  activeTab: { backgroundColor: '#5D5FEE' },
-  tabText: { marginTop: normalize(4), color: '#000', fontSize: normalize(14) },
-  tabTextActive: { marginTop: normalize(4), color: '#fff', fontWeight: 'bold', fontSize: normalize(14) },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: normalize(20), marginBottom: normalize(10) },
-  sectionTitle: { fontSize: normalize(18), fontWeight: 'bold' },
-  seeAllText: { color: '#5D5FEE', fontSize: normalize(14) },
-  popularEvents: { flexDirection: 'row', marginTop: normalize(10), marginBottom: normalize(10) },
-  allEvents: { flexDirection: 'row', marginTop: normalize(10), marginBottom: normalize(10) },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: normalize(16),
+  },
+  smallText: {
+    fontSize: normalize(12),
+    color: 'gray',
+  },
+  locationText: {
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    marginLeft: normalize(4),
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationBtn: {
+    backgroundColor: '#fff',
+    padding: normalize(8),
+    borderRadius: normalize(12),
+    marginLeft: normalize(8),
+  },
+  createEventButton: {
+    marginTop: normalize(16),
+    flexDirection: 'row',
+    backgroundColor: '#5D5FEE',
+    padding: normalize(12),
+    borderRadius: normalize(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  createEventText: {
+    color: '#fff',
+    marginLeft: normalize(8),
+    fontWeight: 'bold',
+    fontSize: normalize(16),
+  },
+  tabs: {
+    flexDirection: 'row',
+    marginTop: normalize(20),
+    marginBottom: normalize(10),
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: normalize(12),
+    backgroundColor: '#eee',
+    marginHorizontal: normalize(5),
+    borderRadius: normalize(10),
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#5D5FEE',
+  },
+  tabText: {
+    marginTop: normalize(4),
+    color: '#000',
+    fontSize: normalize(14),
+  },
+  tabTextActive: {
+    marginTop: normalize(4),
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: normalize(14),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: normalize(20),
+    marginBottom: normalize(10),
+  },
+  sectionTitle: {
+    fontSize: normalize(18),
+    fontWeight: 'bold',
+  },
+  seeAllText: {
+    color: '#5D5FEE',
+    fontSize: normalize(14),
+  },
+  popularEvents: {
+    flexDirection: 'row',
+    marginTop: normalize(10),
+    marginBottom: normalize(10),
+  },
+  allEvents: {
+    flexDirection: 'row',
+    marginTop: normalize(10),
+    marginBottom: normalize(10),
+  },
 });

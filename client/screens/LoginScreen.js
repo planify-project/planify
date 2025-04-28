@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
@@ -15,15 +14,21 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       }
       await signInWithEmailAndPassword(auth, email, password);
       console.log('User logged in successfully');
-      navigation.navigate('Home'); // Navigate to Home screen after successful login      
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (err) {
       console.error(err.message);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('Invalid email or password');
+        setPassword(''); // Clear the password field
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed attempts. Please try again later');
       } else {
-        setError('Login failed');
+        setError('Login failed: ' + err.message);
       }
     }
   };

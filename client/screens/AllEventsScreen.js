@@ -64,7 +64,7 @@ export default function AllEventsScreen() {
 
       {/* Title Section */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Explore Eents</Text>
+        <Text style={styles.title}>Explore Events</Text>
         <Text style={styles.subtitle}>Find your next adventure</Text>
       </View>
 

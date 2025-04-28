@@ -1,14 +1,10 @@
-import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { initializeApp } from 'firebase/app';
 import AuthNavigator from './navigation/AuthNavigator';
-
-import * as React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { StatusBar } from 'react-native';
-
 
 // Screens
 import AllEventsScreen from './screens/AllEventsScreen';
@@ -33,6 +29,7 @@ function HomeStack() {
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
       <Stack.Screen name="AllEvents" component={AllEventsScreen} />
       <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+      <Stack.Screen name="Auth" component={AuthNavigator} />
     </Stack.Navigator>
   );
 }
@@ -40,11 +37,6 @@ function HomeStack() {
 // Stack Navigator for Calendar
 function CalendarStack() {
   return (
-    <NavigationContainer>
-      <AuthNavigator />
-    </NavigationContainer>
-  )
-}
     <Stack.Navigator
       screenOptions={{ 
         headerShown: false,
