@@ -329,6 +329,7 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       }
       await signInWithEmailAndPassword(auth, email, password);
       console.log('User logged in successfully');
+      navigation.navigate('Home'); // Navigate to Home screen after successful login      
     } catch (err) {
       console.error(err.message);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {

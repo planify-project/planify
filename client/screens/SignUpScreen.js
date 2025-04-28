@@ -81,7 +81,7 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
           <Text style={styles.signInButtonText}>Sign up</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.createAccountButton} onPress={switchToLogin}>
-          <Text style={styles.createAccountText}>Already have an account</Text>
+          <Text style={styles.createAccountText} onPress={()=>{navigation.navigate("Login")}}>Already have an account</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
