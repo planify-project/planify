@@ -1,39 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  const Notification = sequelize.define('Notification', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    message: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    is_read: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false
-    }
+  return sequelize.define('notification', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    user_id: DataTypes.INTEGER,
+    title: DataTypes.STRING,
+    message: DataTypes.TEXT,
+    is_read: DataTypes.BOOLEAN,
+    type: DataTypes.STRING
   }, {
-    tableName: 'notifications',
-    timestamps: false
+    underscored: true,
+    timestamps: true
   });
-
-  return Notification;
 };

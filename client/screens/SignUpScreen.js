@@ -1,8 +1,10 @@
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPassword, error, setError, switchToLogin }) => {
+  const navigation = useNavigation();
   const auth = getAuth();
 
   const handleSignUp = async () => {
@@ -18,15 +20,17 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
       }
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('User registered successfully');
-      switchToLogin(); // Navigate to the login page after successful sign-up
+      switchToLogin();
     } catch (err) {
       console.error(err.message);
       if (err.code === 'auth/email-already-in-use') {
-        setError('Email is already in use');
+        setError('This email is already registered. Please try logging in instead.');
+        setEmail('');
+        setPassword('');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
       } else {
-        setError('Registration failed');
+        setError('Registration failed: ' + err.message);
       }
     }
   };
@@ -81,7 +85,7 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
           <Text style={styles.signInButtonText}>Sign up</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.createAccountButton} onPress={switchToLogin}>
-          <Text style={styles.createAccountText} onPress={()=>{navigation.navigate("Login")}}>Already have an account</Text>
+          <Text style={styles.createAccountText}>Already have an account? Log in</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
