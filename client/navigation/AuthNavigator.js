@@ -97,53 +97,6 @@ const AuthNavigator = () => {
   }
 
   return (
-    // <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-    //   {user ? (
-    //     <Stack.Screen name="Home">
-    //       {(props) => (
-    //         <HomeScreen
-    //           {...props}
-    //           handleLogout={handleLogout}
-    //         />
-    //       )}
-    //     </Stack.Screen>
-    //   ) : (
-    //     <>
-    //       <Stack.Screen name="Login">
-    //         {(props) => (
-    //           <LoginScreen
-    //             {...props}
-    //             email={email}
-    //             setEmail={setEmail}
-    //             password={password}
-    //             setPassword={setPassword}
-    //             handleLogin={handleLogin}
-    //             error={error}
-    //             setError={setError}
-    //             switchToSignUp={switchToSignUp}
-    //           />
-    //         )}
-    //       </Stack.Screen>
-    //       <Stack.Screen name="SignUp">
-    //         {(props) => (
-    //           <SignUpScreen
-    //             {...props}
-    //             username={username}
-    //             setUsername={setUsername}
-    //             email={email}
-    //             setEmail={setEmail}
-    //             password={password}
-    //             setPassword={setPassword}
-    //             handleSignUp={handleSignUp}
-    //             error={error}
-    //             setError={setError}
-    //             switchToLogin={switchToLogin}
-    //           />
-    //         )}
-    //       </Stack.Screen>
-    //     </>
-    //   )}
-    // </Stack.Navigator>
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
   <Stack.Screen name="Login">
     {(props) => (
