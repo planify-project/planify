@@ -44,8 +44,8 @@ export default function ScheduleScreen() {
         style={styles.calendar}
         theme={{
           selectedDayBackgroundColor: '#5D5FEE',
-          todayTextColor: '#000',
-          arrowColor: '#000',
+          todayTextColor: '#5D5FEE',
+          arrowColor: '#5D5FEE',
         }}
       />
       <View style={styles.eventsHeader}>
