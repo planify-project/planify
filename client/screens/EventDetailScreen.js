@@ -1,107 +1,103 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
-
-const event = {
-  title: 'Pool party',
-  price: '20 DT/person',
-  location: 'Les grottes, Bizerte',
-  description:
-    'Pool party, Les grottes, Bizerte is a wonderful, elegant 5 star hotel overlooking the sea, perfect for a romantic, charming',
-  images: [
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
-    'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
-  ],
-  mainImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-  rating: 5.0,
-  features: [
-    { icon: '📶', label: 'Free Wifi' },
-    { icon: '🍳', label: 'Free Breakfast' },
-  ],
-};
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-export default function EventDetailScreen(props) {
+export default function EventDetailScreen({ route }) {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showFullDesc, setShowFullDesc] = useState(false);
+  const navigation = useNavigation();
+  
+  // Get the event data from the route params
+  const event = route.params?.event || {
+    title: 'Event Title',
+    price: '0 DT',
+    location: 'Location',
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+    rating: '0.0',
+    per: 'person'
+  };
 
-  useEffect(() => {
-    console.log('EventDetailScreen rendered', props.route?.params);
-  }, [props.route]);
+  // Generate additional images for preview
+  const images = [
+    event.image,
+    'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
+    'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
+  ];
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn}>
-          <Text style={styles.headerIcon}>{'<'}</Text>
+        <TouchableOpacity 
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detail</Text>
-        <TouchableOpacity style={styles.headerBtn}>
-          <Text style={styles.headerIcon}>⋯</Text>
+        <Text style={styles.headerTitle}>Event Details</Text>
+        <TouchableOpacity 
+          style={styles.headerBtn}
+          onPress={() => setIsFavorite(!isFavorite)}
+        >
+          <Ionicons 
+            name={isFavorite ? "heart" : "heart-outline"} 
+            size={24} 
+            color={isFavorite ? "#FF5A5F" : "#222"} 
+          />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Main Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: event.mainImage }} style={styles.mainImage} />
-          <TouchableOpacity
-            style={styles.favoriteBtn}
-            onPress={() => setIsFavorite(!isFavorite)}
-          >
-            <Text style={{ fontSize: 22 }}>{isFavorite ? '❤️' : '🤍'}</Text>
-          </TouchableOpacity>
+          <Image source={{ uri: event.image }} style={styles.mainImage} />
         </View>
 
-        {/* Features */}
-        <View style={styles.featuresRow}>
-          {event.features.map((f, idx) => (
-            <View key={idx} style={styles.featureTag}>
-              <Text style={styles.featureIcon}>{f.icon}</Text>
-              <Text style={styles.featureText}>{f.label}</Text>
-            </View>
-          ))}
-          <View style={styles.featureTag}>
-            <Text style={styles.featureIcon}>⭐</Text>
-            <Text style={styles.featureText}>{event.rating}</Text>
+        {/* Event Info */}
+        <View style={styles.infoContainer}>
+          <Text style={styles.eventTitle}>{event.title}</Text>
+          
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color="#5D5FEE" />
+            <Text style={styles.locationText}>{event.location}</Text>
+          </View>
+
+          <View style={styles.priceContainer}>
+            <Text style={styles.price}>{event.price}</Text>
+            <Text style={styles.perText}>/{event.per}</Text>
+          </View>
+
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Text style={styles.ratingText}>{event.rating}</Text>
           </View>
         </View>
 
-        {/* Title, Price, Location */}
-        <View style={styles.infoRow}>
-          <Text style={styles.eventTitle}>{event.title}</Text>
-          <Text style={styles.eventPrice}>{event.price}</Text>
-        </View>
-        <View style={styles.locationRow}>
-          <Text style={styles.locationDot}>•</Text>
-          <Text style={styles.locationText}>{event.location}</Text>
-        </View>
-
         {/* Description */}
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>
-          {showFullDesc ? event.description : event.description.slice(0, 80) + '...'}
-          {!showFullDesc && (
-            <Text style={styles.readMore} onPress={() => setShowFullDesc(true)}>
-              {' Read More...'}
-            </Text>
-          )}
-        </Text>
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.sectionTitle}>About this event</Text>
+          <Text style={styles.description}>
+            Experience an unforgettable {event.title.toLowerCase()} at {event.location}. 
+            This event promises to deliver an amazing experience with top-notch facilities and services.
+            Don't miss out on this opportunity to create lasting memories!
+          </Text>
+        </View>
 
         {/* Preview Images */}
-        <Text style={styles.sectionTitle}>Preview</Text>
-        <FlatList
-          data={event.images}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(_, idx) => idx.toString()}
-          style={{ marginBottom: 20 }}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={styles.previewImage} />
-          )}
-        />
+        <View style={styles.previewContainer}>
+          <Text style={styles.sectionTitle}>Gallery</Text>
+          <FlatList
+            data={images}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, idx) => idx.toString()}
+            renderItem={({ item }) => (
+              <Image source={{ uri: item }} style={styles.previewImage} />
+            )}
+          />
+        </View>
       </ScrollView>
 
       {/* Join Event Button */}
@@ -116,22 +112,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F6F7FB',
-    paddingTop: 40,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   headerBtn: {
     padding: 8,
-  },
-  headerIcon: {
-    fontSize: 22,
-    color: '#222',
   },
   headerTitle: {
     fontSize: 18,
@@ -139,120 +132,95 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   imageContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    margin: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    elevation: 2,
+    width: '100%',
+    height: 250,
   },
   mainImage: {
-    width: width - 32,
-    height: 180,
-    borderRadius: 16,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
-  favoriteBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+  infoContainer: {
+    padding: 16,
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 6,
-    elevation: 3,
-  },
-  featuresRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  featureTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F2F4F7',
-    borderRadius: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 8,
-  },
-  featureIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  featureText: {
-    fontSize: 13,
-    color: '#222',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 8,
   },
   eventTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#222',
+    marginBottom: 8,
   },
-  eventPrice: {
-    fontSize: 15,
-    color: '#2D9CDB',
-    fontWeight: '500',
-  },
-  locationRow: {
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
     marginBottom: 8,
-  },
-  locationDot: {
-    fontSize: 18,
-    color: '#2D9CDB',
-    marginRight: 4,
   },
   locationText: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 4,
   },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: '#444',
-    marginHorizontal: 16,
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
     marginBottom: 8,
   },
-  readMore: {
-    color: '#2D9CDB',
-    fontWeight: '500',
+  price: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#5D5FEE',
+  },
+  perText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 16,
+    color: '#222',
+    marginLeft: 4,
+  },
+  descriptionContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  previewContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginTop: 8,
   },
   previewImage: {
-    width: 90,
-    height: 60,
-    borderRadius: 10,
-    marginHorizontal: 6,
-    backgroundColor: '#eee',
+    width: 120,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 8,
   },
   joinBtn: {
-    backgroundColor: '#4F7CAC',
+    backgroundColor: '#5D5FEE',
     margin: 16,
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   joinBtnText: {
     color: '#fff',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
   },
 }); 
