@@ -1,9 +1,11 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from './screens/HomeScreen';
 import { Ionicons } from '@expo/vector-icons';
-
+import HomeScreen from './screens/HomeScreen';
+import ScheduleScreen from './screens/ScheduleScreen';
+import WishlistScreen from './screens/WishlistScreen';
+import SettingsScreen from './screens/SettingsScreen';
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -16,11 +18,11 @@ export default function App() {
 
             if (route.name === 'Home') {
               iconName = 'home-outline';
-            } else if (route.name === 'Calendar') {
+            } else if (route.name === 'Schedule') {
               iconName = 'calendar-outline';
             } else if (route.name === 'Wishlist') {
               iconName = 'heart-outline';
-            } else if (route.name === 'Profile') {
+            } else if (route.name === 'Settings') {
               iconName = 'person-outline';
             }
 
@@ -32,9 +34,9 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Calendar" component={HomeScreen} />
-        <Tab.Screen name="Wishlist" component={HomeScreen} />
-        <Tab.Screen name="Profile" component={HomeScreen} />
+        <Tab.Screen name="Schedule" component={ScheduleScreen} />
+        <Tab.Screen name="Wishlist" component={WishlistScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
