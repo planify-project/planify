@@ -1,9 +1,14 @@
-import * as React from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { initializeApp } from 'firebase/app';
+import AuthNavigator from './navigation/AuthNavigator';
+
+import * as React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'react-native';
+
 
 // Screens
 import AllEventsScreen from './screens/AllEventsScreen';
@@ -35,6 +40,11 @@ function HomeStack() {
 // Stack Navigator for Calendar
 function CalendarStack() {
   return (
+    <NavigationContainer>
+      <AuthNavigator />
+    </NavigationContainer>
+  )
+}
     <Stack.Navigator
       screenOptions={{ 
         headerShown: false,
