@@ -1,6 +1,6 @@
 const { Agent } = require('../models/Agent');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const agentController = {
   // Register a new agent

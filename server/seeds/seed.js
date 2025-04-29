@@ -1,7 +1,7 @@
 // This script seeds the database with sample events for development/testing
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
-const db = require('./database');
+const db = require('../database');
 const { Event, User } = db;
 
 async function seedEvents() {
