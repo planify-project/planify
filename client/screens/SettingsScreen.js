@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
@@ -89,9 +89,14 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F6FC', paddingHorizontal: 0, paddingTop:24 },
+  container: { flex: 1, backgroundColor: '#F4F6FC', paddingHorizontal: 0,     padding: normalize(16)
+  },
   header: {
     fontSize: 28,
     fontWeight: 'bold',

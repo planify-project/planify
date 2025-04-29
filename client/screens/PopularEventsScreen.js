@@ -1,6 +1,12 @@
 // screens/PopularEventsScreen.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
 export default function PopularEventsScreen() {
   return (
@@ -13,5 +19,5 @@ export default function PopularEventsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 24, fontWeight: 'bold' }
+  text: { fontSize: normalize(24), fontWeight: 'bold' }
 });
