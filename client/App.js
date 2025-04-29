@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 // Screens
-import AllEventsScreen from './screens/AllEventsScreen';
+import AllEventsScreen from './screens/NearbyEventScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
 import PopularEventsScreen from './screens/PopularEventsScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -44,10 +44,13 @@ function HomeStack() {
       <Stack.Screen
         name="AllEvents"
         component={AllEventsScreen}
-        options={{ headerShown: true,
+        options={{
+          headerShown: true,
+          headerTitle: "Nearby Events",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
       />
       <Stack.Screen
         name="EventDetail"
@@ -60,6 +63,14 @@ function HomeStack() {
       <Stack.Screen
         name="Notification"
         component={NotificationScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="Popular Events"
+        component={PopularEventsScreen}
         options={{ headerShown: true,
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',

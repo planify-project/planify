@@ -231,7 +231,7 @@ export default function HomeScreen({ navigation }) {
       {/* Popular Events See All */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Popular Events</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Popular Events')}>
           <Text style={styles.seeAllText}>See all</Text>
         </TouchableOpacity>
       </View>

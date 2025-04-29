@@ -4,6 +4,10 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
 export default function EventDetailScreen({ route }) {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -39,7 +43,7 @@ export default function EventDetailScreen({ route }) {
           <Text style={styles.eventTitle}>{event.title}</Text>
           
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={16} color="#5D5FEE" />
+            <Ionicons name="location-outline" size={normalize(16)} color="#5D5FEE" />
             <Text style={styles.locationText}>{event.location}</Text>
           </View>
 
@@ -49,7 +53,7 @@ export default function EventDetailScreen({ route }) {
           </View>
 
           <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={normalize(16)} color="#FFD700" />
             <Text style={styles.ratingText}>{event.rating}</Text>
           </View>
         </View>
@@ -89,8 +93,7 @@ export default function EventDetailScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: "auto"
-    ,
+    paddingTop: "auto",
     flex: 1,
     backgroundColor: '#F6F7FB',
   },
@@ -98,23 +101,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: normalize(16),
+    paddingVertical: normalize(12),
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   headerBtn: {
-    padding: 8,
+    padding: normalize(8),
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: normalize(18),
     fontWeight: '600',
     color: '#222',
   },
   imageContainer: {
     width: '100%',
-    height: 250,
+    height: normalize(250),
   },
   mainImage: {
     width: '100%',
@@ -122,86 +125,86 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   infoContainer: {
-    padding: 16,
+    padding: normalize(16),
     backgroundColor: '#fff',
   },
   eventTitle: {
-    fontSize: 24,
+    fontSize: normalize(24),
     fontWeight: 'bold',
     color: '#222',
-    marginBottom: 8,
+    marginBottom: normalize(8),
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: normalize(8),
   },
   locationText: {
-    fontSize: 16,
+    fontSize: normalize(16),
     color: '#666',
-    marginLeft: 4,
+    marginLeft: normalize(4),
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 8,
+    marginBottom: normalize(8),
   },
   price: {
-    fontSize: 20,
+    fontSize: normalize(20),
     fontWeight: 'bold',
     color: '#5D5FEE',
   },
   perText: {
-    fontSize: 14,
+    fontSize: normalize(14),
     color: '#666',
-    marginLeft: 4,
+    marginLeft: normalize(4),
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   ratingText: {
-    fontSize: 16,
+    fontSize: normalize(16),
     color: '#222',
-    marginLeft: 4,
+    marginLeft: normalize(4),
   },
   descriptionContainer: {
-    padding: 16,
+    padding: normalize(16),
     backgroundColor: '#fff',
-    marginTop: 8,
+    marginTop: normalize(8),
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: normalize(18),
     fontWeight: '600',
     color: '#222',
-    marginBottom: 12,
+    marginBottom: normalize(12),
   },
   description: {
-    fontSize: 16,
+    fontSize: normalize(16),
     color: '#666',
-    lineHeight: 24,
+    lineHeight: normalize(24),
   },
   previewContainer: {
-    padding: 16,
+    padding: normalize(16),
     backgroundColor: '#fff',
-    marginTop: 8,
+    marginTop: normalize(8),
   },
   previewImage: {
-    width: 120,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 8,
+    width: normalize(120),
+    height: normalize(80),
+    borderRadius: normalize(8),
+    marginRight: normalize(8),
   },
   joinBtn: {
     backgroundColor: '#5D5FEE',
-    margin: 16,
-    borderRadius: 12,
-    paddingVertical: 16,
+    margin: normalize(16),
+    borderRadius: normalize(12),
+    paddingVertical: normalize(16),
     alignItems: 'center',
   },
   joinBtnText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: normalize(18),
     fontWeight: '600',
   },
-}); 
+});
