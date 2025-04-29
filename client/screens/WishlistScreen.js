@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const wishlistData = [
@@ -134,3 +134,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 });
+
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}

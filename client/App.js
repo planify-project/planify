@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 // Screens
-import AllEventsScreen from './screens/AllEventsScreen';
+import AllEventsScreen from './screens/NearbyEventScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
 import PopularEventsScreen from './screens/PopularEventsScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -15,6 +15,8 @@ import ScheduleScreen from './screens/ScheduleScreen';
 import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
+import NotificationScreen from './screens/NotificationScreen';
+
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -32,31 +34,101 @@ const screenHeaderOptions = {
 function HomeStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} options={screenHeaderOptions} />
-      <Stack.Screen name="AllEvents" component={AllEventsScreen} options={screenHeaderOptions} />
-      <Stack.Screen name="EventDetail" component={EventDetailScreen} options={screenHeaderOptions} />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="AllEvents"
+        component={AllEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Nearby Events",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="Notification"
+        component={NotificationScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="Popular Events"
+        component={PopularEventsScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="Auth"
+        component={AuthNavigator}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
 
-// Schedule Stack (with PopularEvents)
+// Stack Navigator for Schedule (shows PopularEvents)
 function ScheduleStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Schedule" component={ScheduleScreen} options={screenHeaderOptions} />
-      <Stack.Screen name="PopularEvents" component={PopularEventsScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Schedule"
+        component={ScheduleScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="Popular Events"
+        component={PopularEventsScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
 
-// Wishlist Stack
+// Stack Navigator for Wishlist
 function WishlistStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Wishlist" component={WishlistScreen} options={screenHeaderOptions} />
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+      }}
+    >
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
-  );
+  )
 }
+
+// Stack Navigator for Calendar
+
 
 // Settings Stack
 function SettingsStack() {

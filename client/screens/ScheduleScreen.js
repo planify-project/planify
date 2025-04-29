@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 
 const events = [
@@ -96,3 +96,8 @@ const styles = StyleSheet.create({
   eventPrice: { color: '#5D5FEE', marginTop: 2, fontWeight: 'bold' },
   arrow: { fontSize: 22, color: '#b3b3c6' },
 });
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}

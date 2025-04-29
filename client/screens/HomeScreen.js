@@ -1,5 +1,5 @@
-import {React, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import EventCard from '../components/EventCard';
@@ -51,7 +51,6 @@ export default function HomeScreen({ navigation }) {
     }
   ];
 
-  // Extracted getLocation function
   const getLocation = async () => {
     try {
       setLoading(true);
@@ -110,12 +109,6 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
-      {/* Title */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Home</Text>
-        {/* <Text style={styles.subtitle}>Find amazing events near you</Text> */}
-      </View>
-
       {/* Location and Notification */}
       <View style={styles.header}>
         <View>
@@ -132,7 +125,10 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationBtn}>
+        <TouchableOpacity
+          style={styles.notificationBtn}
+          onPress={() => navigation.navigate('Notification')}
+        >
           <Ionicons name="notifications-outline" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerRight}>
@@ -197,103 +193,80 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-{/* Near Location See All */}
-<View style={styles.sectionHeader}>
-  <Text style={styles.sectionTitle}>Near Location</Text>
-  <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
-    <Text style={styles.seeAllText}>See all</Text>
-  </TouchableOpacity>
-</View>
+      {/* Near Location See All */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Near Location</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
+          <Text style={styles.seeAllText}>See all</Text>
+        </TouchableOpacity>
+      </View>
 
-<View style={{ height: normalize(250) }}>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    <EventCard
-      image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-      title="Pool party"
-      location="Les grottes, Bizerte"
-      price="20 DT"
-      rating="5.0"
-      per="person"
-      onPress={() => navigation.navigate('EventDetail', { event: {
-        image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-        title: "Pool party",
-        location: "Les grottes, Bizerte",
-        price: "20 DT",
-        rating: "5.0",
-        per: "person"
-      }})}
-    />
-    <EventCard
-      image="https://images.unsplash.com/photo-1560185127-6ed189bf02c5"
-      title="Golden Palace"
-      location="Cite Hasan, Nabeul"
-      price="175 DT"
-      rating="4.5"
-      per="night"
-      onPress={() => navigation.navigate('EventDetail', { event: {
-        image: "https://images.unsplash.com/photo-1560185127-6ed189bf02c5",
-        title: "Golden Palace",
-        location: "Cite Hasan, Nabeul",
-        price: "175 DT",
-        rating: "4.5",
-        per: "night"
-      }})}
-    />
-  </ScrollView>
-</View>
+      <View style={{ height: normalize(250) }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <EventCard
+            image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
+            title="Pool party"
+            location="Les grottes, Bizerte"
+            price="20 DT"
+            rating="5.0"
+            per="person"
+            onPress={() => navigation.navigate('EventDetail', { event: {
+              image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+              title: "Pool party",
+              location: "Les grottes, Bizerte",
+              price: "20 DT",
+              rating: "5.0",
+              per: "person"
+            }})}
+          />
+          <EventCard
+            image="https://images.unsplash.com/photo-1560185127-6ed189bf02c5"
+            title="Golden Palace"
+            location="Cite Hasan, Nabeul"
+            price="175 DT"
+            rating="4.5"
+            per="night"
+            onPress={() => navigation.navigate('EventDetail', { event: {
+              image: "https://images.unsplash.com/photo-1560185127-6ed189bf02c5",
+              title: "Golden Palace",
+              location: "Cite Hasan, Nabeul",
+              price: "175 DT",
+              rating: "4.5",
+              per: "night"
+            }})}
+          />
+        </ScrollView>
+      </View>
 
-{/* Popular Events See All */}
-<View style={styles.sectionHeader}>
-  <Text style={styles.sectionTitle}>Popular Events</Text>
-  <TouchableOpacity onPress={() => navigation.navigate('Calendar', { screen: 'PopularEvents' })}>
-    <Text style={styles.seeAllText}>See all</Text>
-  </TouchableOpacity>
-</View>
+      {/* Popular Events See All */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Popular Events</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Popular Events')}>
+          <Text style={styles.seeAllText}>See all</Text>
+        </TouchableOpacity>
+      </View>
 
-<View style={styles.popularEvents}>
-  {popularEvents.map((event, index) => (
-    <EventCard
-      key={index}
-      image={event.image}
-      title={event.title}
-      location={event.location}
-      price={event.price}
-      rating={event.rating}
-      per={event.per}
-      onPress={() => navigation.navigate('EventDetail', { event })}
-    />
-  ))}
-</View>
-
-{/* All Events See All */}
-<View style={styles.sectionHeader}>
-  <Text style={styles.sectionTitle}>All Events</Text>
-  <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
-    <Text style={styles.seeAllText}>See all</Text>
-  </TouchableOpacity>
-</View>
-
-<View style={styles.allEvents}>
-  {allEvents.map((event, index) => (
-    <EventCard
-      key={index}
-      image={event.image}
-      title={event.title}
-      location={event.location}
-      price={event.price}
-      rating={event.rating}
-      per={event.per}
-      horizontal
-      onPress={() => navigation.navigate('EventDetail', { event })}
-    />
-  ))}
-</View>
+      <View style={styles.allEvents}>
+        {allEvents.map((event, index) => (
+          <EventCard
+            key={index}
+            image={event.image}
+            title={event.title}
+            location={event.location}
+            price={event.price}
+            rating={event.rating}
+            per={event.per}
+            horizontal
+            onPress={() => navigation.navigate('EventDetail', { event })}
+          />
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const { width } = Dimensions.get('window');
-const scale = width / 375; // 375 is a common base width (iPhone 11)
+const scale = width / 375;
 
 function normalize(size) {
   return Math.round(scale * size);
@@ -301,7 +274,10 @@ function normalize(size) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, padding: normalize(16), backgroundColor: '#f9f9f9' },
+    flex: 1,
+    padding: normalize(16),
+    backgroundColor: '#f9f9f9'
+  },
   titleContainer: {
     marginTop: normalize(16),
     marginBottom: normalize(14),
