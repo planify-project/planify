@@ -1,5 +1,4 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -17,47 +16,70 @@ import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
 
+// Navigators
+const RootStack = createNativeStackNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Stack for Home Tab
+const screenHeaderOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+};
+
+// Home Stack
 function HomeStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Screen name="AllEvents" component={AllEventsScreen} />
-      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} options={screenHeaderOptions} />
+      <Stack.Screen name="AllEvents" component={AllEventsScreen} options={screenHeaderOptions} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} options={screenHeaderOptions} />
     </Stack.Navigator>
   );
 }
 
-// Stack for Calendar Tab
-function CalendarStack() {
+// Schedule Stack (with PopularEvents)
+function ScheduleStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PopularEvents" component={PopularEventsScreen} />
+    <Stack.Navigator>
+      <Stack.Screen name="Schedule" component={ScheduleScreen} options={screenHeaderOptions} />
+      <Stack.Screen name="PopularEvents" component={PopularEventsScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
 
-// Bottom Tab Navigator after login
+// Wishlist Stack
+function WishlistStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Wishlist" component={WishlistScreen} options={screenHeaderOptions} />
+    </Stack.Navigator>
+  );
+}
+
+// Settings Stack
+function SettingsStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Settings" component={SettingsScreen} options={screenHeaderOptions} />
+    </Stack.Navigator>
+  );
+}
+
+// Main Bottom Tabs
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let iconName;
-
-          if (route.name === 'Home') {
-            iconName = 'home-outline';
-          } else if (route.name === 'Schedulex') {
-            iconName = 'calendar-outline';
-          } else if (route.name === 'Wishlist') {
-            iconName = 'heart-outline';
-          } else if (route.name === 'Profile') {
-            iconName = 'person-outline';
+          switch (route.name) {
+            case 'Home': iconName = 'home-outline'; break;
+            case 'Schedule': iconName = 'calendar-outline'; break;
+            case 'Wishlist': iconName = 'heart-outline'; break;
+            case 'Settings': iconName = 'person-outline'; break;
           }
-
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarShowLabel: false,
@@ -67,35 +89,21 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Schedule" component={ScheduleScreen} />
-      <Tab.Screen name="Wishlist" component={WishlistScreen} />
-      <Tab.Screen name="Profile" component={SettingsScreen} />
+      <Tab.Screen name="Schedule" component={ScheduleStack} />
+      <Tab.Screen name="Wishlist" component={WishlistStack} />
+      <Tab.Screen name="Settings" component={SettingsStack} />
     </Tab.Navigator>
   );
 }
 
-// Main App Component
+// App Component
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const auth = getAuth();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
-    });
-
-    return unsubscribe;
-  }, []);
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : (
-          <Stack.Screen name="MainTabs" component={MainTabs} />
-        )}
-      </Stack.Navigator>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Screen name="Auth" component={AuthNavigator} />
+        <RootStack.Screen name="MainTabs" component={MainTabs} />
+      </RootStack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
   );

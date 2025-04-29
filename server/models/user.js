@@ -8,6 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     contact_details: DataTypes.JSON
   }, {
     underscored: true,
-    timestamps: true
+    timestamps: false ,
   });
 };

@@ -178,6 +178,8 @@ import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import { initializeApp } from 'firebase/app';
 
 const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPassword, error, setError, switchToLogin }) => {
   const navigation = useNavigation();
@@ -196,6 +198,11 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
       }
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('User registered successfully');
+      await axios.post('http://192.168.43.149:3000/api/users/add', {
+        name:username,
+        email,
+        password,
+      });
       switchToLogin();
     } catch (err) {
       console.error(err.message);
