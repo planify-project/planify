@@ -16,17 +16,19 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       console.log('User logged in successfully');
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'MainTabs' }],
       });
     } catch (err) {
       console.error(err.message);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('Invalid email or password');
-        setPassword(''); // Clear the password field
+        setPassword('');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many failed attempts. Please try again later');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
       } else {
         setError('Login failed: ' + err.message);
       }

@@ -2,6 +2,8 @@ import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import { initializeApp } from 'firebase/app';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -26,6 +28,11 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
       }
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('User registered successfully');
+      await axios.post('http://192.168.43.149:3000/api/users/add', {
+        name:username,
+        email,
+        password,
+      });
       switchToLogin();
     } catch (err) {
       console.error(err.message);
@@ -90,7 +97,10 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
         <TouchableOpacity style={styles.signInButton} onPress={handleSignUp}>
           <Text style={styles.signInButtonText}>Sign up</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.createAccountButton} onPress={switchToLogin}>
+        <TouchableOpacity style={styles.createAccountButton}
+        //  onPress={switchToLogin}
+        onPress={() => navigation.navigate('Login')} 
+         >
           <Text style={styles.createAccountText}>Already have an account? Log in</Text>
         </TouchableOpacity>
       </View>

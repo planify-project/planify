@@ -1,5 +1,5 @@
+import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
-import AuthNavigator from './navigation/AuthNavigator';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,14 +11,23 @@ import HomeScreen from './screens/HomeScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
 import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
 
 
-// Stack and Tab Navigators
+// Navigators
+const RootStack = createNativeStackNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Stack Navigator for Home
+const screenHeaderOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+};
+
+// Home Stack
 function HomeStack() {
   return (
     <Stack.Navigator>
@@ -104,60 +113,56 @@ function WishlistStack() {
   )
 }
 
-// Stack Navigator for Settings
+// Stack Navigator for Calendar
+
+
+// Settings Stack
 function SettingsStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
-      }}
-    >
-      <Stack.Screen name="Settings" component={SettingsScreen}
-        options={{
-          headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }} />
+    <Stack.Navigator>
+      <Stack.Screen name="Settings" component={SettingsScreen} options={screenHeaderOptions} />
     </Stack.Navigator>
-  )
+  );
 }
 
-// Main App
-export default function App() {
-  console.log('App.js rendered - navigation stack loaded');
+// Main Bottom Tabs
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          switch (route.name) {
+            case 'Home': iconName = 'home-outline'; break;
+            case 'Schedule': iconName = 'calendar-outline'; break;
+            case 'Wishlist': iconName = 'heart-outline'; break;
+            case 'Settings': iconName = 'person-outline'; break;
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: '#000',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="Schedule" component={ScheduleStack} />
+      <Tab.Screen name="Wishlist" component={WishlistStack} />
+      <Tab.Screen name="Settings" component={SettingsStack} />
+    </Tab.Navigator>
+  );
+}
 
+// App Component
+export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
-            let iconName;
-            if (route.name === 'Home') {
-              iconName = 'home-outline';
-            } else if (route.name === 'Schedule') {
-              iconName = 'calendar-outline';
-            } else if (route.name === 'Wishlist') {
-              iconName = 'heart-outline';
-            } else if (route.name === 'Settings') {
-              iconName = 'person-outline';
-            }
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarShowLabel: false,
-          tabBarActiveTintColor: '#000',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeStack} />
-        <Tab.Screen name="Schedule" component={ScheduleStack} />
-        <Tab.Screen name="Wishlist" component={WishlistStack} />
-        <Tab.Screen name="Settings" component={SettingsStack} />
-      </Tab.Navigator>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Screen name="Auth" component={AuthNavigator} />
+        <RootStack.Screen name="MainTabs" component={MainTabs} />
+      </RootStack.Navigator>
+      <StatusBar style="auto" />
     </NavigationContainer>
   );
 }

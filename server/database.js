@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize('planify', 'root', 'Sgdkkt123', {
+const sequelize = new Sequelize('planify', 'root', 'root', {
     host: 'localhost',
     dialect: 'mysql'
 });
@@ -102,9 +102,13 @@ Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
 // ... existing code ...
 
-// sequelize.sync({ force: true });
-// console.log('All models were synchronized successfully.');
-
+// sequelize.sync({ alter: true })
+//   .then(() => {
+//     console.log('All models were synchronized successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error synchronizing models:', error);
+//   });
 // Export all models and sequelize instance
 module.exports = {
     sequelize,
