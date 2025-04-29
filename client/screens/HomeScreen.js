@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import EventCard from '../components/EventCard';
+import { Modal, Pressable } from 'react-native';
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -132,7 +134,15 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.notificationBtn}
-            onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+            onPress={() => {
+              const auth = getAuth();
+              signOut(auth).then(() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Auth' }],
+                });
+              });
+            }}
           >
             <Ionicons name="person-outline" size={24} color="#000" />
           </TouchableOpacity>
