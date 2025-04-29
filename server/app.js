@@ -5,6 +5,7 @@ require('./database')
 const db = require('./database');
 const { Event } = db;
 const eventsRouter = require('./routes/events');
+const agentRoutes = require('./routes/agentRoutes');
 
 
 const app = express();
@@ -22,6 +23,9 @@ app.get('/', (req, res) => {
 // Paginated events endpoint
 app.use('/api/events', eventsRouter);
 
+// Routes
+app.use('/api/agents', agentRoutes);
+
 // Database connection and server start
 
   try { 
@@ -33,5 +37,7 @@ app.use('/api/events', eventsRouter);
     console.error('Unable to start the server:', error);
     process.exit(1);
   }
+
+module.exports = app;
 
 

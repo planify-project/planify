@@ -14,10 +14,6 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       }
       await signInWithEmailAndPassword(auth, email, password);
       console.log('User logged in successfully');
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
     } catch (err) {
       console.error(err.message);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -73,7 +69,7 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.createAccountButton}
-          onPress={() => navigation.navigate('SignUp')} // Navigate to SignUp screen
+          onPress={() => navigation.navigate('SignUp')}
         >
           <Text style={styles.createAccountText}>Create new account</Text>
         </TouchableOpacity>

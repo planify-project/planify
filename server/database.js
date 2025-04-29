@@ -34,6 +34,7 @@ const Notification = require('./models/notification')(sequelize, DataTypes);
 const MonthlyReport = require('./models/monthlyReport')(sequelize, DataTypes);
 const AuditLog = require('./models/auditLog')(sequelize, DataTypes);
 const Admin = require('./models/admin')(sequelize, DataTypes);
+const Agent = require('./models/Agent')(sequelize, DataTypes);
 
 // Associations
 
@@ -129,5 +130,6 @@ module.exports = {
     Notification,
     MonthlyReport,
     AuditLog,
-    Admin
+    Admin,
+    Agent
 };
