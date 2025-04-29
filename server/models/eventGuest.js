@@ -1,45 +1,11 @@
-const { DataTypes } = require('sequelize');
-
-const EventGuest = (sequelize, DataTypes) => {
-  const EventGuest = sequelize.define('EventGuest', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    event_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: true
-      }
-    },
-    rsvp_status: {
-      type: DataTypes.ENUM('pending', 'confirmed', 'declined'),
-      allowNull: false,
-      defaultValue: 'pending'
-    }
+module.exports = (sequelize, DataTypes) => {
+  return sequelize.define('event_guest', {
+    event_id: { type: DataTypes.INTEGER, primaryKey: true },
+    user_id: DataTypes.INTEGER,
+    email: DataTypes.STRING,
+    rsvp_status: DataTypes.ENUM('invited', 'accepted', 'declined', 'maybe')
   }, {
-    tableName: 'event_guests'
+    underscored: true,
+    timestamps: true
   });
-
-  return EventGuest;
 };
-
-module.exports = EventGuest;

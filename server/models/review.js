@@ -1,43 +1,15 @@
 module.exports = (sequelize, DataTypes) => {
-  const Review = sequelize.define('Review', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    reviewer_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    service_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'services',
-        key: 'id'
-      }
-    },
-    rating: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    comment: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    }
+  return sequelize.define('review', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    reviewer_id: DataTypes.INTEGER,
+    service_id: DataTypes.INTEGER,
+    rating: DataTypes.INTEGER,
+    comment: DataTypes.TEXT,
+    created_at: DataTypes.DATE
   }, {
-    tableName: 'reviews',
-    timestamps: false
+    underscored: true,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false
   });
-
-  return Review;
 };

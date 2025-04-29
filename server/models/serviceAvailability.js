@@ -1,33 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
-  const ServiceAvailability = sequelize.define('ServiceAvailability', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    service_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'services',
-        key: 'id'
-      }
-    },
-    day_of_week: {
-      type: DataTypes.ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
-      allowNull: false
-    },
-    start_time: {
-      type: DataTypes.TIME,
-      allowNull: false
-    },
-    end_time: {
-      type: DataTypes.TIME,
-      allowNull: false
-    }
+  return sequelize.define('service_availability', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    service_id: DataTypes.INTEGER,
+    day_of_week: DataTypes.INTEGER,
+    start_time: DataTypes.TIME,
+    end_time: DataTypes.TIME
   }, {
-    tableName: 'service_availability'
+    underscored: true,
+    timestamps: true
   });
-
-  return ServiceAvailability;
 };

@@ -1,29 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
-  const EventUser = sequelize.define('EventUser', {
-    event_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
-    },
-    role: {
-      type: DataTypes.ENUM('organizer', 'co-host'),
-      allowNull: false
-    }
+  return sequelize.define('event_user', {
+    event_id: { type: DataTypes.INTEGER, primaryKey: true },
+    user_id: { type: DataTypes.INTEGER, primaryKey: true },
+    role: DataTypes.ENUM('organizer', 'co-host')
   }, {
-    tableName: 'event_users',
-    timestamps: false
+    underscored: true,
+    timestamps: true
   });
-
-  return EventUser;
 };
