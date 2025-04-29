@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker } from 'react-native-maps';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -29,6 +30,14 @@ export default function EventDetailScreen({ route }) {
     'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
     'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
   ];
+
+  // Example coordinates for demonstration (replace with real event coordinates)
+  const eventCoords = {
+    latitude: 37.2746, // Replace with actual latitude
+    longitude: 9.8642, // Replace with actual longitude
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
 
   return (
     <View style={styles.container}>
@@ -66,6 +75,17 @@ export default function EventDetailScreen({ route }) {
             This event promises to deliver an amazing experience with top-notch facilities and services.
             Don't miss out on this opportunity to create lasting memories!
           </Text>
+        </View>
+
+        {/* Map Section */}
+        <View style={styles.mapContainer}>
+          <Text style={styles.sectionTitle}>Event Location</Text>
+          <MapView
+            style={styles.map}
+            initialRegion={eventCoords}
+          >
+            <Marker coordinate={eventCoords} title={event.title} description={event.location} />
+          </MapView>
         </View>
 
         {/* Preview Images */}
@@ -206,5 +226,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: normalize(18),
     fontWeight: '600',
+  },
+  mapContainer: {
+    padding: normalize(16),
+    backgroundColor: '#fff',
+    marginTop: normalize(8),
+    borderRadius: normalize(8),
+  },
+  map: {
+    width: '100%',
+    height: normalize(200),
+    borderRadius: normalize(8),
+    marginTop: normalize(8),
   },
 });
