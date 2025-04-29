@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, navigation }) => {
@@ -163,3 +163,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}

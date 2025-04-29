@@ -28,27 +28,6 @@ export default function EventDetailScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.headerBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#222" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Event Details</Text>
-        <TouchableOpacity 
-          style={styles.headerBtn}
-          onPress={() => setIsFavorite(!isFavorite)}
-        >
-          <Ionicons 
-            name={isFavorite ? "heart" : "heart-outline"} 
-            size={24} 
-            color={isFavorite ? "#FF5A5F" : "#222"} 
-          />
-        </TouchableOpacity>
-      </View>
-
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Main Image */}
         <View style={styles.imageContainer}>
@@ -110,6 +89,8 @@ export default function EventDetailScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: "auto"
+    ,
     flex: 1,
     backgroundColor: '#F6F7FB',
   },

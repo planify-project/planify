@@ -1,6 +1,12 @@
 // screens/PopularEventsScreen.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
 export default function PopularEventsScreen() {
   return (

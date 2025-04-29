@@ -50,22 +50,10 @@ export default function AllEventsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.headerBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#222" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Events</Text>
-        <View style={styles.headerBtn} />
-      </View>
-
+   
       {/* Title Section */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Explore Events</Text>
-        <Text style={styles.subtitle}>Find your next adventure</Text>
       </View>
 
       {/* Events List */}
