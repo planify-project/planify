@@ -5,14 +5,17 @@ require('./database')
 const db = require('./database');
 const { Event } = db;
 const eventsRouter = require('./routes/events');
-
+const userRouter = require('./routes/user.route');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 
+// process.env.PORT || 
+3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/api/users', userRouter);
 
 // Test endpoint
 app.get('/', (req, res) => {
