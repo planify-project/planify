@@ -172,9 +172,9 @@ export default function HomeScreen({ navigation }) {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-          <Ionicons name="calendar-outline" size={20} color="#fff" />
-          <Text style={styles.tabTextActive}>Event</Text>
+        <TouchableOpacity style={[styles.tab]}>
+          <Ionicons name="calendar-outline" size={20} color="#000" />
+          <Text style={styles.tabText}>Event</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tab}>
           <Ionicons name="home-outline" size={20} color="#000" />
