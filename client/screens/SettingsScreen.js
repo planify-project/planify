@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext'; // <-- import
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -9,10 +10,10 @@ function normalize(size) {
 }
 
 export default function SettingsScreen() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, toggleTheme, theme } = useTheme(); // <-- use context
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: normalize(40) }}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={{ paddingBottom: normalize(40) }}>
       <View style={styles.profileCard}>
         <Image
           source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
@@ -46,15 +47,15 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
         <View style={styles.row}>
-          <Ionicons name="moon-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="moon-outline" size={normalize(22)} color={theme.primary} />
           <View style={styles.rowText}>
-            <Text style={styles.rowTitle}>Dark Mode</Text>
-            <Text style={styles.rowSubtitle}>Change your theme to dark mode</Text>
+            <Text style={[styles.rowTitle, { color: theme.text }]}>Dark Mode</Text>
+            <Text style={[styles.rowSubtitle, { color: isDark ? '#aaa' : '#888' }]}>Change your theme to dark mode</Text>
           </View>
           <Switch
-            value={darkMode}
-            onValueChange={setDarkMode}
-            thumbColor={darkMode ? "#5D5FEE" : "#f4f3f4"}
+            value={isDark}
+            onValueChange={toggleTheme}
+            thumbColor={isDark ? theme.primary : "#f4f3f4"}
             trackColor={{ false: "#ccc", true: "#b3b3ff" }}
           />
         </View>

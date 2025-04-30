@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { ThemeProvider } from './context/ThemeContext';
+
 
 
 // Screens
@@ -15,11 +17,9 @@ import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
-
-// import AuthNavigator from './navigation/AuthNavigator';
-// import LoginScreen from './screens/LoginScreen';
-// import SignUpScreen from './screens/SignUpScreen';
-
+import AgentChatScreen from './screens/AgentChatScreen';
+import AgentListScreen from './screens/AgentsListScreen';
+import AgentProfileScreen from './screens/AgentProfileScreen';
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -87,7 +87,35 @@ function HomeStack() {
         component={AuthNavigator}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Agent Chat"
+        component={AgentChatScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="Agent List"
+        component={AgentListScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="AgentProfile"
+        component={AgentProfileScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Agent Profile",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
     </Stack.Navigator>
+  
   );
 }
 
@@ -174,6 +202,7 @@ function MainTabs() {
 // App Component
 export default function App() {
   return (
+    <ThemeProvider>
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         <RootStack.Screen name="Auth" component={AuthNavigator} />
@@ -181,5 +210,6 @@ export default function App() {
       </RootStack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
+    </ThemeProvider>
   );
 }
