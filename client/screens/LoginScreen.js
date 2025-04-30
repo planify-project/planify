@@ -79,11 +79,8 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
         <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
           <Text style={styles.signInButtonText}>Sign in</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => navigation.navigate('SignUp')}
-        >
-          <Text style={styles.createAccountText}>Create new account</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -158,12 +155,10 @@ const styles = StyleSheet.create({
     fontSize: normalize(16),
     fontWeight: 'bold',
   },
-  createAccountButton: {
-    marginTop: normalize(15),
-  },
-  createAccountText: {
+  linkText: {
     color: '#4a90e2',
     fontSize: normalize(14),
+    marginTop: normalize(15),
   },
   errorText: {
     color: 'red',
