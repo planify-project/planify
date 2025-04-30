@@ -11,6 +11,9 @@ export default function HomeScreen({ navigation }) {
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
 
   const popularEvents = [
     {
@@ -166,11 +169,87 @@ export default function HomeScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* Create Event Button */}
-      <TouchableOpacity style={styles.createEventButton}>
+      {/* Create Event Button - Fix the structure */}
+      <TouchableOpacity 
+        style={styles.createEventButton}
+        onPress={() => setCreateEventModalVisible(true)}
+      >
         <Ionicons name="add" size={16} color="#fff" />
         <Text style={styles.createEventText}>Create Event</Text>
       </TouchableOpacity>
+
+      {/* Create Event Modal - Move outside the button */}
+      <Modal
+        visible={createEventModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCreateEventModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000099' }}>
+          <View style={{ backgroundColor: '#fff', padding: 24, borderRadius: 12, width: 300 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Select the name and date of your event:</Text>
+            
+            <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>NAME</Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: '#ddd',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16
+              }}
+              placeholder="Event name"
+              value={eventName}
+              onChangeText={setEventName}
+            />
+            
+            <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>DATE</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 14, marginRight: 8 }}>FROM:</Text>
+              <TextInput
+                style={{
+                  flex: 1,
+                  borderWidth: 1,
+                  borderColor: '#ddd',
+                  borderRadius: 8,
+                  padding: 12
+                }}
+                placeholder="DD/MM/YY"
+                value={eventDate}
+                onChangeText={setEventDate}
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#5D5FEE',
+                padding: 16,
+                borderRadius: 8,
+                alignItems: 'center',
+                marginBottom: 12
+              }}
+              onPress={() => {
+                setCreateEventModalVisible(false);
+                setEventName('');
+                setEventDate('');
+                navigation.navigate('CreateEvent');
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Create</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => {
+                setCreateEventModalVisible(false);
+                setEventName('');
+                setEventDate('');
+              }}
+            >
+              <Text style={{ color: '#666', textAlign: 'center' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -337,8 +416,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#5D5FEE',
     padding: normalize(12),
     borderRadius: normalize(12),
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   createEventText: {
     color: '#fff',
