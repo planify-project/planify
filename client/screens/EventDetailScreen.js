@@ -104,7 +104,7 @@ export default function EventDetailScreen({ route }) {
       </ScrollView>
 
       {/* Join Event Button */}
-      <TouchableOpacity style={styles.joinBtn}>
+      <TouchableOpacity style={styles.joinBtn} onPress={() => navigation.navigate('Auth')}>
         <Text style={styles.joinBtnText}>Join Event</Text>
       </TouchableOpacity>
     </View>

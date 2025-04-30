@@ -58,7 +58,8 @@ const AuthNavigator = () => {
         setError('Password should be at least 6 characters');
         return;
       }
-      await createUserWithEmailAndPassword(auth, email, password);
+      
+     createUserWithEmailAndPassword(auth, email, password);
       console.log('User registered successfully');
     } catch (error) {
       console.error(error.message);

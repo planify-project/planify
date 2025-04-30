@@ -16,6 +16,10 @@ import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
 
+// import AuthNavigator from './navigation/AuthNavigator';
+// import LoginScreen from './screens/LoginScreen';
+// import SignUpScreen from './screens/SignUpScreen';
+
 
 // Navigators
 const RootStack = createNativeStackNavigator();

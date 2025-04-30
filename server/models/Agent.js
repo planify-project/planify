@@ -1,6 +1,3 @@
-const { DataTypes } = require('sequelize');
-const bcrypt = require('bcrypt');
-
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('agent', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
