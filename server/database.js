@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize('planify', 'root', 'Sgdkkt123', {
+const sequelize = new Sequelize('planify', 'root', 'root', {
     host: 'localhost',
     dialect: 'mysql'
 });
