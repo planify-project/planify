@@ -1,5 +1,8 @@
+const { DataTypes } = require('sequelize');
+const bcrypt = require('bcrypt');
+
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('user', {
+  return sequelize.define('agent', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: DataTypes.STRING,
     email: { type: DataTypes.STRING, unique: true },
@@ -8,6 +11,6 @@ module.exports = (sequelize, DataTypes) => {
     contact_details: DataTypes.JSON
   }, {
     underscored: true,
-    timestamps: false ,
+    timestamps: true
   });
 };

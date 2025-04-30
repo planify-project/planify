@@ -1,6 +1,12 @@
 import React from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
 const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, navigation }) => {
   const auth = getAuth();
@@ -16,17 +22,19 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       console.log('User logged in successfully');
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'MainTabs' }],
       });
     } catch (err) {
       console.error(err.message);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('Invalid email or password');
-        setPassword(''); // Clear the password field
+        setPassword('');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many failed attempts. Please try again later');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
       } else {
         setError('Login failed: ' + err.message);
       }
@@ -73,7 +81,7 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.createAccountButton}
-          onPress={() => navigation.navigate('SignUp')} // Navigate to SignUp screen
+          onPress={() => navigation.navigate('SignUp')}
         >
           <Text style={styles.createAccountText}>Create new account</Text>
         </TouchableOpacity>
@@ -92,10 +100,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    marginBottom: 20,
+    marginBottom: normalize(20),
   },
   headerText: {
-    fontSize: 28,
+    fontSize: normalize(28),
     fontWeight: 'bold',
     color: '#333',
   },
@@ -104,62 +112,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   illustrationContainer: {
-    marginBottom: 20,
+    marginBottom: normalize(20),
     alignItems: 'center',
   },
   illustration: {
-    width: 180,
-    height: 180,
+    width: normalize(180),
+    height: normalize(180),
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: normalize(20),
     fontWeight: 'bold',
     color: '#000',
-    marginBottom: 20,
+    marginBottom: normalize(20),
     textAlign: 'center',
   },
   inputContainer: {
     width: '100%',
-    marginBottom: 15,
+    marginBottom: normalize(15),
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: normalize(14),
     color: '#555',
-    marginBottom: 5,
+    marginBottom: normalize(5),
   },
   input: {
     width: '100%',
-    height: 50,
+    height: normalize(50),
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    borderRadius: normalize(8),
+    paddingHorizontal: normalize(15),
     backgroundColor: '#fff',
   },
   signInButton: {
     width: '100%',
-    height: 50,
+    height: normalize(50),
     backgroundColor: '#4a90e2',
-    borderRadius: 8,
+    borderRadius: normalize(8),
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: normalize(20),
   },
   signInButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: normalize(16),
     fontWeight: 'bold',
   },
   createAccountButton: {
-    marginTop: 15,
+    marginTop: normalize(15),
   },
   createAccountText: {
     color: '#4a90e2',
-    fontSize: 14,
+    fontSize: normalize(14),
   },
   errorText: {
     color: 'red',
-    marginBottom: 10,
+    marginBottom: normalize(10),
     textAlign: 'center',
   },
 });
