@@ -15,6 +15,8 @@ import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
+import AddServiceScreen from './screens/AddServiceScreen';
+import EditServiceScreen from './screens/EditServiceScreen';
 
 
 // Navigators
@@ -134,6 +136,28 @@ function SettingsStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Settings" component={SettingsScreen} options={screenHeaderOptions} />
+      <Stack.Screen 
+        name="AddService" 
+        component={AddServiceScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Add New Service",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="EditService" 
+        component={EditServiceScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Edit Service",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
     </Stack.Navigator>
   );
 }

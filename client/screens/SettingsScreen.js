@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -8,23 +10,99 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }) {
   const [darkMode, setDarkMode] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState([]);
+  const auth = getAuth();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const response = await axios.get(`http://192.168.43.149:3000/api/users/${user.uid}`);
+          setUserProfile(response.data);
+          // Fetch user's services
+          const servicesResponse = await axios.get(`http://192.168.43.149:3000/api/services/agent/${user.uid}`);
+          setServices(servicesResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: normalize(40) }}>
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
+          source={{ uri: userProfile?.profileImage || 'https://randomuser.me/api/portraits/women/44.jpg' }}
           style={styles.avatar}
         />
         <View style={{ flex: 1 }}>
-          <Text style={styles.profileName}>Yonnefer Doe</Text>
-          <Text style={styles.profileHandle}>@yonneferdoe</Text>
+          <Text style={styles.profileName}>{userProfile?.name || 'Loading...'}</Text>
+          <Text style={styles.profileHandle}>@{userProfile?.email?.split('@')[0] || 'user'}</Text>
         </View>
         <TouchableOpacity>
           <Ionicons name="pencil" size={normalize(22)} color="#fff" />
         </TouchableOpacity>
+      </View>
+
+      {/* Services Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>My Services</Text>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => navigation.navigate('AddService')}
+          >
+            <Ionicons name="add-circle-outline" size={normalize(24)} color="#5D5FEE" />
+          </TouchableOpacity>
+        </View>
+        
+        {services.length > 0 ? (
+          services.map((service) => (
+            <TouchableOpacity 
+              key={service.id} 
+              style={styles.serviceRow}
+              onPress={() => navigation.navigate('EditService', { service })}
+            >
+              <Image
+                source={{ uri: service.imageUrl || 'https://via.placeholder.com/50' }}
+                style={styles.serviceImage}
+              />
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceTitle}>{service.title}</Text>
+                <Text style={styles.servicePrice}>{service.price} DT</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No services added yet</Text>
+            <TouchableOpacity 
+              style={styles.addFirstServiceButton}
+              onPress={() => navigation.navigate('AddService')}
+            >
+              <Text style={styles.addFirstServiceText}>Add Your First Service</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -66,7 +144,7 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.row}>
+        <TouchableOpacity style={styles.row} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Log out</Text>
@@ -151,5 +229,69 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, marginLeft: normalize(14) },
   rowTitle: { fontSize: normalize(16), fontWeight: 'bold', color: '#222' },
   rowSubtitle: { fontSize: normalize(13), color: '#888', marginTop: normalize(2) },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: normalize(18),
+    paddingVertical: normalize(12),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F4F6FC',
+  },
+  sectionTitle: {
+    fontSize: normalize(18),
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  addButton: {
+    padding: normalize(4),
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: normalize(12),
+    paddingHorizontal: normalize(18),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F4F6FC',
+  },
+  serviceImage: {
+    width: normalize(50),
+    height: normalize(50),
+    borderRadius: normalize(8),
+    marginRight: normalize(12),
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceTitle: {
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  servicePrice: {
+    fontSize: normalize(14),
+    color: '#5D5FEE',
+    marginTop: normalize(2),
+  },
+  emptyState: {
+    padding: normalize(20),
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: normalize(16),
+    color: '#888',
+    marginBottom: normalize(12),
+  },
+  addFirstServiceButton: {
+    backgroundColor: '#5D5FEE',
+    paddingHorizontal: normalize(20),
+    paddingVertical: normalize(10),
+    borderRadius: normalize(8),
+  },
+  addFirstServiceText: {
+    color: '#fff',
+    fontSize: normalize(14),
+    fontWeight: 'bold',
+  },
 });
 

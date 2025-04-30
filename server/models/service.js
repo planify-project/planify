@@ -1,11 +1,18 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('service', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    provider_id: DataTypes.INTEGER,
-    category_id: DataTypes.INTEGER,
-    type: DataTypes.STRING,
+    title: DataTypes.STRING,
     description: DataTypes.TEXT,
-    price: DataTypes.DECIMAL
+    price: DataTypes.FLOAT,
+    serviceType: DataTypes.STRING,
+    imageUrl: DataTypes.STRING,
+    agentId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'agents',
+        key: 'id'
+      }
+    }
   }, {
     underscored: true,
     timestamps: true
