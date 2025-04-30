@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize('planify', 'root', 'root', {
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.USER_NAME, process.env.DB_PASSWORD, {
     host: 'localhost',
     dialect: 'mysql'
 });
@@ -34,6 +34,7 @@ const Notification = require('./models/notification')(sequelize, DataTypes);
 const MonthlyReport = require('./models/monthlyReport')(sequelize, DataTypes);
 const AuditLog = require('./models/auditLog')(sequelize, DataTypes);
 const Admin = require('./models/admin')(sequelize, DataTypes);
+const Agent = require('./models/Agent')(sequelize, DataTypes);
 
 // Associations
 
@@ -133,5 +134,6 @@ module.exports = {
     Notification,
     MonthlyReport,
     AuditLog,
-    Admin
+    Admin,
+    Agent
 };

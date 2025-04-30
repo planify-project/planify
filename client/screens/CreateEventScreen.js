@@ -1,29 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import AgentModal from '../components/AgentModal';
 
-const venues = [
-  {
-    id: 1,
-    name: 'Grand Ballroom',
-    price: 2007,
-    status: 'Available',
-    image: 'https://i.imgur.com/8z8F1L8.jpg',
-  },
-  {
-    id: 2,
-    name: 'Garden Venue',
-    price: 1800,
-    status: 'Available',
-    image: 'https://i.imgur.com/LkY3L1x.jpg',
-  },
-];
+const mockData = {
+  spaces: [
+    {
+      id: 1,
+      name: 'Grand Ballroom',
+      price: 2007,
+      status: 'Available',
+      image: 'https://i.imgur.com/8z8F1L8.jpg',
+    },
+    {
+      id: 2,
+      name: 'Garden Venue',
+      price: 1800,
+      status: 'Available',
+      image: 'https://i.imgur.com/LkY3L1x.jpg',
+    }
+  ],
+  equipment: [
+    {
+      id: 1,
+      name: 'Sound System',
+      price: 500,
+      status: 'Available'
+    },
+    {
+      id: 2,
+      name: 'Lighting Kit',
+      price: 300,
+      status: 'Available'
+    }
+  ]
+};
 
-export default function CreateEventScreen() {
+export default function CreateEventScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('space');
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [agentModalVisible, setAgentModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'services') {
+      fetchServices();
+    }
+  }, [activeTab]);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching services...');
+      // Replace localhost with your computer's IP address
+      const response = await axios.get('http://192.168.1.211:3000/api/services');
+      console.log('Services response:', response.data);
+      setServices(response.data.data); // Note: response.data.data because of the server response structure
+    } catch (err) {
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      setError(`Failed to fetch services: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTableHeader = () => (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, { flex: 2 }]}>Name</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>Price</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>Status</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>Action</Text>
+    </View>
+  );
+
+  const renderTableRow = (item) => (
+    <View style={styles.tableRow} key={item.id}>
+      <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
+      <Text style={[styles.cell, { flex: 1 }]}>${item.price}</Text>
+      <Text style={[styles.cell, { flex: 1 }]}>{item.status}</Text>
+      <View style={[styles.cell, { flex: 1 }]}>
+        <TouchableOpacity style={styles.selectButton}>
+          <Text style={styles.selectButtonText}>Select</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
+      <AgentModal 
+        visible={agentModalVisible}
+        onClose={() => setAgentModalVisible(false)}
+        onChooseAgent={() => {
+          setAgentModalVisible(false);
+          // Add navigation to agent selection screen if needed
+          // navigation.navigate('AgentSelection');
+        }}
+      />
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -34,7 +114,10 @@ export default function CreateEventScreen() {
             <Text style={styles.date}>2 June</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity 
+          style={styles.contactButton}
+          onPress={() => setAgentModalVisible(true)}
+        >
           <Text style={styles.contactButtonText}>Contact Agent</Text>
         </TouchableOpacity>
       </View>
@@ -52,21 +135,30 @@ export default function CreateEventScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Venue Cards */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {venues.map(venue => (
-          <View key={venue.id} style={styles.card}>
-            <Image source={{ uri: venue.image }} style={styles.image} />
-            <View style={styles.cardContent}>
-              <Text style={styles.venueName}>{venue.name}</Text>
-              <Text style={styles.price}>${venue.price}</Text>
-              <Text style={styles.status}>{venue.status}</Text>
-              <TouchableOpacity style={styles.selectButton}>
-                <Text style={styles.selectButtonText}>Select</Text>
-              </TouchableOpacity>
+        {renderTableHeader()}
+        
+        {activeTab === 'space' && (
+          mockData.spaces.map(item => renderTableRow(item))
+        )}
+        
+        {activeTab === 'services' && (
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <Text>Loading services...</Text>
             </View>
-          </View>
-        ))}
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : (
+            services.map(item => renderTableRow(item))
+          )
+        )}
+
+        {activeTab === 'equipment' && (
+          mockData.equipment.map(item => renderTableRow(item))
+        )}
       </ScrollView>
 
       {/* Done Button */}
@@ -142,45 +234,49 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingBottom: 80,
   },
-  card: {
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  headerCell: {
+    fontWeight: 'bold',
+    color: '#495057',
+    fontSize: 14,
+  },
+  tableRow: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: 'center',
     shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 2,
   },
-  image: {
-    width: '100%',
-    height: 180,
-  },
-  cardContent: {
-    padding: 12,
-  },
-  venueName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  price: {
-    color: '#28a745',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginVertical: 4,
-  },
-  status: {
-    color: '#28a745',
+  cell: {
+    fontSize: 14,
+    color: '#212529',
   },
   selectButton: {
-    marginTop: 8,
     backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
   },
   selectButtonText: {
     color: '#fff',
+    fontSize: 12,
     fontWeight: 'bold',
   },
   doneButton: {
@@ -197,5 +293,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
   },
 });

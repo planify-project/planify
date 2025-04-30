@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Modal, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import EventCard from '../components/EventCard';
 import { getAuth, signOut } from 'firebase/auth';
+import { Calendar } from 'react-native-calendars';
+import api from '../configs/api';
 
 export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -13,7 +15,10 @@ export default function HomeScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
-  const [eventDate, setEventDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [services, setServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [error, setError] = useState(null);
 
   const popularEvents = [
     {
@@ -91,13 +96,49 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     getLocation();
+    fetchServices();
   }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoadingServices(true);
+      setError(null);
+      const response = await api.get('/services');
+      if (response.data.success) {
+        setServices(response.data.data);
+      } else {
+        setError('Failed to fetch services');
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      if (error.code === 'ECONNREFUSED') {
+        setError('Server is not running. Please start the server.');
+      } else if (error.code === 'ETIMEDOUT') {
+        setError('Request timed out. Please check your internet connection.');
+      } else {
+        setError('Network error. Please try again later.');
+      }
+    } finally {
+      setLoadingServices(false);
+    }
+  };
 
   const handleSelectCity = (selectedCity) => {
     setCity(selectedCity);
     setModalVisible(false);
     setLoading(false);
     setErrorMsg(null);
+  };
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date.dateString);
+    // Here you would typically save the selected date to your backend
+    // For example:
+    // axios.post('http://localhost:3000/api/schedule', {
+    //   eventName,
+    //   date: date.dateString,
+    //   userId: getAuth().currentUser.uid
+    // });
   };
 
   let locationText = 'Detecting...';
@@ -182,7 +223,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.createEventText}>Create Event</Text>
       </TouchableOpacity>
 
-      {/* Create Event Modal - Move outside the button */}
+      {/* Create Event Modal */}
       <Modal
         visible={createEventModalVisible}
         transparent
@@ -191,7 +232,7 @@ export default function HomeScreen({ navigation }) {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000099' }}>
           <View style={{ backgroundColor: '#fff', padding: 24, borderRadius: 12, width: 300 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Select the name and date of your event:</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Create New Event</Text>
             
             <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>NAME</Text>
             <TextInput
@@ -207,22 +248,22 @@ export default function HomeScreen({ navigation }) {
               onChangeText={setEventName}
             />
             
-            <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>DATE</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 14, marginRight: 8 }}>FROM:</Text>
-              <TextInput
-                style={{
-                  flex: 1,
-                  borderWidth: 1,
-                  borderColor: '#ddd',
-                  borderRadius: 8,
-                  padding: 12
-                }}
-                placeholder="DD/MM/YY"
-                value={eventDate}
-                onChangeText={setEventDate}
-              />
-            </View>
+            <Text style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>SELECT DATE</Text>
+            <Calendar
+              onDayPress={handleDateSelect}
+              markedDates={{
+                [selectedDate]: { selected: true, selectedColor: '#5D5FEE' }
+              }}
+              theme={{
+                selectedDayBackgroundColor: '#5D5FEE',
+                todayTextColor: '#5D5FEE',
+                arrowColor: '#5D5FEE',
+              }}
+              style={{
+                borderRadius: 8,
+                marginBottom: 16
+              }}
+            />
             
             <TouchableOpacity
               style={{
@@ -233,10 +274,12 @@ export default function HomeScreen({ navigation }) {
                 marginBottom: 12
               }}
               onPress={() => {
-                setCreateEventModalVisible(false);
-                setEventName('');
-                setEventDate('');
-                navigation.navigate('CreateEvent');
+                if (eventName && selectedDate) {
+                  setCreateEventModalVisible(false);
+                  setEventName('');
+                  setSelectedDate('');
+                  navigation.navigate('CreateEvent', { eventName, date: selectedDate });
+                }
               }}
             >
               <Text style={{ color: '#fff', fontWeight: 'bold' }}>Create</Text>
@@ -246,7 +289,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() => {
                 setCreateEventModalVisible(false);
                 setEventName('');
-                setEventDate('');
+                setSelectedDate('');
               }}
             >
               <Text style={{ color: '#666', textAlign: 'center' }}>Cancel</Text>
@@ -316,7 +359,7 @@ export default function HomeScreen({ navigation }) {
         </ScrollView>
       </View>
 
-      {/* Popular Events See All */}
+      {/* Services List */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Popular Events</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Popular Events')}>
@@ -324,21 +367,37 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.allEvents}>
-        {allEvents.map((event, index) => (
-          <EventCard
-            key={index}
-            image={event.image}
-            title={event.title}
-            location={event.location}
-            price={event.price}
-            rating={event.rating}
-            per={event.per}
-            horizontal
-            onPress={() => navigation.navigate('EventDetail', { event })}
-          />
-        ))}
-      </View>
+      {loadingServices ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#5D5FEE" />
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={fetchServices}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.allEvents}>
+          {services.map((service) => (
+            <EventCard
+              key={service.id}
+              image={service.image}
+              title={service.name}
+              location={service.location}
+              price={`${service.price} ${service.currency}`}
+              rating={service.rating.toString()}
+              per={service.per}
+              horizontal
+              onPress={() => navigation.navigate('EventDetail', { event: service })}
+            />
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -356,109 +415,119 @@ const styles = StyleSheet.create({
     padding: normalize(16),
     backgroundColor: '#f9f9f9'
   },
-  titleContainer: {
-    marginTop: normalize(16),
-    marginBottom: normalize(14),
-  },
-  title: {
-    fontSize: normalize(21),
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: normalize(4),
-  },
-  subtitle: {
-    fontSize: normalize(16),
-    color: '#666',
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: normalize(20)
   },
   smallText: {
     fontSize: normalize(12),
-    color: 'gray',
+    color: '#555'
   },
   locationText: {
-    fontSize: normalize(16),
+    marginLeft: 4,
+    fontSize: normalize(14),
     fontWeight: 'bold',
-    marginLeft: normalize(4),
+    color: '#000'
+  },
+  notificationBtn: {
+    padding: normalize(8),
+    backgroundColor: '#eee',
+    borderRadius: normalize(8),
+    marginLeft: normalize(10)
   },
   headerRight: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  notificationBtn: {
-    backgroundColor: '#fff',
-    padding: normalize(8),
-    borderRadius: normalize(12),
-    marginLeft: normalize(8),
+    alignItems: 'center'
   },
   createEventButton: {
-    marginTop: normalize(16),
     flexDirection: 'row',
-    backgroundColor: '#5D5FEE',
-    padding: normalize(12),
-    borderRadius: normalize(12),
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#5D5FEE',
+    paddingVertical: normalize(12),
+    paddingHorizontal: normalize(20),
+    borderRadius: normalize(8),
+    alignSelf: 'center',
+    marginBottom: normalize(20),
+    gap: 6
   },
   createEventText: {
     color: '#fff',
-    marginLeft: normalize(8),
     fontWeight: 'bold',
-    fontSize: normalize(16),
+    fontSize: normalize(14)
   },
   tabs: {
     flexDirection: 'row',
-    marginTop: normalize(20),
-    marginBottom: normalize(10),
+    justifyContent: 'space-around',
+    marginBottom: normalize(20)
   },
   tab: {
-    flex: 1,
-    paddingVertical: normalize(12),
+    paddingVertical: normalize(10),
+    paddingHorizontal: normalize(16),
+    borderRadius: normalize(20),
     backgroundColor: '#eee',
-    marginHorizontal: normalize(5),
-    borderRadius: normalize(10),
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6
   },
   activeTab: {
     backgroundColor: '#5D5FEE',
   },
   tabText: {
-    marginTop: normalize(4),
-    color: '#000',
     fontSize: normalize(14),
+    color: '#000'
   },
   tabTextActive: {
-    marginTop: normalize(4),
-    color: '#fff',
-    fontWeight: 'bold',
     fontSize: normalize(14),
+    color: '#fff'
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: normalize(20),
-    marginBottom: normalize(10),
+    marginTop: normalize(16),
+    marginBottom: normalize(8)
   },
   sectionTitle: {
-    fontSize: normalize(18),
+    fontSize: normalize(16),
     fontWeight: 'bold',
+    color: '#000'
   },
   seeAllText: {
-    color: '#5D5FEE',
     fontSize: normalize(14),
-  },
-  popularEvents: {
-    flexDirection: 'row',
-    marginTop: normalize(10),
-    marginBottom: normalize(10),
+    color: '#5D5FEE'
   },
   allEvents: {
-    flexDirection: 'row',
     marginTop: normalize(10),
-    marginBottom: normalize(10),
+    gap: normalize(10)
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: normalize(14),
+    textAlign: 'center',
+    marginBottom: 10
+  },
+  retryButton: {
+    backgroundColor: '#5D5FEE',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold'
+  }
 });
