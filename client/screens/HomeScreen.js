@@ -134,13 +134,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity 
             style={styles.notificationBtn}
             onPress={() => {
-              const auth = getAuth();
-              signOut(auth).then(() => {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Auth' }],
-                });
-              });
+              navigation.navigate('Agent List')
             }}
           >
             <Ionicons name="person-outline" size={24} color="#000" />
