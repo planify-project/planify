@@ -8,8 +8,6 @@ import { ThemeProvider } from './context/ThemeContext';
 
 
 // Screens
-import AllEventsScreen from './screens/NearbyEventScreen';
-import EventDetailScreen from './screens/EventDetailScreen';
 import PopularEventsScreen from './screens/PopularEventsScreen';
 import HomeScreen from './screens/HomeScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
@@ -17,6 +15,9 @@ import WishlistScreen from './screens/WishlistScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
+import EventDetailScreen from './screens/EventDetailScreen';
+import CreateEventScreen from './screens/CreateEventScreen';
+import JoinEventScreen from './screens/JoinEventScreen';
 import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
@@ -38,7 +39,7 @@ function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Home"
+        name="HomeMain"
         component={HomeScreen}
         options={{
           headerShown: true,
@@ -47,17 +48,18 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
+      
       <Stack.Screen
-        name="AllEvents"
-        component={AllEventsScreen}
+        name="CreateEvent"
+        component={CreateEventScreen}
         options={{
           headerShown: true,
-          headerTitle: "Nearby Events",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
+
       <Stack.Screen
         name="EventDetail"
         component={EventDetailScreen}
@@ -83,9 +85,20 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
       />
       <Stack.Screen
+        name="JoinEvent"
+        component={JoinEventScreen}
+        options={{
+          title: 'Join Event',
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
         name="Auth"
         component={AuthNavigator}
         options={{ headerShown: false }}
+     
       />
       <Stack.Screen
         name="Agent Chat"
@@ -124,7 +137,7 @@ function ScheduleStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Schedule"
+        name="ScheduleMain"
         component={ScheduleScreen}
         options={{
           headerShown: true,
@@ -153,19 +166,16 @@ function WishlistStack() {
         headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
       }}
     >
-      <Stack.Screen name="Wishlist" component={WishlistScreen} />
+      <Stack.Screen name="WishlistMain" component={WishlistScreen} />
     </Stack.Navigator>
   )
 }
-
-// Stack Navigator for Calendar
-
 
 // Settings Stack
 function SettingsStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Settings" component={SettingsScreen} options={screenHeaderOptions} />
+      <Stack.Screen name="SettingsMain" component={SettingsScreen} options={screenHeaderOptions} />
     </Stack.Navigator>
   );
 }
@@ -201,7 +211,7 @@ function MainTabs() {
 
 // App Component
 export default function App() {
-  return (
+  return (   
     <ThemeProvider>
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>

@@ -6,6 +6,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
 import app from "../configs/config.js";
+import AppNavigator from './AppNavigator';
 
 const Stack = createNativeStackNavigator();
 const auth = getAuth(app);
@@ -97,7 +98,16 @@ const AuthNavigator = () => {
     );
   }
 
-  return (
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+
+  return user ? <AppNavigator /> :(
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
   <Stack.Screen name="Login">
     {(props) => (

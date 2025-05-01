@@ -2,8 +2,6 @@
 
 # dependencies
 node_modules/
-
-#lock file
 package-lock.json
 
 # Expo
@@ -38,3 +36,5 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+app-example
