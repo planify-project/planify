@@ -1,73 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AgentModal from '../components/AgentModal';
 
-const mockData = {
-  spaces: [
-    {
-      id: 1,
-      name: 'Grand Ballroom',
-      price: 2007,
-      status: 'Available',
-      image: 'https://i.imgur.com/8z8F1L8.jpg',
-    },
-    {
-      id: 2,
-      name: 'Garden Venue',
-      price: 1800,
-      status: 'Available',
-      image: 'https://i.imgur.com/LkY3L1x.jpg',
-    }
-  ],
-  equipment: [
-    {
-      id: 1,
-      name: 'Sound System',
-      price: 500,
-      status: 'Available'
-    },
-    {
-      id: 2,
-      name: 'Lighting Kit',
-      price: 300,
-      status: 'Available'
-    }
-  ]
-};
+// Add axios configuration at the top of the file
+const api = axios.create({
+  baseURL: 'http://172.20.10.3:3000/api',
+  timeout: 10000, // Increase timeout to 10 seconds
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
-export default function CreateEventScreen({ navigation }) {
+export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
+  const [venues, setVenues] = useState([]);
   const [services, setServices] = useState([]);
+  const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [agentModalVisible, setAgentModalVisible] = useState(false);
+  // Add selected items state
+  const [selectedItems, setSelectedItems] = useState({
+    venue: null,
+    services: [],
+    equipment: []
+  });
 
-  useEffect(() => {
-    if (activeTab === 'services') {
-      fetchServices();
-    }
-  }, [activeTab]);
-
-  const fetchServices = async () => {
+  const fetchData = async (type) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching services...');
-      // Replace localhost with your computer's IP address
-      const response = await axios.get('http://192.168.1.211:3000/api/services');
-      console.log('Services response:', response.data);
-      setServices(response.data.data); // Note: response.data.data because of the server response structure
+      
+      console.log(`Fetching ${type}...`);
+      const response = await api.get(`/services?type=${type}`);
+      
+      if (response.data.success) {
+        switch(type) {
+          case 'venue':
+            setVenues(response.data.data || []);
+            break;
+          case 'service':
+            setServices(response.data.data || []);
+            break;
+          case 'equipment':
+            setEquipment(response.data.data || []);
+            break;
+        }
+      } else {
+        setError(`Failed to fetch ${type} data`);
+      }
     } catch (err) {
-      console.error('Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
-      setError(`Failed to fetch services: ${err.message}`);
+      console.error(`Error fetching ${type}:`, err);
+      let errorMessage = 'Network error occurred';
+      
+      if (err.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please check your connection and try again.';
+      } else if (err.response) {
+        errorMessage = err.response.data?.message || `Error: ${err.response.status}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add retry functionality with delay
+  const retryWithDelay = async (type) => {
+    setError(null);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+    fetchData(type);
+  };
+
+  useEffect(() => {
+    let type;
+    switch(activeTab) {
+      case 'space':
+        type = 'venue';
+        break;
+      case 'services':
+        type = 'service';
+        break;
+      case 'equipment':
+        type = 'equipment';
+        break;
+    }
+    fetchData(type);
+  }, [activeTab]);
+
+  const getCurrentData = () => {
+    switch(activeTab) {
+      case 'space':
+        return venues;
+      case 'services':
+        return services;
+      case 'equipment':
+        return equipment;
+      default:
+        return [];
     }
   };
 
@@ -80,18 +112,141 @@ export default function CreateEventScreen({ navigation }) {
     </View>
   );
 
-  const renderTableRow = (item) => (
-    <View style={styles.tableRow} key={item.id}>
-      <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
-      <Text style={[styles.cell, { flex: 1 }]}>${item.price}</Text>
-      <Text style={[styles.cell, { flex: 1 }]}>{item.status}</Text>
-      <View style={[styles.cell, { flex: 1 }]}>
-        <TouchableOpacity style={styles.selectButton}>
-          <Text style={styles.selectButtonText}>Select</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderTableRow = (item) => {
+    const isSelected = isItemSelected(item);
+    
+    return (
+      <TouchableOpacity 
+        style={[styles.tableRow, isSelected && styles.selectedRow]} 
+        onPress={() => handleSelectItem(item)}
+      >
+        <View style={[styles.cell, { flex: 2 }]}>
+          <Text style={styles.cellText}>{item.description}</Text>
+        </View>
+        <View style={[styles.cell, { flex: 1 }]}>
+          <Text style={styles.cellText}>${item.price}</Text>
+        </View>
+        <View style={[styles.cell, { flex: 1 }]}>
+          <View style={[styles.selectButton, isSelected && styles.selectedButton]}>
+            <Text style={[styles.selectButtonText, isSelected && styles.selectedButtonText]}>
+              {isSelected ? 'Selected' : 'Select'}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const isItemSelected = (item) => {
+    switch(activeTab) {
+      case 'space':
+        return selectedItems.venue?.id === item.id;
+      case 'services':
+        return selectedItems.services.some(s => s.id === item.id);
+      case 'equipment':
+        return selectedItems.equipment.some(e => e.id === item.id);
+      default:
+        return false;
+    }
+  };
+
+  const handleSelectItem = (item) => {
+    setSelectedItems(prev => {
+      switch(activeTab) {
+        case 'space':
+          return { ...prev, venue: prev.venue?.id === item.id ? null : item };
+        case 'services':
+          return {
+            ...prev,
+            services: prev.services.some(s => s.id === item.id)
+              ? prev.services.filter(s => s.id !== item.id)
+              : [...prev.services, item]
+          };
+        case 'equipment':
+          return {
+            ...prev,
+            equipment: prev.equipment.some(e => e.id === item.id)
+              ? prev.equipment.filter(e => e.id !== item.id)
+              : [...prev.equipment, item]
+          };
+        default:
+          return prev;
+      }
+    });
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007bff" />
+          <Text style={styles.loadingText}>Loading {activeTab}...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => retryWithDelay(activeTab === 'space' ? 'venue' : activeTab === 'services' ? 'service' : 'equipment')}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const data = getCurrentData();
+    return data.length > 0 ? (
+      data.map((item) => renderTableRow(item))
+    ) : (
+      <Text style={styles.noDataText}>No {activeTab} available</Text>
+    );
+  };
+
+  const handleDone = async () => {
+    if (!selectedItems.venue) {
+      setError('Please select a venue first');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const eventData = {
+        title: route.params?.eventName || 'New Event',
+        type: route.params?.eventType || 'social',
+        date: route.params?.eventDate || new Date().toISOString(),
+        venue: selectedItems.venue,
+        budget: parseFloat(selectedItems.venue.price || 0)
+      };
+
+      console.log('Creating event with data:', eventData);
+
+      // Update the endpoint to match your server route
+      const response = await api.post('/events', eventData);
+
+      if (response.data.success) {
+        Alert.alert(
+          'Success',
+          'Event created successfully!',
+          [{ 
+            text: 'OK', 
+            onPress: () => navigation.navigate('HomeMain') 
+          }]
+        );
+      }
+    } catch (err) {
+      console.error('Error creating event:', err.response?.data || err);
+      setError('Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -100,8 +255,6 @@ export default function CreateEventScreen({ navigation }) {
         onClose={() => setAgentModalVisible(false)}
         onChooseAgent={() => {
           setAgentModalVisible(false);
-          // Add navigation to agent selection screen if needed
-          // navigation.navigate('AgentSelection');
         }}
       />
       {/* Header */}
@@ -137,32 +290,18 @@ export default function CreateEventScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {renderTableHeader()}
-        
-        {activeTab === 'space' && (
-          mockData.spaces.map(item => renderTableRow(item))
-        )}
-        
-        {activeTab === 'services' && (
-          loading ? (
-            <View style={styles.loadingContainer}>
-              <Text>Loading services...</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : (
-            services.map(item => renderTableRow(item))
-          )
-        )}
-
-        {activeTab === 'equipment' && (
-          mockData.equipment.map(item => renderTableRow(item))
-        )}
+        {renderContent()}
       </ScrollView>
 
       {/* Done Button */}
-      <TouchableOpacity style={styles.doneButton}>
+      <TouchableOpacity 
+        style={[
+          styles.doneButton,
+          (!selectedItems.venue && activeTab === 'space') && styles.disabledButton
+        ]}
+        onPress={handleDone}
+        disabled={!selectedItems.venue && activeTab === 'space'}
+      >
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
     </View>
@@ -249,35 +388,40 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
+    padding: 12,
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    alignItems: 'center'
+  },
+  selectedRow: {
+    backgroundColor: '#f0f9ff'
   },
   cell: {
+    padding: 8,
+    justifyContent: 'center'
+  },
+  cellText: {
     fontSize: 14,
-    color: '#212529',
+    color: '#333'
   },
   selectButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#e0e0e0',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 4,
+    alignItems: 'center'
+  },
+  selectedButton: {
+    backgroundColor: '#4CAF50'
   },
   selectButtonText: {
-    color: '#fff',
+    color: '#666',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600'
+  },
+  selectedButtonText: {
+    color: '#fff'
   },
   doneButton: {
     position: 'absolute',
@@ -301,13 +445,36 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
+    alignItems: 'center',
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
   },
+  retryButton: {
+    marginTop: 10,
+    backgroundColor: '#007bff',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 14
+  },
+  noDataText: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 20,
+    fontSize: 16
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+  }
 });
