@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import api from '../configs/api';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -8,33 +9,66 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-const events = [
-  {
-    id: '1',
-    title: 'Pool party',
-    date: '2025-07-19',
-    price: '$260.7/night',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-  },
-  {
-    id: '2',
-    title: 'Golden Palace Hotel',
-    date: '2025-03-29',
-    price: '$135.9/night',
-    image: 'https://via.placeholder.com/100x80.png?text=Hotel',
-  },
-];
-
-export default function ScheduleScreen() {
+export default function ScheduleScreen({ navigation, route }) {
+  const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching events...');
+      const response = await api.get('/events');
+      console.log('Events response:', response.data);
+      
+      // The API returns data in { events: [...] } format
+      if (response.data && Array.isArray(response.data.events)) {
+        setEvents(response.data.events);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      console.error('Error fetching events:', {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      setError('Failed to load events. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // Listen for new events from CreateEventScreen
+  useEffect(() => {
+    if (route.params?.newEvent) {
+      setEvents(prevEvents => [route.params.newEvent, ...prevEvents]);
+    }
+    if (route.params?.refresh) {
+      fetchEvents();
+    }
+  }, [route.params]);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.eventItem}>
-      <Image source={{ uri: item.image }} style={styles.eventImage} />
+    <TouchableOpacity 
+      style={styles.eventItem}
+      onPress={() => navigation.navigate('EventDetails', { event: item })}
+    >
       <View style={styles.eventInfo}>
-        <Text style={styles.eventTitle}>{item.title}</Text>
-        <Text style={styles.eventDate}>{item.date}</Text>
-        <Text style={styles.eventPrice}>{item.price}</Text>
+        <Text style={styles.eventTitle}>{item.name || 'Untitled Event'}</Text>
+        <Text style={styles.eventDate}>
+          {new Date(item.date || item.created_at).toLocaleDateString()}
+        </Text>
+        <Text style={styles.eventStatus}>{item.status}</Text>
+        <Text style={styles.eventPrice}>${parseFloat(item.budget || 0).toFixed(2)}</Text>
       </View>
       <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>
@@ -54,18 +88,29 @@ export default function ScheduleScreen() {
           arrowColor: '#5D5FEE',
         }}
       />
+
       <View style={styles.eventsHeader}>
         <Text style={styles.myEventsText}>My Events</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See all</Text>
+        <TouchableOpacity onPress={fetchEvents}>
+          <Text style={styles.seeAllText}>Refresh</Text>
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={events}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: normalize(20) }}
-      />
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#5D5FEE" style={styles.loader} />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <FlatList
+          data={events}
+          keyExtractor={item => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: normalize(20) }}
+          ListEmptyComponent={
+            <Text style={styles.noEventsText}>No events scheduled</Text>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -141,4 +186,22 @@ const styles = StyleSheet.create({
     fontSize: normalize(22),
     color: '#b3b3c6',
   },
+  loader: {
+    marginTop: normalize(20)
+  },
+  errorText: {
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginTop: normalize(20)
+  },
+  noEventsText: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: normalize(20)
+  },
+  eventStatus: {
+    fontSize: normalize(12),
+    color: '#5D5FEE',
+    marginTop: normalize(2)
+  }
 });

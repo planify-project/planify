@@ -17,5 +17,6 @@ const validateServiceId = (req, res, next) => {
 // Routes
 router.get('/', ServicesController.getAllServices);
 router.get('/:id', validateServiceId, ServicesController.getServiceById);
+router.post('/', ServicesController.createService); // Add this line
 
-module.exports = router; 
+module.exports = router;

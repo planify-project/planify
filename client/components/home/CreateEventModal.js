@@ -58,8 +58,10 @@ const CreateEventModal = ({
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
+          
         </View>
       </View>
+      
     </Modal>
   );
 };
