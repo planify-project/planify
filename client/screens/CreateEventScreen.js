@@ -4,14 +4,28 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AgentModal from '../components/AgentModal';
 
-// Add axios configuration at the top of the file
+// Update the axios configuration
 const api = axios.create({
-  baseURL: 'http://172.20.10.3:3000/api',
-  timeout: 10000, // Increase timeout to 10 seconds
+  baseURL: 'http://192.168.1.60:3000/api',
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Add error handling interceptor with better logging
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      message: error.message,
+      code: error.code,
+      url: error.config?.url
+    });
+    return Promise.reject(error);
+  }
+);
 
 export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
@@ -33,35 +47,25 @@ export default function CreateEventScreen({ navigation, route }) {
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching ${type}...`);
+      console.log(`Fetching ${type} data from: ${api.defaults.baseURL}/services?type=${type}`);
       const response = await api.get(`/services?type=${type}`);
       
       if (response.data.success) {
         switch(type) {
           case 'venue':
-            setVenues(response.data.data || []);
+            setVenues(response.data.data);
             break;
           case 'service':
-            setServices(response.data.data || []);
+            setServices(response.data.data);
             break;
           case 'equipment':
-            setEquipment(response.data.data || []);
+            setEquipment(response.data.data);
             break;
         }
-      } else {
-        setError(`Failed to fetch ${type} data`);
       }
     } catch (err) {
       console.error(`Error fetching ${type}:`, err);
-      let errorMessage = 'Network error occurred';
-      
-      if (err.code === 'ECONNABORTED') {
-        errorMessage = 'Request timed out. Please check your connection and try again.';
-      } else if (err.response) {
-        errorMessage = err.response.data?.message || `Error: ${err.response.status}`;
-      }
-      
-      setError(errorMessage);
+      setError(`Failed to fetch ${type}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -215,33 +219,36 @@ export default function CreateEventScreen({ navigation, route }) {
 
     try {
       setLoading(true);
-      setError(null);
-
       const eventData = {
-        title: route.params?.eventName || 'New Event',
+        name: route.params?.eventName || 'New Event',
         type: route.params?.eventType || 'social',
         date: route.params?.eventDate || new Date().toISOString(),
-        venue: selectedItems.venue,
-        budget: parseFloat(selectedItems.venue.price || 0)
+        location: selectedItems.venue?.description,
+        budget: parseFloat(selectedItems.venue?.price || 0),
+        status: 'pending',
+        is_self_planned: true,
+        visibility: 'public'
       };
 
-      console.log('Creating event with data:', eventData);
-
-      // Update the endpoint to match your server route
       const response = await api.post('/events', eventData);
 
       if (response.data.success) {
         Alert.alert(
           'Success',
           'Event created successfully!',
-          [{ 
-            text: 'OK', 
-            onPress: () => navigation.navigate('HomeMain') 
-          }]
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('Schedule', { // Changed from 'ScheduleMain' to 'Schedule'
+                newEvent: response.data.data,
+                refresh: true
+              })
+            }
+          ]
         );
       }
     } catch (err) {
-      console.error('Error creating event:', err.response?.data || err);
+      console.error('Error creating event:', err);
       setError('Failed to create event. Please try again.');
     } finally {
       setLoading(false);
@@ -311,170 +318,185 @@ export default function CreateEventScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8ff',
-    padding: 16,
+    backgroundColor: '#F3F4F8'
   },
   header: {
+    height: 60,
+    backgroundColor: '#5D5FEE',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingTop: 10
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFFFFF'
   },
   subHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
+    alignItems: 'center'
   },
   eventType: {
     fontSize: 14,
-    color: '#333',
+    color: '#FFFFFF'
   },
   date: {
     fontSize: 14,
-    color: '#333',
+    color: '#FFFFFF'
   },
   contactButton: {
-    backgroundColor: '#e6ecff',
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 15,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 8
   },
   contactButtonText: {
-    color: '#007bff',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '600'
   },
   tabs: {
     flexDirection: 'row',
-    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 8,
-    backgroundColor: '#dee3f0',
+    paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 8,
-    marginHorizontal: 4,
+    marginHorizontal: 5,
+    borderRadius: 8
   },
   activeTab: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#5D5FEE'
   },
   tabText: {
-    color: '#333',
+    color: '#7C7C7C',
+    fontSize: 15,
+    fontWeight: '500'
   },
   activeTabText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '600'
   },
   scrollContainer: {
-    paddingBottom: 80,
+    padding: 15
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3
   },
   headerCell: {
-    fontWeight: 'bold',
-    color: '#495057',
-    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E1E1E',
+    fontSize: 15
   },
   tableRow: {
     flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    alignItems: 'center'
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3
   },
   selectedRow: {
-    backgroundColor: '#f0f9ff'
+    backgroundColor: '#F0F8FF'
   },
   cell: {
-    padding: 8,
+    padding: 5,
     justifyContent: 'center'
   },
   cellText: {
-    fontSize: 14,
-    color: '#333'
+    fontSize: 15,
+    color: '#1E1E1E'
   },
   selectButton: {
-    backgroundColor: '#e0e0e0',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
+    backgroundColor: '#5D5FEE',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    minWidth: 80,
     alignItems: 'center'
   },
   selectedButton: {
     backgroundColor: '#4CAF50'
   },
   selectButtonText: {
-    color: '#666',
-    fontSize: 12,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600'
-  },
-  selectedButtonText: {
-    color: '#fff'
   },
   doneButton: {
     position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: '#007bff',
-    padding: 16,
-    borderRadius: 12,
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#5D5FEE',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4
+  },
+  disabledButton: {
+    backgroundColor: '#B8B8B8'
   },
   doneButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600'
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 20
   },
   errorContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   errorText: {
-    color: 'red',
+    color: '#FF3B30',
     textAlign: 'center',
+    marginBottom: 10
   },
   retryButton: {
-    marginTop: 10,
-    backgroundColor: '#007bff',
+    backgroundColor: '#5D5FEE',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 5,
+    borderRadius: 8
   },
   retryButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#666',
-    fontSize: 14
+    color: '#FFFFFF',
+    fontWeight: '600'
   },
   noDataText: {
     textAlign: 'center',
-    color: '#666',
+    color: '#7C7C7C',
     marginTop: 20,
     fontSize: 16
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
   }
 });
