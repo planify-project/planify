@@ -26,10 +26,14 @@ import JoinEventScreen from './screens/JoinEventScreen';
 import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
+<<<<<<< HEAD
 import AboutScreen from './screens/AboutScreen';
 import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
+=======
+import AllEventsScreen from './screens/AllEventsScreen';
+>>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -144,6 +148,7 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
+<<<<<<< HEAD
       <Stack.Screen
         name="AllServices"
         component={AllServicesScreen}
@@ -153,6 +158,17 @@ function HomeStack() {
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+=======
+       <Stack.Screen
+        name="AllEvents" // Register AllEventsScreen
+        component={AllEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'All Events',
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+>>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
         }}
       />
     </Stack.Navigator>

@@ -35,6 +35,8 @@ exports.createUser = async (req, res) => {
       password: hashedPassword
     });
     res.status(201).json(newUser);
+ 
+    
   } catch (error) {
     res.status(500).json({ error: 'Failed to create user', details: error.message });
   }
