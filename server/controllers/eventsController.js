@@ -75,4 +75,44 @@ exports.getPublicEvents = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch public events', details: error.message });
   }
+}
+exports.createEvent = async (req, res) => {
+  try {
+    console.log('Received event data:', req.body);
+
+    const {
+      title,
+      type,
+      date,
+      venue,
+      services = [],
+      equipment = []
+    } = req.body;
+
+    // Create the event with existing model structure
+    const event = await Event.create({
+      title,
+      type: type || 'social',
+      event_date: date,
+      venue_id: venue?.id,
+      status: 'pending',
+      user_id: 1, // Default user ID until auth is implemented
+      budget: parseFloat(venue?.price || 0)
+    });
+
+    console.log('Event created:', event);
+
+    res.status(201).json({
+      success: true,
+      data: event,
+      message: 'Event created successfully'
+    });
+
+  } catch (error) {
+    console.error('Error creating event:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };

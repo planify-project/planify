@@ -9,7 +9,7 @@ const { Event } = db;
 const eventsRouter = require('./routes/events');
 const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
-const servicesRouter = require('./routes/services');
+const servicesRouter = require('./routes/services.js');
 
 const app = express();
 const port = process.env.PORT || 3000;
