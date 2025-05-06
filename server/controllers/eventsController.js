@@ -11,20 +11,32 @@ exports.getAllEvents = async (req, res) => {
     const { count, rows } = await Event.findAndCountAll({
       offset,
       limit,
-      order: [['date', 'ASC']]
+      order: [['startDate', 'ASC']], // Updated to use startDate
     });
 
     res.json({
       events: rows,
       total: count,
       page,
-      totalPages: Math.ceil(count / limit)
+      totalPages: Math.ceil(count / limit),
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch events', details: error.message });
   }
 };
 
+exports.getPublicEvents = async (req, res) => {
+  try {
+    const publicEvents = await Event.findAll({
+      where: { isPublic: true },
+      order: [['startDate', 'ASC']], // Updated to use startDate
+    });
+
+    res.status(200).json(publicEvents);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch public events', details: error.message });
+  }
+}
 exports.createEvent = async (req, res) => {
   try {
     console.log('Received event data:', req.body);

@@ -4,7 +4,8 @@
   "description": "Server for Planify application",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon app.js",
+    "seed": "node seeds/publicEvents.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

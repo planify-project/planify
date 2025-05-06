@@ -23,6 +23,7 @@ import JoinEventScreen from './screens/JoinEventScreen';
 import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
+import AllEventsScreen from './screens/AllEventsScreen';
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -127,6 +128,17 @@ function HomeStack() {
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+       <Stack.Screen
+        name="AllEvents" // Register AllEventsScreen
+        component={AllEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'All Events',
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
         }}
       />
     </Stack.Navigator>
