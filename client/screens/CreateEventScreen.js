@@ -266,14 +266,14 @@ export default function CreateEventScreen({ navigation, route }) {
       />
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Create Event</Text>
-          <View style={styles.subHeader}>
-            <Text style={styles.eventType}>Birthday</Text>
-            <Ionicons name="pencil" size={16} color="#007bff" style={{ marginHorizontal: 4 }} />
-            <Text style={styles.date}>2 June</Text>
-          </View>
-        </View>
+      <View>
+  <Text style={styles.headerTitle}>Create Event</Text>
+  <View style={styles.subHeader}>
+    <Text style={styles.eventType}>{route.params?.eventType || 'Event Type'}</Text>
+    <Ionicons name="pencil" size={16} color="#007bff" style={{ marginHorizontal: 4 }} />
+    <Text style={styles.date}>{route.params?.eventDate || 'Event Date'}</Text>
+  </View>
+</View>
         <TouchableOpacity 
           style={styles.contactButton}
           onPress={() => setAgentModalVisible(true)}

@@ -60,7 +60,7 @@ export default function ScheduleScreen({ navigation, route }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.eventItem}
-      onPress={() => navigation.navigate('EventDetails', { event: item })}
+      onPress={() => navigation.navigate('/EventDetails', { event: item })}
     >
       <View style={styles.eventInfo}>
         <Text style={styles.eventTitle}>{item.name || 'Untitled Event'}</Text>
