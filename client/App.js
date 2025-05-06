@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthContext } from './context/AuthContext';
+import React, { useContext } from 'react';
 
 
 
@@ -132,6 +134,9 @@ function HomeStack() {
   );
 }
 
+
+
+
 // Stack Navigator for Schedule (shows PopularEvents)
 function ScheduleStack() {
   return (
@@ -212,14 +217,14 @@ function MainTabs() {
 // App Component
 export default function App() {
   return (   
-    <ThemeProvider>
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        <RootStack.Screen name="Auth" component={AuthNavigator} />
-        <RootStack.Screen name="MainTabs" component={MainTabs} />
-      </RootStack.Navigator>
-      <StatusBar style="auto" />
-    </NavigationContainer>
-    </ThemeProvider>
+
+      <AuthContext.Provider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen name="Root" component={MainTabs} options={{ headerShown: false }} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AuthContext.Provider>
+
   );
 }
