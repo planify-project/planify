@@ -14,6 +14,8 @@ const agentController = {
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
+     
+      
       res.status(201).json({ agent, token });
     } catch (error) {
       res.status(400).json({ error: error.message });

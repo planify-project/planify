@@ -47,6 +47,7 @@ Event.belongsToMany(User, { through: EventUser, foreignKey: 'event_id', otherKey
 
 Event.hasMany(EventGuest, { foreignKey: 'event_id' });
 EventGuest.belongsTo(Event, { foreignKey: 'event_id' });
+
 User.hasMany(EventGuest, { foreignKey: 'user_id' });
 EventGuest.belongsTo(User, { foreignKey: 'user_id' });
 
@@ -101,6 +102,24 @@ Notification.belongsTo(User, { foreignKey: 'user_id' });
 
 Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
+
+Event.hasMany(Message, { foreignKey: 'event_id' });
+Message.belongsTo(Event, { foreignKey: 'event_id' });
+
+User.hasMany(Message, { foreignKey: 'from_user_id' });
+Message.belongsTo(User, { foreignKey: 'from_user_id' });
+
+User.hasMany(Message, { foreignKey: 'to_user_id' });
+Message.belongsTo(User, { foreignKey: 'to_user_id' });
+
+Event.hasMany(Payment, { foreignKey: 'event_id' });
+Payment.belongsTo(Event, { foreignKey: 'event_id' });
+
+User.hasMany(Payment, { foreignKey: 'user_id' });
+Payment.belongsTo(User, { foreignKey: 'user_id' });
+
+Service.hasMany(Payment, { foreignKey: 'service_id' });
+Payment.belongsTo(Service, { foreignKey: 'service_id' });
 // ... existing code ...
 
 // sequelize.sync({ alter: true })
