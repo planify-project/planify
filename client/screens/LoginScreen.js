@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -8,8 +9,9 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, navigation }) => {
+const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }) => {
   const auth = getAuth();
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     setError('');
@@ -49,7 +51,7 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
       </View>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
-          <Image source={require('../assets/image1.png')} style={styles.illustration} resizeMode="contain" />
+          <Image source={require('../assets/LOGOLOGO.png')} style={styles.illustration} resizeMode="contain" />
         </View>
         <Text style={styles.welcomeText}>WELCOME BACK</Text>
         <View style={styles.inputContainer}>
@@ -79,9 +81,9 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
         <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
           <Text style={styles.signInButtonText}>Sign in</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+  <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+</TouchableOpacity>
       </View>
     </SafeAreaView>
   );

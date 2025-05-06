@@ -1,5 +1,8 @@
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase'; // Adjust the import based on your project structure
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -8,8 +11,36 @@ function normalize(size) {
 }
 
 const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPassword, error, setError, switchToLogin }) => {
-  const handleSignUp = () => {
-    console.log('Sign up button pressed');
+  // const handleSignUp = () => {
+  //   console.log('Sign up button pressed');
+  // };
+const navigation = useNavigation();
+  const handleSignUp = async () => {
+    setError('');
+    try {
+      if (!username || !email || !password) {
+        setError('All fields are required');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log('User registered successfully');
+      switchToLogin();
+    } catch (err) {
+      console.error(err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Please try logging in instead.');
+        setEmail('');
+        setPassword('');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address');
+      } else {
+        setError('Registration failed: ' + err.message);
+      }
+    }
   };
 
   return (
@@ -69,9 +100,9 @@ const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPas
         <TouchableOpacity style={styles.signInButton} onPress={handleSignUp}>
           <Text style={styles.signInButtonText}>Sign up</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.createAccountButton} onPress={switchToLogin}>
-          <Text style={styles.createAccountText}>Already have an account? Log in</Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.createAccountButton} onPress={() => navigation.navigate('Login')}>
+  <Text style={styles.createAccountText}>Already have an account? Log in</Text>
+</TouchableOpacity>
       </View>
     </SafeAreaView>
   );

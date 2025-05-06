@@ -32,7 +32,7 @@ const HomeHeader = ({
           style={styles.notificationBtn}
           onPress={onNotificationPress}
         >
-          <Ionicons name="person-outline" size={24} color="#000" />
+          <Ionicons name="notifications-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
     </View>

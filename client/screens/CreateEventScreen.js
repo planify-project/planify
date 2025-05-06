@@ -101,7 +101,7 @@ export default function CreateEventScreen({ navigation }) {
         onChooseAgent={() => {
           setAgentModalVisible(false);
           // Add navigation to agent selection screen if needed
-          // navigation.navigate('AgentSelection');
+          navigation.navigate('Agent List');
         }}
       />
       {/* Header */}
