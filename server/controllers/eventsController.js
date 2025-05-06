@@ -23,9 +23,6 @@ exports.getAllEvents = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch events', details: error.message });
   }
-<<<<<<< HEAD
-}; 
-=======
 };
 
 exports.getPublicEvents = async (req, res) => {
@@ -80,4 +77,3 @@ exports.createEvent = async (req, res) => {
     });
   }
 };
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a

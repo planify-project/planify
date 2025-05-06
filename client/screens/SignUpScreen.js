@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase'; // Adjust the import based on your project structure
+// import { auth } from '../firebase'; // Adjust the import based on your project structure
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;

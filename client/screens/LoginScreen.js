@@ -1,11 +1,8 @@
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-<<<<<<< HEAD
 import { useTheme } from '../context/ThemeContext';
-=======
 import { useNavigation } from '@react-navigation/native';
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -15,11 +12,8 @@ function normalize(size) {
 
 const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }) => {
   const auth = getAuth();
-<<<<<<< HEAD
   const { theme } = useTheme();
-=======
   const navigation = useNavigation();
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
 
   const handleLogin = async () => {
     setError('');
@@ -90,13 +84,8 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }
           <Text style={styles.signInButtonText}>Sign in</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-<<<<<<< HEAD
-          <Text style={[styles.linkText, { color: theme.primary }]}>Don't have an account? Sign Up</Text>
-        </TouchableOpacity>
-=======
   <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
 </TouchableOpacity>
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
       </View>
     </SafeAreaView>
   );

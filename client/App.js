@@ -7,6 +7,11 @@ import { ThemeProvider } from './context/ThemeContext';
 import { useEffect, useState } from 'react';
 import { auth } from './configs/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { enableScreens } from 'react-native-screens';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// Enable screens for better performance
+enableScreens();
 
 // Screens
 import PopularEventsScreen from './screens/PopularEventsScreen';
@@ -26,14 +31,10 @@ import JoinEventScreen from './screens/JoinEventScreen';
 import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
-<<<<<<< HEAD
 import AboutScreen from './screens/AboutScreen';
 import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
-=======
-import AllEventsScreen from './screens/AllEventsScreen';
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -148,7 +149,6 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
-<<<<<<< HEAD
       <Stack.Screen
         name="AllServices"
         component={AllServicesScreen}
@@ -158,17 +158,6 @@ function HomeStack() {
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-=======
-       <Stack.Screen
-        name="AllEvents" // Register AllEventsScreen
-        component={AllEventsScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'All Events',
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
->>>>>>> 1034aea1d1191c69209cb70d0303d66fbee3c70a
         }}
       />
     </Stack.Navigator>
@@ -368,17 +357,19 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <NavigationContainer>
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
-            <RootStack.Screen name="MainTabs" component={MainTabs} />
-          ) : (
-            <RootStack.Screen name="Auth" component={AuthNavigator} />
-          )}
-        </RootStack.Navigator>
-      </NavigationContainer>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <NavigationContainer>
+          <RootStack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              <RootStack.Screen name="MainTabs" component={MainTabs} />
+            ) : (
+              <RootStack.Screen name="Auth" component={AuthNavigator} />
+            )}
+          </RootStack.Navigator>
+        </NavigationContainer>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
