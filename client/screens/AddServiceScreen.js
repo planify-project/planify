@@ -1,180 +1,175 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
-  Dimensions,
   Alert,
-  Platform
+  ActivityIndicator,
+  Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { getAuth } from 'firebase/auth';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-
-const { width } = Dimensions.get('window');
-const scale = width / 375;
-function normalize(size) {
-  return Math.round(scale * size);
-}
-
-const API_URL = 'http://192.168.43.149:3000/api';
+import { useTheme } from '../context/ThemeContext';
+import api from '../configs/api';
+import { normalize } from '../utils/scaling';
+import { auth } from '../configs/config';
 
 export default function AddServiceScreen({ navigation }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [serviceType, setServiceType] = useState('');
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const auth = getAuth();
-
-  useEffect(() => {
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Sorry, we need camera roll permissions to make this work!');
-        }
-      }
-    })();
-  }, []);
+  const { theme } = useTheme();
 
   const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
 
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-      }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri) => {
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      type: 'image/jpeg',
+      name: 'upload.jpg',
+    });
+    formData.append('upload_preset', 'planify_services');
+
+    try {
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/dxqg8zq8d/image/upload',
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      const data = await response.json();
+      return data.secure_url;
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      console.error('Error uploading image:', error);
+      throw error;
     }
   };
 
   const handleSubmit = async () => {
-    if (!title || !description || !price || !serviceType) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!title || !description || !price) {
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    setLoading(true);
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('User not authenticated');
-
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('price', price);
-      formData.append('serviceType', serviceType);
-      formData.append('agentId', user.uid);
+      setLoading(true);
+      let imageUrl = '';
+      
       if (image) {
-        formData.append('image', {
-          uri: image,
-          type: 'image/jpeg',
-          name: 'service-image.jpg',
-        });
+        imageUrl = await uploadImage(image);
       }
 
-      await axios.post(`${API_URL}/services`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const serviceData = {
+        title,
+        description,
+        price: parseFloat(price),
+        imageUrl: imageUrl || 'https://via.placeholder.com/150',
+        serviceType: 'general',
+        userId: auth.currentUser.uid
+      };
 
-      Alert.alert('Success', 'Service added successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+      const response = await api.post('/services', serviceData);
+
+      console.log('Service created:', response.data);
+      Alert.alert('Success', 'Service created successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('AllServices')
+        }
       ]);
     } catch (error) {
-      console.error('Error adding service:', error);
-      Alert.alert('Error', 'Failed to add service. Please try again.');
+      console.error('Error creating service:', error);
+      Alert.alert('Error', 'Failed to create service. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.imageContainer}>
-        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-          {image ? (
-            <Image source={{ uri: image }} style={styles.image} />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="camera-outline" size={normalize(40)} color="#5D5FEE" />
-              <Text style={styles.imagePlaceholderText}>Add Service Image</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.form}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Service Title</Text>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Enter service title"
-            placeholderTextColor="#888"
-          />
-        </View>
+        <Text style={[styles.label, { color: theme.text }]}>Title *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter service title"
+          placeholderTextColor={theme.textSecondary}
+        />
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Enter service description"
-            placeholderTextColor="#888"
-            multiline
-            numberOfLines={4}
-          />
-        </View>
+        <Text style={[styles.label, { color: theme.text }]}>Description *</Text>
+        <TextInput
+          style={[styles.input, styles.textArea, { backgroundColor: theme.card, color: theme.text }]}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Enter service description"
+          placeholderTextColor={theme.textSecondary}
+          multiline
+          numberOfLines={4}
+        />
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Price (DT)</Text>
-          <TextInput
-            style={styles.input}
-            value={price}
-            onChangeText={setPrice}
-            placeholder="Enter price"
-            placeholderTextColor="#888"
-            keyboardType="numeric"
-          />
-        </View>
+        <Text style={[styles.label, { color: theme.text }]}>Price (DT) *</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+          value={price}
+          onChangeText={setPrice}
+          placeholder="Enter price"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+        />
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Service Type</Text>
-          <TextInput
-            style={styles.input}
-            value={serviceType}
-            onChangeText={setServiceType}
-            placeholder="Enter service type"
-            placeholderTextColor="#888"
+        <TouchableOpacity 
+          style={[styles.imageButton, { backgroundColor: theme.primary }]} 
+          onPress={pickImage}
+        >
+          <Text style={styles.imageButtonText}>Pick an image</Text>
+        </TouchableOpacity>
+
+        {image && (
+          <Image 
+            source={{ uri: image }} 
+            style={styles.previewImage} 
           />
-        </View>
+        )}
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={[styles.submitButton, { backgroundColor: theme.primary }]}
           onPress={handleSubmit}
           disabled={loading}
         >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Adding Service...' : 'Add Service'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Create Service</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -184,67 +179,49 @@ export default function AddServiceScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F6FC',
-  },
-  imageContainer: {
-    padding: normalize(16),
-  },
-  imagePicker: {
-    width: '100%',
-    height: normalize(200),
-    backgroundColor: '#fff',
-    borderRadius: normalize(12),
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-  },
-  imagePlaceholderText: {
-    marginTop: normalize(8),
-    color: '#5D5FEE',
-    fontSize: normalize(16),
   },
   form: {
     padding: normalize(16),
   },
-  inputContainer: {
-    marginBottom: normalize(16),
-  },
   label: {
-    fontSize: normalize(14),
-    color: '#222',
-    marginBottom: normalize(8),
+    fontSize: normalize(16),
     fontWeight: 'bold',
+    marginBottom: normalize(8),
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: normalize(8),
-    padding: normalize(12),
-    fontSize: normalize(16),
     borderWidth: 1,
     borderColor: '#ddd',
+    borderRadius: normalize(8),
+    padding: normalize(12),
+    marginBottom: normalize(16),
+    fontSize: normalize(16),
   },
   textArea: {
     height: normalize(100),
     textAlignVertical: 'top',
   },
-  submitButton: {
-    backgroundColor: '#5D5FEE',
+  imageButton: {
+    padding: normalize(12),
     borderRadius: normalize(8),
+    alignItems: 'center',
+    marginBottom: normalize(16),
+  },
+  imageButtonText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+  },
+  previewImage: {
+    width: '100%',
+    height: normalize(200),
+    borderRadius: normalize(8),
+    marginBottom: normalize(16),
+  },
+  submitButton: {
     padding: normalize(16),
+    borderRadius: normalize(8),
     alignItems: 'center',
     marginTop: normalize(16),
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
   },
   submitButtonText: {
     color: '#fff',

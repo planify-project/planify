@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import * as Location from 'expo-location';
 import HomeHeader from '../components/home/HomeHeader';
 import HomeTabs from '../components/home/HomeTabs';
@@ -130,6 +130,13 @@ export default function HomeScreen({ navigation }) {
 
       <HomeTabs activeTab={activeTab} onTabPress={setActiveTab} />
 
+      <TouchableOpacity 
+        style={styles.servicesButton}
+        onPress={() => navigation.navigate('AddService')}
+      >
+        <Text style={styles.servicesButtonText}>Add New Service</Text>
+      </TouchableOpacity>
+
       <NearbyEvents navigation={navigation} />
       
       <PopularEvents 
@@ -145,5 +152,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: normalize(16),
     backgroundColor: '#f9f9f9'
-  }
+  },
+  servicesButton: {
+    backgroundColor: '#5D5FEE',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    marginHorizontal: normalize(16),
+    marginVertical: normalize(8),
+    alignItems: 'center',
+  },
+  servicesButtonText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+  },
 });

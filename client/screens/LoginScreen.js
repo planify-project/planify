@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -10,6 +11,7 @@ function normalize(size) {
 
 const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, navigation }) => {
   const auth = getAuth();
+  const { theme } = useTheme();
 
   const handleLogin = async () => {
     setError('');
@@ -42,20 +44,20 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={styles.headerText}>Login</Text>
+        <Text style={[styles.headerText, { color: theme.text }]}>Login</Text>
       </View>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
           <Image source={require('../assets/image1.png')} style={styles.illustration} resizeMode="contain" />
         </View>
-        <Text style={styles.welcomeText}>WELCOME BACK</Text>
+        <Text style={[styles.welcomeText, { color: theme.text }]}>WELCOME BACK</Text>
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>EMAIL</Text>
+          <Text style={[styles.inputLabel, { color: theme.text }]}>EMAIL</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
             value={email}
             onChangeText={setEmail}
             placeholder="Enter your email"
@@ -65,9 +67,9 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
           />
         </View>
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>PASSWORD</Text>
+          <Text style={[styles.inputLabel, { color: theme.text }]}>PASSWORD</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -76,11 +78,11 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError, 
           />
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
+        <TouchableOpacity style={[styles.signInButton, { backgroundColor: theme.primary }]} onPress={handleLogin}>
           <Text style={styles.signInButtonText}>Sign in</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+          <Text style={[styles.linkText, { color: theme.primary }]}>Don't have an account? Sign Up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -92,7 +94,6 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -102,7 +103,6 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: normalize(28),
     fontWeight: 'bold',
-    color: '#333',
   },
   authContainer: {
     width: '90%',
@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: normalize(20),
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: normalize(20),
     textAlign: 'center',
   },
@@ -129,7 +128,6 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: normalize(14),
-    color: '#555',
     marginBottom: normalize(5),
   },
   input: {
@@ -139,12 +137,10 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: normalize(8),
     paddingHorizontal: normalize(15),
-    backgroundColor: '#fff',
   },
   signInButton: {
     width: '100%',
     height: normalize(50),
-    backgroundColor: '#4a90e2',
     borderRadius: normalize(8),
     justifyContent: 'center',
     alignItems: 'center',
@@ -156,7 +152,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   linkText: {
-    color: '#4a90e2',
     fontSize: normalize(14),
     marginTop: normalize(15),
   },

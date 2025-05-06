@@ -4,9 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-import HomeScreen from '../screens/HomeScreen';
 import app from "../configs/config.js";
-import AppNavigator from './AppNavigator';
+import MainTabs from './AppNavigator';
 
 const Stack = createNativeStackNavigator();
 const auth = getAuth(app);
@@ -97,50 +96,41 @@ const AuthNavigator = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-
-  return user ? <AppNavigator /> :(
+  return user ? <MainTabs /> : (
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-  <Stack.Screen name="Login">
-    {(props) => (
-      <LoginScreen
-        {...props}
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        handleLogin={handleLogin}
-        error={error}
-        setError={setError}
-        switchToSignUp={switchToSignUp}
-      />
-    )}
-  </Stack.Screen>
-  <Stack.Screen name="SignUp">
-    {(props) => (
-      <SignUpScreen
-        {...props}
-        username={username}
-        setUsername={setUsername}
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        handleSignUp={handleSignUp}
-        error={error}
-        setError={setError}
-        switchToLogin={switchToLogin}
-      />
-    )}
-  </Stack.Screen>
-</Stack.Navigator>
+      <Stack.Screen name="Login">
+        {(props) => (
+          <LoginScreen
+            {...props}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            handleLogin={handleLogin}
+            error={error}
+            setError={setError}
+            switchToSignUp={switchToSignUp}
+          />
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="SignUp">
+        {(props) => (
+          <SignUpScreen
+            {...props}
+            username={username}
+            setUsername={setUsername}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            handleSignUp={handleSignUp}
+            error={error}
+            setError={setError}
+            switchToLogin={switchToLogin}
+          />
+        )}
+      </Stack.Screen>
+    </Stack.Navigator>
   );
 };
 
