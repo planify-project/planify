@@ -3,10 +3,11 @@ import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AgentModal from '../components/AgentModal';
+import { API_BASE } from '../config';
 
 // Update the axios configuration
 const api = axios.create({
-  baseURL: 'http://192.168.1.60:3000/api',
+  baseURL: API_BASE,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
