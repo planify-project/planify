@@ -1,22 +1,111 @@
+// module.exports = (sequelize, DataTypes) => {
+//   return sequelize.define('event', {
+//     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+//     name: DataTypes.STRING,
+//     type: DataTypes.STRING,
+//     date: DataTypes.DATE,
+//     location: DataTypes.STRING,
+//     created_by: DataTypes.INTEGER,
+//     budget: DataTypes.DECIMAL,
+//     status: DataTypes.STRING,
+//     is_self_planned: DataTypes.BOOLEAN,
+//     agent_id: DataTypes.INTEGER,
+//     visibility: DataTypes.ENUM('public', 'private'),
+//     is_free: DataTypes.BOOLEAN,
+//     price: DataTypes.DECIMAL,
+//     attendees_count: DataTypes.INTEGER,
+//     available_spots: DataTypes.INTEGER
+//   }, {
+//     underscored: true,
+//     timestamps: true
+//   });
+// };
+
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('event', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    name: DataTypes.STRING,
-    type: DataTypes.STRING,
-    date: DataTypes.DATE,
-    location: DataTypes.STRING,
-    created_by: DataTypes.INTEGER,
-    budget: DataTypes.DECIMAL,
-    status: DataTypes.STRING,
-    is_self_planned: DataTypes.BOOLEAN,
-    agent_id: DataTypes.INTEGER,
-    visibility: DataTypes.ENUM('public', 'private'),
-    is_free: DataTypes.BOOLEAN,
-    price: DataTypes.DECIMAL,
-    attendees_count: DataTypes.INTEGER,
-    available_spots: DataTypes.INTEGER
+    id: {
+      type: DataTypes.UUID, // Use UUID for better uniqueness
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false, // Event name is required
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true, // Optional field for event details
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: true, // Supports event categories like "wedding", "meeting", etc.
+    },
+    startDate: {
+      type: DataTypes.DATE,
+      allowNull: false, // Start date is required
+    },
+    endDate: {
+      type: DataTypes.DATE,
+      allowNull: true, // Optional for multi-day events
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional for private events
+    },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true, // Added for geolocation support
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true, // Added for geolocation support
+    },
+    isPublic: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Renamed from "visibility" for clarity
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'approved', 'rejected', 'cancelled', 'completed'),
+      defaultValue: 'pending', // Added more detailed statuses
+    },
+    maxParticipants: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Optional field to limit the number of attendees
+    },
+    ticketPrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true, // Optional field for ticket pricing
+    },
+    coverImage: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional field for the event's cover image URL
+    },
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: false, // Required for tracking the event creator
+    },
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Optional field for assigning an agent
+    },
+    attendees_count: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Optional field for tracking attendees
+    },
+    available_spots: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Optional field for tracking available spots
+    },
+    budget: {
+      type: DataTypes.DECIMAL,
+      allowNull: true, // Optional field for event budget
+    },
+    is_free: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Indicates whether the event is free
+    },
   }, {
-    underscored: true,
-    timestamps: true
+    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    paranoid: true, // Enables soft deletes (adds deletedAt field)
   });
 };
