@@ -1,132 +1,85 @@
+import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import React, { createContext, useEffect, useState } from 'react';
-export const AuthContext = createContext();
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase'; 
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+} from 'firebase/auth';
 
+export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(null);
-    const auth = getAuth();
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Load user from AsyncStorage
+    // Monitor authentication state changes
     useEffect(() => {
-        loadUser();
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+        });
+        return unsubscribe;
     }, []);
 
-    const loadUser = async () => {
-        try {
-            const userData = await AsyncStorage.getItem('user');
-            if (userData) {
-                setCurrentUser(JSON.parse(userData));
-            }
-        } catch (error) {
-            console.error('Failed to load user:', error);
-        }
-    };
-
-    const login = async (email, password) => {
-        try {
-            if (!email || !password) {
-                setError('Email and password are required');
-                return;
-            }
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const idToken = await userCredential.user.getIdToken();
-            const user = userCredential.user;
-            const id = user.uid;
-            await axios.post('http://192.168.1.100:3000/api/auth/login', {
-                id,
-                email,
-                password,
-            });
-            axios.post()
-            console.log('User logged in successfully');
-            await AsyncStorage.setItem('idToken', idToken);
-            await AsyncStorage.setItem('user', JSON.stringify(user));
-            const savedToken = await AsyncStorage.getItem('idToken');
-            const savedUser = await AsyncStorage.getItem('user');
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs' }],
-            });
-            console.log('Saved user :', savedUser);
-            console.log('Saved idToken:', savedToken);
-        } catch (err) {
-            console.error('Login error:', err);
-            const errorMessage = (() => {
-                switch (err.code) {
-                    case 'auth/invalid-credential':
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        setPassword('');
-                        return 'Invalid email or password';
-                    case 'auth/invalid-email':
-                        return 'Invalid email address';
-                    case 'auth/too-many-requests':
-                        return 'Too many failed attempts. Please try again later';
-                    case 'auth/network-request-failed':
-                        return 'Network error. Please check your connection and try again';
-                    default:
-                        return `Login failed: ${err.message}`;
-                }
-            })();
-            setError(errorMessage);
-        }
-    };
-
-    const logout = async () => {
-        try {
-            await AsyncStorage.removeItem('user');
-            setCurrentUser(null);
-        } catch (err) {
-            console.error('Logout error:', err);
-        }
-    };
-
+    // Register a new user and send data to backend
     const register = async (email, password, name) => {
-        if (!name || !email || !password) {
-            Alert.alert('All fields are required');
-            return;
-        }
-        if (password.length < 6) {
-            Alert.alert('Password must be at least 6 characters');
-            return;
-        }
-
         try {
-            // Create user with Firebase
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
-            const idToken = await userCredential.user.getIdToken();
 
-            // Send to your backend to store in your DB
-            const res = await axios.post('http://localhost:3000/api/auth/register', {
+            // Prepare user data
+            const userData = {
                 id,
-                name,
                 email,
+                name,
                 password,
-            });
+            };
 
-            // Save idToken and user in AsyncStorage
-            await AsyncStorage.setItem('idToken', idToken);
-
-            // Debug: Check if idToken is saved
-            const savedToken = await AsyncStorage.getItem('idToken');
-            console.log('Saved idToken after register:', savedToken);
-
-            await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
-
-            Alert.alert('Registration successful');
-            // navigation.navigate('Home'); // Remove this if navigation is handled by auth state
-        } catch (err) {
-            console.log('Register error:', err.message);
-            Alert.alert('Registration failed', err.message);
+            // Send user data to backend
+            // await axios.post('https://192.168.1.3:3000/api/auth/register', userData);
+        } catch (error) {
+            console.error('Registration Error:', error.message);
+            throw error;
         }
     };
+
+    // Log in an existing user and send data to backend
+    const login = async (email, password, name) => {
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const id = userCredential.user.uid;
+
+            // Prepare user data
+            const userData = {
+                id,
+                email,
+                name,
+                password,
+            };
+
+            // Send user data to backend
+            // await axios.post('https://192.168.1.3:3000/api/auth/login', userData);
+        } catch (error) {
+            console.error('Login Error:', error.message);
+            throw error;
+        }
+    };
+
+    // Log out the current user
+    const logout = async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error('Logout Error:', error.message);
+            throw error;
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ login, logout, register, currentUser }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     );
 };
-
