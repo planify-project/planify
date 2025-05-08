@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('wishlist', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    user_id: DataTypes.INTEGER,
+    user_id: DataTypes.STRING,
     name: DataTypes.STRING
   }, {
     underscored: true,

@@ -84,7 +84,7 @@ export default function AgentProfileScreen() {
         </View>
         <TouchableOpacity
           style={styles.contactBtn}
-          onPress={() => navigation.navigate('Agent Chat')} 
+          onPress={() => navigation.navigate('Agent Chat')} // <-- Add this handler
         >
           <Text style={styles.contactBtnText}>Contact Agent</Text>
         </TouchableOpacity>

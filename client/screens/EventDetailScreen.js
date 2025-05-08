@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState , useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
+import { AuthContext } from '../context/AuthContext'; 
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -11,6 +12,8 @@ function normalize(size) {
 }
 
 export default function EventDetailScreen({ route }) {
+  const { user } = useContext(AuthContext); // Access the user context
+  console.log('User:', user); 
   const [isFavorite, setIsFavorite] = useState(false);
   const navigation = useNavigation();
   

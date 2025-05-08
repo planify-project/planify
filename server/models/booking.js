@@ -6,13 +6,13 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true 
     },
     user_id: { 
-      type: DataTypes.INTEGER 
+      type: DataTypes.STRING, // user_id is a string
     },
     service_id: { 
       type: DataTypes.INTEGER 
     },
     event_id: { 
-      type: DataTypes.UUID, // Match the UUID type of the `id` column in the `events` table
+      type: DataTypes.STRING, // <-- Change from UUID to STRING to match events.id
     },
     status: {
       type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),
