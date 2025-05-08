@@ -140,14 +140,7 @@ export default function HomeScreen({ navigation }) {
       <PopularEvents 
         navigation={navigation} 
         events={popularEvents}/>
-
-      {/* Button to navigate to All Events */}
-      <TouchableOpacity 
-        style={styles.allEventsButton} 
-        onPress={() => navigation.navigate('AllEvents')}
-      >
-        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
-      </TouchableOpacity>
+        
     </ScrollView>
   );
 }

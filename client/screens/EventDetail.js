@@ -111,58 +111,188 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff'
+//   },
+//   image: {
+//     width: '100%',
+//     height: normalize(250),
+//     resizeMode: 'cover'
+//   },
+//   content: {
+//     padding: normalize(20)
+//   },
+//   title: {
+//     fontSize: normalize(24),
+//     fontWeight: 'bold',
+//     marginBottom: normalize(10)
+//   },
+//   infoRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: normalize(8)
+//   },
+//   location: {
+//     marginLeft: normalize(8),
+//     fontSize: normalize(14),
+//     color: '#666'
+//   },
+//   rating: {
+//     marginLeft: normalize(8),
+//     fontSize: normalize(14),
+//     color: '#666'
+//   },
+//   priceContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'baseline',
+//     marginBottom: normalize(16)
+//   },
+//   price: {
+//     fontSize: normalize(24),
+//     fontWeight: 'bold',
+//     color: '#5D5FEE'
+//   },
+//   per: {
+//     fontSize: normalize(14),
+//     color: '#666',
+//     marginLeft: normalize(4)
+//   },
+//   description: {
+//     fontSize: normalize(14),
+//     color: '#666',
+//     lineHeight: normalize(20),
+//     marginBottom: normalize(20)
+//   },
+//   availableDates: {
+//     marginBottom: normalize(20)
+//   },
+//   sectionTitle: {
+//     fontSize: normalize(16),
+//     fontWeight: 'bold',
+//     marginBottom: normalize(10)
+//   },
+//   datesContainer: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     gap: normalize(8)
+//   },
+//   dateButton: {
+//     backgroundColor: '#f0f0f0',
+//     paddingHorizontal: normalize(12),
+//     paddingVertical: normalize(8),
+//     borderRadius: normalize(8)
+//   },
+//   dateText: {
+//     fontSize: normalize(14),
+//     color: '#666'
+//   },
+//   bookButton: {
+//     backgroundColor: '#5D5FEE',
+//     padding: normalize(16),
+//     borderRadius: normalize(8),
+//     alignItems: 'center'
+//   },
+//   bookButtonText: {
+//     color: '#fff',
+//     fontSize: normalize(16),
+//     fontWeight: 'bold'
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center'
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: normalize(20)
+//   },
+//   errorText: {
+//     color: '#ff4444',
+//     fontSize: normalize(14),
+//     textAlign: 'center',
+//     marginBottom: normalize(10)
+//   },
+//   retryButton: {
+//     backgroundColor: '#5D5FEE',
+//     paddingHorizontal: normalize(20),
+//     paddingVertical: normalize(10),
+//     borderRadius: normalize(8)
+//   },
+//   retryButtonText: {
+//     color: '#fff',
+//     fontWeight: 'bold'
+//   }
+// }); 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff'
+    backgroundColor: '#FAFAFA'
   },
   image: {
     width: '100%',
     height: normalize(250),
-    resizeMode: 'cover'
+    resizeMode: 'cover',
+    borderBottomLeftRadius: normalize(20),
+    borderBottomRightRadius: normalize(20),
   },
   content: {
-    padding: normalize(20)
+    padding: normalize(20),
+    backgroundColor: '#fff',
+    borderTopLeftRadius: normalize(20),
+    borderTopRightRadius: normalize(20),
+    marginTop: -normalize(20),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
   },
   title: {
     fontSize: normalize(24),
     fontWeight: 'bold',
-    marginBottom: normalize(10)
+    color: '#333',
+    marginBottom: normalize(12)
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: normalize(8)
+    marginBottom: normalize(6)
   },
   location: {
-    marginLeft: normalize(8),
+    marginLeft: normalize(6),
     fontSize: normalize(14),
-    color: '#666'
+    color: '#777'
   },
   rating: {
-    marginLeft: normalize(8),
+    marginLeft: normalize(6),
     fontSize: normalize(14),
-    color: '#666'
+    color: '#777'
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    marginTop: normalize(12),
     marginBottom: normalize(16)
   },
   price: {
-    fontSize: normalize(24),
+    fontSize: normalize(26),
     fontWeight: 'bold',
-    color: '#5D5FEE'
+    color: '#6C63FF'
   },
   per: {
     fontSize: normalize(14),
-    color: '#666',
+    color: '#777',
     marginLeft: normalize(4)
   },
   description: {
-    fontSize: normalize(14),
-    color: '#666',
-    lineHeight: normalize(20),
+    fontSize: normalize(15),
+    color: '#444',
+    lineHeight: normalize(22),
     marginBottom: normalize(20)
   },
   availableDates: {
@@ -170,29 +300,38 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: normalize(16),
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#333',
     marginBottom: normalize(10)
   },
   datesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: normalize(8)
+    gap: normalize(10)
   },
   dateButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#EAEAFF',
     paddingHorizontal: normalize(12),
     paddingVertical: normalize(8),
-    borderRadius: normalize(8)
+    borderRadius: normalize(12),
+    marginBottom: normalize(8)
   },
   dateText: {
     fontSize: normalize(14),
-    color: '#666'
+    color: '#5D5FEE',
+    fontWeight: '600'
   },
   bookButton: {
     backgroundColor: '#5D5FEE',
     padding: normalize(16),
-    borderRadius: normalize(8),
-    alignItems: 'center'
+    borderRadius: normalize(12),
+    alignItems: 'center',
+    marginTop: normalize(10),
+    shadowColor: '#5D5FEE',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4
   },
   bookButtonText: {
     color: '#fff',
@@ -202,13 +341,15 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: '#fff'
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: normalize(20)
+    padding: normalize(20),
+    backgroundColor: '#fff'
   },
   errorText: {
     color: '#ff4444',
@@ -217,13 +358,13 @@ const styles = StyleSheet.create({
     marginBottom: normalize(10)
   },
   retryButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#6C63FF',
     paddingHorizontal: normalize(20),
     paddingVertical: normalize(10),
-    borderRadius: normalize(8)
+    borderRadius: normalize(10)
   },
   retryButtonText: {
     color: '#fff',
     fontWeight: 'bold'
   }
-}); 
+});
