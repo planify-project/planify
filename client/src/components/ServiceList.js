@@ -1,44 +1,66 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
 import { useService } from '../context/ServiceContext';
 import { useNavigation } from '@react-navigation/native';
 
 const ServiceList = () => {
-  const { services, loading, error, deleteService } = useService();
+  const { services, loading, error, deleteService, fetchServices } = useService();
   const navigation = useNavigation();
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   const handleDelete = async (id) => {
     try {
-      await deleteService(id);
+      Alert.alert(
+        'Delete Service',
+        'Are you sure you want to delete this service?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              await deleteService(id);
+              await fetchServices(); // Refresh after delete
+            }
+          }
+        ]
+      );
     } catch (error) {
       console.error('Error deleting service:', error);
+      Alert.alert('Error', 'Failed to delete service');
     }
   };
 
   const renderService = ({ item }) => (
     <View style={styles.serviceCard}>
-      {item.image && (
+      {item.imageUrl && (
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.imageUrl }}
           style={styles.serviceImage}
         />
       )}
       <View style={styles.serviceInfo}>
-        <Text style={styles.serviceName}>{item.name}</Text>
+        <Text style={styles.serviceName}>{item.title}</Text>
         <Text style={styles.serviceDescription}>{item.description}</Text>
         <View style={styles.serviceDetails}>
           <Text style={styles.servicePrice}>${item.price}</Text>
-          <Text style={styles.serviceDuration}>{item.duration} minutes</Text>
+          <Text style={styles.serviceType}>{item.serviceType}</Text>
         </View>
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ServiceForm', { id: item._id })}
+            onPress={() => navigation.navigate('ServiceForm', { id: item.id })}
             style={styles.editButton}
           >
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => handleDelete(item._id)}
+            onPress={() => handleDelete(item.id)}
             style={styles.deleteButton}
           >
             <Text style={styles.deleteButtonText}>Delete</Text>
@@ -75,8 +97,10 @@ const ServiceList = () => {
       <FlatList
         data={services}
         renderItem={renderService}
-        keyExtractor={item => item._id}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContainer}
+        refreshing={loading}
+        onRefresh={fetchServices}
       />
     </View>
   );
@@ -132,7 +156,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  serviceDuration: {
+  serviceType: {
     fontSize: 14,
     color: '#666',
   },

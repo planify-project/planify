@@ -1,15 +1,16 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('service', {
+  const Service = sequelize.define('service', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: DataTypes.STRING,
     description: DataTypes.TEXT,
     price: DataTypes.FLOAT,
     serviceType: DataTypes.STRING,
     imageUrl: DataTypes.STRING,
-    agentId: {
+    provider_id: {
       type: DataTypes.INTEGER,
+      allowNull: true,
       references: {
-        model: 'agents',
+        model: 'users',
         key: 'id'
       }
     }
@@ -17,4 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     underscored: true,
     timestamps: true
   });
+
+  Service.associate = (models) => {
+    Service.belongsTo(models.User, {
+      foreignKey: 'provider_id',
+      as: 'user'
+    });
+  };
+
+  return Service;
 };

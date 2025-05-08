@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { auth, db } from '../configs/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import api from '../configs/api';
+
+const { width } = Dimensions.get('window');
+const numColumns = 2;
+const tileSize = width / numColumns;
 
 export default function AllServicesScreen({ navigation }) {
   const { theme } = useTheme();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchServices();
@@ -15,41 +19,74 @@ export default function AllServicesScreen({ navigation }) {
 
   const fetchServices = async () => {
     try {
-      const servicesRef = collection(db, 'services');
-      const q = query(servicesRef, where('userId', '==', auth.currentUser.uid));
-      const querySnapshot = await getDocs(q);
+      console.log('Starting to fetch services...');
+      setLoading(true);
+      setError(null);
       
-      const servicesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const response = await api.get('/services');
+      console.log('Raw API Response:', response);
+      console.log('Response data:', response.data);
       
-      setServices(servicesData);
+      if (response.data.success) {
+        const formattedServices = response.data.data.map(service => {
+          console.log('Processing service:', service);
+          // Construct the full image URL using the API base URL, removing /api from the path
+          const baseUrl = api.defaults.baseURL.replace('/api', '');
+          const fullImageUrl = service.imageUrl 
+            ? `${baseUrl}${service.imageUrl}`
+            : 'https://via.placeholder.com/150';
+          
+          console.log('Full image URL:', fullImageUrl);
+          return {
+            ...service,
+            imageUrl: fullImageUrl
+          };
+        });
+        console.log('Formatted services:', formattedServices);
+        setServices(formattedServices);
+      } else {
+        console.error('API returned success: false');
+        setError('Failed to fetch services');
+      }
     } catch (error) {
       console.error('Error fetching services:', error);
+      console.error('Error details:', error.response?.data);
+      setError(error.message || 'Failed to fetch services');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderServiceItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.serviceCard, { backgroundColor: theme.card }]}
-      onPress={() => navigation.navigate('ServiceDetail', { service: item })}
-    >
-      <Image
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }}
-        style={styles.serviceImage}
-      />
-      <View style={styles.serviceInfo}>
-        <Text style={[styles.serviceTitle, { color: theme.text }]}>{item.title}</Text>
-        <Text style={[styles.servicePrice, { color: theme.primary }]}>${item.price}</Text>
-        <Text style={[styles.serviceDescription, { color: theme.textSecondary }]} numberOfLines={2}>
-          {item.description}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderServiceItem = ({ item }) => {
+    console.log('Rendering service item:', item);
+    console.log('Service card image URL:', item.imageUrl);
+    
+    return (
+      <TouchableOpacity
+        style={[styles.serviceCard, { backgroundColor: theme.card }]}
+        onPress={() => navigation.navigate('ServiceDetail', { service: item })}
+      >
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.serviceImage}
+          onError={(e) => {
+            console.error('Image loading error for service:', {
+              id: item.id,
+              title: item.title,
+              imageUrl: item.imageUrl,
+              error: e.nativeEvent.error
+            });
+          }}
+        />
+        <View style={styles.serviceInfo}>
+          <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={[styles.servicePrice, { color: theme.primary }]}>${item.price}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -59,24 +96,43 @@ export default function AllServicesScreen({ navigation }) {
     );
   }
 
+  if (error) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.errorText, { color: theme.error }]}>{error}</Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: theme.primary }]}
+          onPress={fetchServices}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Add Service Button */}
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: theme.primary }]}
+        onPress={() => navigation.navigate('Services', { screen: 'AddService' })}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+
       {services.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: theme.text }]}>No services created yet</Text>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('Settings', { screen: 'AddService' })}
-          >
-            <Text style={styles.addButtonText}>Add New Service</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={services}
           renderItem={renderServiceItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id.toString()}
+          numColumns={numColumns}
           contentContainerStyle={styles.listContainer}
+          onRefresh={fetchServices}
+          refreshing={loading}
         />
       )}
     </View>
@@ -88,12 +144,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContainer: {
-    padding: 16,
+    padding: 8,
   },
   serviceCard: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    borderRadius: 10,
+    width: tileSize - 16,
+    margin: 8,
+    borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
     shadowColor: '#000',
@@ -102,25 +158,21 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   serviceImage: {
-    width: 100,
-    height: 100,
+    width: '100%',
+    height: tileSize - 16,
+    resizeMode: 'cover',
   },
   serviceInfo: {
-    flex: 1,
     padding: 12,
   },
   serviceTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  servicePrice: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  serviceDescription: {
+  servicePrice: {
     fontSize: 14,
+    fontWeight: 'bold',
   },
   emptyContainer: {
     flex: 1,
@@ -134,19 +186,45 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    padding: 15,
-    borderRadius: 8,
-    width: '80%',
+    position: 'absolute',
+    right: 20,
+    top: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1,
   },
   addButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   loadingText: {
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  retryButton: {
+    padding: 10,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

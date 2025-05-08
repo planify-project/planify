@@ -362,9 +362,17 @@ export default function App() {
         <NavigationContainer>
           <RootStack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
-              <RootStack.Screen name="MainTabs" component={MainTabs} />
+              <RootStack.Screen 
+                name="Main" 
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
             ) : (
-              <RootStack.Screen name="Auth" component={AuthNavigator} />
+              <RootStack.Screen 
+                name="Auth" 
+                component={AuthNavigator}
+                options={{ headerShown: false }}
+              />
             )}
           </RootStack.Navigator>
         </NavigationContainer>

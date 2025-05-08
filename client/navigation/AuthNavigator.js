@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import app from "../configs/config.js";
@@ -9,18 +9,21 @@ import app from "../configs/config.js";
 const Stack = createNativeStackNavigator();
 const auth = getAuth(app);
 
-const AuthNavigator = () => {
+const AuthNavigator = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
+      if (user) {
+        // User is signed in, navigation will be handled by App.js
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
     });
 
     return unsubscribe;
@@ -34,6 +37,7 @@ const AuthNavigator = () => {
         return;
       }
       await signInWithEmailAndPassword(auth, email, password);
+      // Navigation will be handled by App.js auth state change
     } catch (error) {
       console.error(error.message);
       if (error.code === 'auth/invalid-email') {
@@ -58,7 +62,7 @@ const AuthNavigator = () => {
         return;
       }
       await createUserWithEmailAndPassword(auth, email, password);
-      console.log('User registered successfully');
+      // Navigation will be handled by App.js auth state change
     } catch (error) {
       console.error(error.message);
       if (error.code === 'auth/invalid-email') {
@@ -93,7 +97,7 @@ const AuthNavigator = () => {
             handleLogin={handleLogin}
             error={error}
             setError={setError}
-            switchToSignUp={() => props.navigation.navigate('SignUp')} // Navigate to SignUp
+            switchToSignUp={() => props.navigation.navigate('SignUp')}
           />
         )}
       />
@@ -111,7 +115,7 @@ const AuthNavigator = () => {
             handleSignUp={handleSignUp}
             error={error}
             setError={setError}
-            switchToLogin={() => props.navigation.navigate('Login')} // Navigate to Login
+            switchToLogin={() => props.navigation.navigate('Login')}
           />
         )}
       />

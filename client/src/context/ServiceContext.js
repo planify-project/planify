@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+const API_URL = 'http://192.168.128.126:3001';
+
 const ServiceContext = createContext();
 
 export const ServiceProvider = ({ children }) => {
@@ -12,10 +14,17 @@ export const ServiceProvider = ({ children }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3001/api/services', {
+      const response = await axios.get(`${API_URL}/api/services`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setServices(response.data);
+      
+      // Transform image URLs to include the API URL
+      const servicesWithFullUrls = response.data.data.map(service => ({
+        ...service,
+        imageUrl: service.imageUrl ? `${API_URL}${service.imageUrl}` : null
+      }));
+      
+      setServices(servicesWithFullUrls);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch services');
@@ -29,20 +38,41 @@ export const ServiceProvider = ({ children }) => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const formData = new FormData();
+
+      // Handle image upload
+      if (serviceData.image && serviceData.image.uri) {
+        formData.append('image', {
+          uri: serviceData.image.uri,
+          type: serviceData.image.type || 'image/jpeg',
+          name: serviceData.image.name || 'photo.jpg'
+        });
+      }
+
+      // Append other form data
       Object.keys(serviceData).forEach(key => {
-        formData.append(key, serviceData[key]);
+        if (key !== 'image') {
+          formData.append(key, serviceData[key]);
+        }
       });
 
-      const response = await axios.post('http://localhost:3001/api/services', formData, {
+      const response = await axios.post(`${API_URL}/api/services`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
-      setServices(prev => [...prev, response.data]);
+
+      // Transform the response data to include full image URL
+      const serviceWithFullUrl = {
+        ...response.data.data,
+        imageUrl: response.data.data.imageUrl ? `${API_URL}${response.data.data.imageUrl}` : null
+      };
+
+      await fetchServices();
       setError(null);
-      return response.data;
+      return serviceWithFullUrl;
     } catch (err) {
+      console.error('Error creating service:', err);
       setError(err.response?.data?.message || 'Failed to create service');
       throw err;
     } finally {
@@ -55,22 +85,41 @@ export const ServiceProvider = ({ children }) => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const formData = new FormData();
+
+      // Handle image upload
+      if (serviceData.image && serviceData.image.uri) {
+        formData.append('image', {
+          uri: serviceData.image.uri,
+          type: serviceData.image.type || 'image/jpeg',
+          name: serviceData.image.name || 'photo.jpg'
+        });
+      }
+
+      // Append other form data
       Object.keys(serviceData).forEach(key => {
-        formData.append(key, serviceData[key]);
+        if (key !== 'image') {
+          formData.append(key, serviceData[key]);
+        }
       });
 
-      const response = await axios.put(`http://localhost:3001/api/services/${id}`, formData, {
+      const response = await axios.put(`${API_URL}/api/services/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
-      setServices(prev => prev.map(service => 
-        service._id === id ? response.data : service
-      ));
+
+      // Transform the response data to include full image URL
+      const serviceWithFullUrl = {
+        ...response.data.data,
+        imageUrl: response.data.data.imageUrl ? `${API_URL}${response.data.data.imageUrl}` : null
+      };
+
+      await fetchServices();
       setError(null);
-      return response.data;
+      return serviceWithFullUrl;
     } catch (err) {
+      console.error('Error updating service:', err);
       setError(err.response?.data?.message || 'Failed to update service');
       throw err;
     } finally {
@@ -82,12 +131,13 @@ export const ServiceProvider = ({ children }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3001/api/services/${id}`, {
+      await axios.delete(`${API_URL}/api/services/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setServices(prev => prev.filter(service => service._id !== id));
+      await fetchServices();
       setError(null);
     } catch (err) {
+      console.error('Error deleting service:', err);
       setError(err.response?.data?.message || 'Failed to delete service');
       throw err;
     } finally {
