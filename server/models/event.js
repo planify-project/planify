@@ -37,9 +37,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.FLOAT,
       allowNull: true, // Added for geolocation support
     },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: true, // Allow null if not all events have a category
+    },
     isPublic: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false, // Renamed from "visibility" for clarity
+      allowNull: false,
+      defaultValue: true, // Default to public events
     },
     status: {
       type: DataTypes.ENUM('pending', 'approved', 'rejected', 'cancelled', 'completed'),
@@ -81,8 +86,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false, // Indicates whether the event is free
     },
+    rating: {
+      type: DataTypes.FLOAT, // Use FLOAT for ratings (e.g., 4.5)
+      allowNull: true, // Optional field for event ratings
+    },
   }, {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
     paranoid: true, // Enables soft deletes (adds deletedAt field)
   });
+  
+
+  return Event;
 };
