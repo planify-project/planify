@@ -1,8 +1,17 @@
-import React from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState, useContext } from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext'; // Make sure this path is correct
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -10,38 +19,44 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }) => {
-  const auth = getAuth();
-  const { theme } = useTheme();
+const LoginScreen = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();
+  const { login, loading } = useContext(AuthContext);
 
   const handleLogin = async () => {
     setError('');
     try {
       if (!email || !password) {
-        setError('Email and password are required');
-        return;
+        throw new Error('Please fill in all fields');
       }
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('User logged in successfully');
+
+      await login(email, password);
       navigation.reset({
         index: 0,
-        routes: [{ name: 'MainTabs' }],
+        routes: [{ name: 'Root' }], 
       });
     } catch (err) {
-      console.error(err.message);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Invalid email or password');
-        setPassword('');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many failed attempts. Please try again later');
-      } else if (err.code === 'auth/network-request-failed') {
-        setError('Network error. Please check your connection and try again.');
-      } else {
-        setError('Login failed: ' + err.message);
+      let errorMessage = 'Login failed. Please try again.';
+      switch (err.code) {
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = 'Invalid email or password';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many attempts. Try again later';
+          break;
       }
+      setError(errorMessage);
+      setPassword('');
     }
   };
 
@@ -53,7 +68,11 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }
       </View>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
-          <Image source={require('../assets/LOGOLOGO.png')} style={styles.illustration} resizeMode="contain" />
+          <Image
+            source={require('../assets/LOGOLOGO.png')}
+            style={styles.illustration}
+            resizeMode="contain"
+          />
         </View>
         <Text style={[styles.welcomeText, { color: theme.text }]}>WELCOME BACK</Text>
         <View style={styles.inputContainer}>
@@ -84,8 +103,8 @@ const LoginScreen = ({ email, setEmail, password, setPassword, error, setError }
           <Text style={styles.signInButtonText}>Sign in</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-  <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-</TouchableOpacity>
+          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

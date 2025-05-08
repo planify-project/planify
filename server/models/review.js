@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('review', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    reviewer_id: DataTypes.INTEGER,
+    reviewer_id: DataTypes.STRING, // <-- Change from INTEGER to STRING
     service_id: DataTypes.INTEGER,
     rating: DataTypes.INTEGER,
     comment: DataTypes.TEXT,

@@ -1,234 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
-import { normalize } from '../utils/scaling';
-import { auth } from '../configs/config';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
+import React, { useContext } from 'react';
+import {
+  View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions
+} from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext'; // Ensure the path is correct
 
-export default function SettingsScreen({ navigation }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const { theme, isDarkMode, toggleTheme } = useTheme();
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+function normalize(size) {
+  return Math.round(scale * size);
+}
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser({
-          displayName: currentUser.displayName || 'User',
-          email: currentUser.email,
-          photoURL: currentUser.photoURL,
-          uid: currentUser.uid
-        });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+export default function SettingsScreen() {
+  const navigation = useNavigation();
+  const { logout } = useContext(AuthContext);
 
-    return () => unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Auth' }],
+        routes: [{ name: 'Root' }],
       });
-    } catch (error) {
-      console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to sign out');
+    } catch (err) {
+      console.error('Logout failed:', err.message);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
-      </View>
-    );
-  }
-
-  if (!user) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={[styles.errorText, { color: theme.text }]}>Please sign in to view settings</Text>
-        <TouchableOpacity
-          style={[styles.signInButton, { backgroundColor: theme.primary }]}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.signInButtonText}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Profile Section */}
-      <View style={styles.profileSection}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: normalize(40) }}>
+      <View style={styles.profileCard}>
         <Image
-          source={{ uri: user?.photoURL || 'https://via.placeholder.com/150' }}
-          style={styles.profileImage}
+          source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
+          style={styles.avatar}
         />
-        <View style={styles.profileInfo}>
-          <Text style={[styles.name, { color: theme.text }]}>{user?.displayName || 'User'}</Text>
-          <Text style={[styles.email, { color: theme.textSecondary }]}>{user?.email}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.profileName}>Yonnefer Doe</Text>
+          <Text style={styles.profileHandle}>@yonneferdoe</Text>
         </View>
-        <View style={styles.profileButtons}>
-          <TouchableOpacity
-            style={[styles.profileButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Text style={styles.profileButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.profileButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('Wishlist')}
-          >
-            <Text style={styles.profileButtonText}>Wishlist</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity>
+          <Ionicons name="pencil" size={normalize(22)} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {/* Settings Options */}
-      <View style={styles.settingsContainer}>
-        <View style={[styles.settingItem, { backgroundColor: theme.card }]}>
-          <Text style={[styles.settingText, { color: theme.text }]}>Dark Mode</Text>
-          <Switch
-            value={isDarkMode}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#767577', true: theme.primary }}
-            thumbColor={isDarkMode ? '#f4f3f4' : '#f4f3f4'}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.settingItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('AddService')}
-        >
-          <Text style={[styles.settingText, { color: theme.text }]}>Add New Service</Text>
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.row}>
+          <Ionicons name="person-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>My Account</Text>
+            <Text style={styles.rowSubtitle}>Make changes to your account</Text>
+          </View>
+          <MaterialIcons name="error-outline" size={normalize(18)} color="#FF5A5F" style={{ marginRight: normalize(8) }} />
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.settingItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('Notifications')}
-        >
-          <Text style={[styles.settingText, { color: theme.text }]}>Notifications</Text>
+        <TouchableOpacity style={styles.row}>
+          <Ionicons name="people-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Saved Beneficiary</Text>
+            <Text style={styles.rowSubtitle}>Manage your saved beneficiary</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.settingItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('About')}
-        >
-          <Text style={[styles.settingText, { color: theme.text }]}>About</Text>
+        <TouchableOpacity style={styles.row}>
+          <Ionicons name="shield-checkmark-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Two-Factor Authentication</Text>
+            <Text style={styles.rowSubtitle}>Further secure your account for safety</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.settingItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('Help')}
-        >
-          <Text style={[styles.settingText, { color: theme.text }]}>Help & Support</Text>
+        <TouchableOpacity style={styles.row} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Log out</Text>
+            <Text style={styles.rowSubtitle}>Log out of your account</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.row}>
+          <Ionicons name="help-circle-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Help & Support</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.settingItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('Privacy')}
-        >
-          <Text style={[styles.settingText, { color: theme.text }]}>Privacy Policy</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.signOutButton, { backgroundColor: theme.error }]}
-          onPress={handleSignOut}
-        >
-          <Text style={styles.signOutText}>Sign Out</Text>
+        <TouchableOpacity style={styles.row}>
+          <Ionicons name="information-circle-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>About App</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F4F6FC',
+    paddingHorizontal: 0,
+    padding: normalize(16),
   },
-  profileSection: {
+  profileCard: {
+    backgroundColor: '#5D5FEE',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: normalize(20),
+    borderRadius: normalize(16),
+    marginHorizontal: normalize(18),
+    padding: normalize(18),
+    marginBottom: normalize(18),
+    marginTop: 0,
+  },
+  avatar: {
+    width: normalize(56),
+    height: normalize(56),
+    borderRadius: normalize(28),
+    marginRight: normalize(16),
+    borderWidth: normalize(2),
+    borderColor: '#fff',
+  },
+  profileName: { color: '#fff', fontWeight: 'bold', fontSize: normalize(18) },
+  profileHandle: { color: '#e0e0ff', fontSize: normalize(14), marginTop: normalize(2) },
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: normalize(16),
+    marginHorizontal: normalize(18),
+    marginBottom: normalize(18),
+    paddingVertical: normalize(4),
+    paddingHorizontal: 0,
+    elevation: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: normalize(16),
+    paddingHorizontal: normalize(18),
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F4F6FC',
   },
-  profileImage: {
-    width: normalize(60),
-    height: normalize(60),
-    borderRadius: normalize(30),
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: normalize(15),
-  },
-  name: {
-    fontSize: normalize(18),
-    fontWeight: 'bold',
-    marginBottom: normalize(4),
-  },
-  email: {
-    fontSize: normalize(14),
-  },
-  profileButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  profileButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  profileButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  settingsContainer: {
-    padding: normalize(16),
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: normalize(16),
-    borderRadius: normalize(8),
-    marginBottom: normalize(12),
-  },
-  settingText: {
-    fontSize: normalize(16),
-  },
-  signOutButton: {
-    padding: normalize(16),
-    borderRadius: normalize(8),
-    alignItems: 'center',
-    marginTop: normalize(16),
-  },
-  signOutText: {
-    color: '#fff',
-    fontSize: normalize(16),
-    fontWeight: 'bold',
-  },
-  errorText: {
-    fontSize: normalize(16),
-    marginBottom: normalize(16),
-  },
-  signInButton: {
-    paddingHorizontal: normalize(20),
-    paddingVertical: normalize(10),
-    borderRadius: normalize(8),
-  },
-  signInButtonText: {
-    color: '#fff',
-    fontSize: normalize(16),
-    fontWeight: 'bold',
-  },
+  rowText: { flex: 1, marginLeft: normalize(14) },
+  rowTitle: { fontSize: normalize(16), fontWeight: 'bold', color: '#222' },
+  rowSubtitle: { fontSize: normalize(13), color: '#888', marginTop: normalize(2) },
 });
-
