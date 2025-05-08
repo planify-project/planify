@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
 
+
             // Prepare user data
          
 
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }) => {
             });
         } catch (error) {
             console.error('Login Error:', error.message);
+
             throw error;
         }
     };
@@ -74,6 +76,7 @@ export const AuthProvider = ({ children }) => {
             await signOut(auth);
         } catch (error) {
             console.error('Logout Error:', error.message);
+
             throw error;
         }
     };
@@ -84,3 +87,4 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+

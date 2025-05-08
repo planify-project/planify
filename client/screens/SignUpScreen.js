@@ -4,6 +4,7 @@ import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext'; // Adjust the path if needed
 
 
+
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 function normalize(size) {
@@ -26,8 +27,8 @@ const handleSignUp = async () => {
       setError('Password must be at least 6 characters');
       return;
     }
-
-    await register(email, password, username);
+const name=username
+    await register(email, password, name);
     console.log('User registered successfully');
     switchToLogin(); // Navigate back to login after successful registration
   } catch (err) {
