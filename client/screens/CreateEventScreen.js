@@ -4,10 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AgentModal from '../components/AgentModal';
 import { API_BASE } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import axios from 'axios';
 
 // Update the axios configuration
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: process.env.API_BASE || 'http://192.168.128.72:3000/api', // Use environment variable for base URL
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
@@ -28,6 +30,26 @@ api.interceptors.response.use(
   }
 );
 
+// Example of setting an item
+const setItem = async (key, value) => {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error('Error saving data', error);
+  }
+};
+
+// Example of getting an item
+const getItem = async (key) => {
+  try {
+    const value = await AsyncStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  } catch (error) {
+    console.error('Error reading data', error);
+    return null;
+  }
+};
+
 export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
   const [venues, setVenues] = useState([]);
@@ -47,10 +69,10 @@ export default function CreateEventScreen({ navigation, route }) {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log(`Fetching ${type} data from: ${api.defaults.baseURL}/services?type=${type}`);
       const response = await api.get(`/services?type=${type}`);
-      
+
       if (response.data.success) {
         switch(type) {
           case 'venue':
@@ -63,6 +85,8 @@ export default function CreateEventScreen({ navigation, route }) {
             setEquipment(response.data.data);
             break;
         }
+      } else {
+        setError(`Failed to fetch ${type}. Please check your connection and try again.`);
       }
     } catch (err) {
       console.error(`Error fetching ${type}:`, err);
@@ -119,7 +143,7 @@ export default function CreateEventScreen({ navigation, route }) {
 
   const renderTableRow = (item) => {
     const isSelected = isItemSelected(item);
-    
+
     return (
       <TouchableOpacity 
         style={[styles.tableRow, isSelected && styles.selectedRow]} 
@@ -228,22 +252,51 @@ export default function CreateEventScreen({ navigation, route }) {
         budget: parseFloat(selectedItems.venue?.price || 0),
         status: 'pending',
         is_self_planned: true,
-        visibility: 'public'
+        visibility: 'public',
+        // Include selected services and equipment
+        services: selectedItems.services.map(s => s.id),
+        equipment: selectedItems.equipment.map(e => e.id)
       };
 
-      const response = await api.post('/events', eventData);
-
-      if (response.data.success) {
+      console.log('Sending event data:', JSON.stringify(eventData));
+      
+      try {
+        const response = await api.post('/events', eventData);
+        
+        if (response.data.success) {
+          Alert.alert(
+            'Success',
+            'Event created successfully!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  // Navigate to the Schedule tab
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Schedule' }],
+                  });
+                }
+              }
+            ]
+          );
+        }
+      } catch (apiError) {
+        // If the API call fails, still navigate to Schedule
+        console.error('API Error:', apiError);
         Alert.alert(
-          'Success',
-          'Event created successfully!',
+          'Note',
+          'There was an issue saving your event, but we\'ll take you to the Schedule screen anyway.',
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('Schedule', { // Changed from 'ScheduleMain' to 'Schedule'
-                newEvent: response.data.data,
-                refresh: true
-              })
+              onPress: () => {
+                // Navigate to the Schedule tab
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Schedule' }],
+                });
+              }
             }
           ]
         );
@@ -263,12 +316,11 @@ export default function CreateEventScreen({ navigation, route }) {
         onClose={() => setAgentModalVisible(false)}
         onChooseAgent={() => {
           setAgentModalVisible(false);
-          // Add navigation to agent selection screen if needed
-          navigation.navigate('Agent List');
         }}
       />
       {/* Header */}
       <View style={styles.header}>
+
       <View>
   <Text style={styles.headerTitle}>Create Event</Text>
   <View style={styles.subHeader}>

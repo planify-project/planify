@@ -60,16 +60,16 @@ export default function ScheduleScreen({ navigation, route }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.eventItem}
-      onPress={() => navigation.navigate('/EventDetails', { event: item })}
+      onPress={() => navigation.navigate('EventDetails', { event: item })}
     >
-      <View style={styles.eventInfo}>
-        <Text style={styles.eventTitle}>{item.name || 'Untitled Event'}</Text>
-        <Text style={styles.eventDate}>
-          {new Date(item.date || item.created_at).toLocaleDateString()}
-        </Text>
-        <Text style={styles.eventStatus}>{item.status}</Text>
-        <Text style={styles.eventPrice}>${parseFloat(item.budget || 0).toFixed(2)}</Text>
-      </View>
+ <View>
+  <Text style={styles.headerTitle}>Create Event</Text>
+  <View style={styles.subHeader}>
+    <Text style={styles.eventType}>{route.params?.eventType || 'Event Type'}</Text>
+    <Ionicons name="pencil" size={16} color="#007bff" style={{ marginHorizontal: 4 }} />
+    <Text style={styles.date}>{route.params?.eventDate || 'Event Date'}</Text>
+  </View>
+</View>
       <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>
   );

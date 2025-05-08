@@ -91,8 +91,11 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
     if (tabId === 'event') {
       navigation.navigate('AllEvents'); // Navigate to AllEventsScreen when "Event" is clicked
     }
+    if (tabId === 'services') {
+      navigation.navigate('ServicesScreen'); // Can create a ServicesScreen if necessary
   };
 
+  }
   return (
     <View style={styles.tabs}>
       {tabs.map((tab) => (

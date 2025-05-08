@@ -63,7 +63,7 @@
 // export default api; 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.1.60:3000/api'; // For Android emulator
+const API_BASE_URL = 'http://192.168.128.72:3000/api'; // For Android emulator
 // const API_BASE_URL = 'http://localhost:3000/api'; // For iOS simulator
 
 const api = axios.create({

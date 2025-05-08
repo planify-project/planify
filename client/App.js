@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
+import { SocketProvider } from './context/SocketContext';
 
 
 
@@ -22,6 +23,7 @@ import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
 import AllEventsScreen from './screens/AllEventsScreen';
+import ServicesScreen from './screens/ServicesScreen';
 
 // Navigators
 const RootStack = createNativeStackNavigator();
@@ -77,6 +79,18 @@ function HomeStack() {
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
       />
+      <Stack.Screen
+        name="ServicesScreen"
+        component={ServicesScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Services',
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+        }}
+      />
+
       <Stack.Screen
         name="Popular Events"
         component={PopularEventsScreen}
@@ -224,14 +238,16 @@ function MainTabs() {
 // App Component
 export default function App() {
   return (   
-    <ThemeProvider>
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        <RootStack.Screen name="Auth" component={AuthNavigator} />
-        <RootStack.Screen name="MainTabs" component={MainTabs} />
-      </RootStack.Navigator>
-      <StatusBar style="auto" />
-    </NavigationContainer>
-    </ThemeProvider>
+    <SocketProvider>
+      <ThemeProvider>
+        <NavigationContainer>
+          <RootStack.Navigator screenOptions={{ headerShown: false }}>
+            <RootStack.Screen name="Auth" component={AuthNavigator} />
+            <RootStack.Screen name="MainTabs" component={MainTabs} />
+          </RootStack.Navigator>
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </ThemeProvider>
+    </SocketProvider>
   );
 }

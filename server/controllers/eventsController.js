@@ -42,7 +42,7 @@ exports.createEvent = async (req, res) => {
     console.log('Received event data:', req.body);
 
     const {
-      title,
+      name,      
       type,
       date,
       venue,
@@ -50,15 +50,14 @@ exports.createEvent = async (req, res) => {
       equipment = []
     } = req.body;
 
-    // Create the event with existing model structure
     const event = await Event.create({
-      title,
+      name,                             // ✅
       type: type || 'social',
-      event_date: date,
-      venue_id: venue?.id,
+      startDate: date,                  // ✅ 
+      location: venue?.name || '',      // ✅ 
       status: 'pending',
-      user_id: 1, // Default user ID until auth is implemented
-      budget: parseFloat(venue?.price || 0)
+      created_by: 1,                    // ✅ 
+      budget: venue?.price ? parseFloat(venue.price) : 0
     });
 
     console.log('Event created:', event);
