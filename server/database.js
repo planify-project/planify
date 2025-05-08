@@ -130,6 +130,8 @@ Payment.belongsTo(Service, { foreignKey: 'service_id' });
 //     console.error('Error synchronizing models:', error);
 //   });
 
+
+// Export all models and sequelize instance
 module.exports = {
     sequelize,
     Sequelize,

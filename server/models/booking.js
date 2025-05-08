@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('booking', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    user_id: { type: DataTypes.INTEGER },
+    user_id: { type: DataTypes.UUID },
     service_id: { type: DataTypes.INTEGER },
     event_id: { type: DataTypes.UUID },
     date: { type: DataTypes.DATE },

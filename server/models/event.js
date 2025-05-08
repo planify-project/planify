@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('event', {
     id: {
-      type: DataTypes.UUID, // Use UUID for better uniqueness
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true, // Optional field for the event's cover image URL
     },
     created_by: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false, // Required for tracking the event creator
     },
     agent_id: {

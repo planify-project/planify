@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     event_id: {
-      type: DataTypes.UUID, // Match the UUID type of the `id` column in the `events` table
+      type: DataTypes.CHAR(36), // Force CHAR(36) to match events.id
       allowNull: true,
     },
     service_id: {

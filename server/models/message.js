@@ -3,33 +3,44 @@ module.exports = (sequelize, DataTypes) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true
     },
     from_user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     to_user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     content: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: false
     },
     event_id: {
-      type: DataTypes.UUID, // Match the UUID type of the `id` column in the `events` table
+      type: DataTypes.CHAR(36), // Force CHAR(36) to match events.id
       allowNull: true,
+      references: {
+        model: 'events',
+        key: 'id'
+      }
     },
     created_at: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.NOW,
-    },
+      allowNull: false
+    }
   }, {
     underscored: true,
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: false,
+    updatedAt: false
   });
 };

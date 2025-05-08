@@ -1,13 +1,20 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    id: {
+      type: DataTypes.STRING, // Firebase UID is a string
+      primaryKey: true,
+      allowNull: false,
+    },
     name: DataTypes.STRING,
-    email: { type: DataTypes.STRING, unique: true },
-    password: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
     phone: DataTypes.STRING,
-    contact_details: DataTypes.JSON
+    contact_details: DataTypes.JSON,
   }, {
     underscored: true,
-    timestamps: false ,
+    timestamps: false,
   });
 };

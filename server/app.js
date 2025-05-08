@@ -4,8 +4,9 @@ const http = require('http');
 const socketIo = require('socket.io');
 require('dotenv').config();
 require('./database');
-const db = require('./database');
-const { Event } = db;
+const morgan = require('morgan');
+
+
 
 // Import routes
 const eventsRouter = require('./routes/events');
@@ -14,6 +15,7 @@ const agentRoutes = require('./routes/agentRoutes');
 const servicesRouter = require('./routes/services.js');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -44,14 +46,16 @@ app.set('io', io);
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({ origin: '*' }))
+app.use(cors())
 app.use(express.json());
+app.use(morgan('dev'));
 
 // Routes
 app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
+app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 

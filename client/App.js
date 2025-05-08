@@ -1,10 +1,9 @@
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useContext, useEffect } from 'react';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
-import { SocketProvider } from './context/SocketContext';
 
 
 
@@ -23,10 +22,11 @@ import AgentChatScreen from './screens/AgentChatScreen';
 import AgentListScreen from './screens/AgentsListScreen';
 import AgentProfileScreen from './screens/AgentProfileScreen';
 import AllEventsScreen from './screens/AllEventsScreen';
+
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import ServicesScreen from './screens/ServicesScreen';
 
 // Navigators
-const RootStack = createNativeStackNavigator();
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -37,140 +37,87 @@ const screenHeaderOptions = {
   headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
 };
 
+
+function JoinEventWrapper(props) {
+  const { user } = useContext(AuthContext);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    if (!user) {
+      navigation.replace('Auth');
+    }
+  }, [user]);
+
+  if (!user) return null;
+  return <JoinEventScreen {...props} />;
+}
+
 // Home Stack
 function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="HomeMain"
+        name="Home"
         component={HomeScreen}
-        options={{
-          headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
+        options={screenHeaderOptions}
       />
-      
       <Stack.Screen
         name="CreateEvent"
         component={CreateEventScreen}
-        options={{
-          headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
+        options={screenHeaderOptions}
       />
-
       <Stack.Screen
         name="EventDetail"
         component={EventDetailScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+        options={screenHeaderOptions}
       />
       <Stack.Screen
         name="Notification"
         component={NotificationScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+        options={screenHeaderOptions}
       />
-      <Stack.Screen
-        name="ServicesScreen"
-        component={ServicesScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'Services',
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
-        }}
-      />
-
       <Stack.Screen
         name="Popular Events"
         component={PopularEventsScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+        options={screenHeaderOptions}
       />
       <Stack.Screen
         name="JoinEvent"
-        component={JoinEventScreen}
-        options={{
-          title: 'Join Event',
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
-      />
-      <Stack.Screen
-        name="Auth"
-        component={AuthNavigator}
-        options={{ headerShown: false }}
-     
+        component={JoinEventWrapper}
+        options={{ ...screenHeaderOptions, title: 'Join Event' }}
       />
       <Stack.Screen
         name="Agent Chat"
         component={AgentChatScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+        options={screenHeaderOptions}
       />
       <Stack.Screen
         name="Agent List"
         component={AgentListScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+        options={screenHeaderOptions}
       />
       <Stack.Screen
         name="AgentProfile"
         component={AgentProfileScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "Agent Profile",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
+        options={{ ...screenHeaderOptions, title: "Agent Profile" }}
       />
-       <Stack.Screen
-        name="AllEvents" // Register AllEventsScreen
+      <Stack.Screen
+        name="AllEvents"
         component={AllEventsScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'All Events',
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
-        }}
+        options={{ ...screenHeaderOptions, title: 'All Events' }}
       />
     </Stack.Navigator>
-  
   );
 }
 
-// Stack Navigator for Schedule (shows PopularEvents)
+// Schedule Stack
 function ScheduleStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="ScheduleMain"
+        name="Schedule"
         component={ScheduleScreen}
-        options={{
-          headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
+        options={screenHeaderOptions}
       />
       <Stack.Screen
         name="Popular Events"
@@ -181,32 +128,29 @@ function ScheduleStack() {
   );
 }
 
-// Stack Navigator for Wishlist
+// Wishlist Stack
 function WishlistStack() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
-      }}
-    >
-      <Stack.Screen name="WishlistMain" component={WishlistScreen} />
+    <Stack.Navigator screenOptions={screenHeaderOptions}>
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
-  )
+  );
 }
 
 // Settings Stack
 function SettingsStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="SettingsMain" component={SettingsScreen} options={screenHeaderOptions} />
+      <Stack.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={screenHeaderOptions} 
+      />
     </Stack.Navigator>
   );
 }
 
-// Main Bottom Tabs
+// Main Tabs Navigator
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -235,19 +179,27 @@ function MainTabs() {
   );
 }
 
-// App Component
+// Main App Component
 export default function App() {
-  return (   
+  return (
+    
     <SocketProvider>
-      <ThemeProvider>
-        <NavigationContainer>
-          <RootStack.Navigator screenOptions={{ headerShown: false }}>
-            <RootStack.Screen name="Auth" component={AuthNavigator} />
-            <RootStack.Screen name="MainTabs" component={MainTabs} />
-          </RootStack.Navigator>
-          <StatusBar style="auto" />
-        </NavigationContainer>
-      </ThemeProvider>
+      <AuthProvider>
+          <NavigationContainer>
+            <Stack.Navigator>
+          <Stack.Screen 
+            name="Root" 
+            component={MainTabs} 
+            options={{ headerShown: false }} 
+          />
+              <Stack.Screen 
+            name="Auth" 
+            component={AuthNavigator} 
+                options={{ headerShown: false }} 
+          />
+            </Stack.Navigator>
+              </NavigationContainer>
+      </AuthProvider>
     </SocketProvider>
   );
 }
