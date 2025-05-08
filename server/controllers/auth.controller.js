@@ -1,4 +1,4 @@
-const { user: User } = require('../models');
+const { User } = require('../database');
 const bcrypt = require('bcryptjs');
 
 // Register a new user (expects Firebase UID as ID)

@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('notification', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    user_id: DataTypes.INTEGER,
+    user_id: DataTypes.STRING,
     title: DataTypes.STRING,
     message: DataTypes.TEXT,
     is_read: DataTypes.BOOLEAN,

@@ -7,6 +7,7 @@ import {
     signOut,
     onAuthStateChanged,
 } from 'firebase/auth';
+import { API_BASE } from '../config';
 
 export const AuthContext = createContext({});
 
@@ -30,15 +31,15 @@ export const AuthProvider = ({ children }) => {
             const id = userCredential.user.uid;
 
             // Prepare user data
-            const userData = {
+            
+
+            // Send user data to backend
+            await axios.post(`${API_BASE}/auth/register`, {
                 id,
                 email,
                 name,
                 password,
-            };
-
-            // Send user data to backend
-            // await axios.post('https://192.168.1.3:3000/api/auth/register', userData);
+            });
         } catch (error) {
             console.error('Registration Error:', error.message);
             throw error;
@@ -52,15 +53,15 @@ export const AuthProvider = ({ children }) => {
             const id = userCredential.user.uid;
 
             // Prepare user data
-            const userData = {
+         
+
+            // Send user data to backend
+            await axios.post(`${API_BASE}/auth/login`, {
                 id,
                 email,
                 name,
                 password,
-            };
-
-            // Send user data to backend
-            // await axios.post('https://192.168.1.3:3000/api/auth/login', userData);
+            });
         } catch (error) {
             console.error('Login Error:', error.message);
             throw error;
