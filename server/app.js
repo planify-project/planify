@@ -50,7 +50,7 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://192.168.147.126:3000', 'http://localhost:8081', 'http://192.168.147.126:8081'],
+  origin: '*',  // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -115,7 +115,8 @@ server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Server URLs:`);
   console.log(`- http://localhost:${port}`);
-  console.log(`- http://192.168.147.126:${port}`);
+  console.log(`- http://0.0.0.0:${port}`);
+  console.log(`- http://172.20.10.3:${port}`);
 });
 
 // Handle server errors

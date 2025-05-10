@@ -40,6 +40,7 @@ import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
 import EventSpaceScreen from './screens/EventSpaceScreen';
+import EventSpaceDetails from './screens/EventSpaceDetails';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import ServicesScreen from './screens/ServicesScreen';
@@ -85,6 +86,17 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Event Spaces",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="EventSpaceDetails"
+        component={EventSpaceDetails}
+        options={{
+          headerShown: true,
+          headerTitle: "Space Details",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }

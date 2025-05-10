@@ -11,7 +11,7 @@ exports.getAllEvents = async (req, res) => {
     const { count, rows } = await Event.findAndCountAll({
       offset,
       limit,
-      order: [['startDate', 'ASC']], // Updated to use startDate
+      order: [['startDate', 'ASC']],
     });
 
     res.json({
@@ -42,7 +42,20 @@ exports.getPublicEvents = async (req, res) => {
       details: error.message 
     });
   }
-}
+};
+
+exports.getEventById = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch event', details: error.message });
+  }
+};
+
 exports.createEvent = async (req, res) => {
   try {
     console.log('Received event data:', req.body);
@@ -57,12 +70,12 @@ exports.createEvent = async (req, res) => {
     } = req.body;
 
     const event = await Event.create({
-      name,                             // ✅
+      name,
       type: type || 'social',
-      startDate: date,                  // ✅ 
-      location: venue?.name || '',      // ✅ 
+      startDate: date,
+      location: venue?.name || '',
       status: 'pending',
-      created_by: 1,                    // ✅ 
+      created_by: 1,
       budget: venue?.price ? parseFloat(venue.price) : 0
     });
 
@@ -80,5 +93,40 @@ exports.createEvent = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+exports.updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.update(req.body);
+    res.json({
+      success: true,
+      data: event,
+      message: 'Event updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update event', details: error.message });
+  }
+};
+
+exports.deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.destroy();
+    res.json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete event', details: error.message });
   }
 };
