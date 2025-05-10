@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     event_id: {
-      type: DataTypes.CHAR(36), // Force CHAR(36) to match events.id
+      type: DataTypes.UUID, // Force CHAR(36) to match events.id
       allowNull: true,
       references: {
         model: 'events',

@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import EventCard from '../components/EventCard';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import { API_BASE } from '../config';
 
 // Responsive scaling
 const { width } = Dimensions.get('window');
@@ -11,46 +13,71 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-const DUMMY_EVENTS = [
-  {
-    id: 1,
-    title: 'Pool party',
-    location: 'Les grottes, Bizerte',
-    price: '20 DT',
-    rating: '5.0',
-    per: 'person',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'
-  },
-  {
-    id: 2,
-    title: 'Golden Palace',
-    location: 'Cite Hasan, Nabeul',
-    price: '175 DT',
-    rating: '4.5',
-    per: 'night',
-    image: 'https://images.unsplash.com/photo-1560185127-6ed189bf02c5'
-  },
-  {
-    id: 3,
-    title: 'Beach outing',
-    location: 'Coco beach Ghar El Milh, Bizerte',
-    price: '80 DT',
-    rating: '5.0',
-    per: 'person',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'
-  }
-];
-
 export default function AllEventsScreen() {
   const navigation = useNavigation();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      console.log('Fetching events from:', `${API_BASE}/events/public`);
+      const response = await axios.get(`${API_BASE}/events/public`);
+      console.log('Response received:', response.data);
+      
+      const formattedEvents = response.data.map(event => ({
+        id: event.id,
+        title: event.name,
+        location: event.location || 'Location not specified',
+        price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
+        rating: '4.5', // You might want to add a rating system later
+        per: 'person',
+        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+        description: event.description,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        type: event.type,
+        status: event.status,
+        maxParticipants: event.maxParticipants,
+        available_spots: event.available_spots,
+        budget: event.budget
+      }));
+      console.log('Formatted events:', formattedEvents);
+      setEvents(formattedEvents);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError('Failed to load events. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEventPress = (event) => {
     navigation.navigate('EventDetail', { event });
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#5D5FEE" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-   
       {/* Title Section */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Explore Events</Text>
@@ -58,7 +85,7 @@ export default function AllEventsScreen() {
 
       {/* Events List */}
       <ScrollView style={styles.eventsContainer}>
-        {DUMMY_EVENTS.map((event) => (
+        {events.map((event) => (
           <View key={event.id} style={styles.eventCardContainer}>
             <EventCard
               image={event.image}
@@ -81,6 +108,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F6F7FB',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -122,5 +153,11 @@ const styles = StyleSheet.create({
   },
   eventCardContainer: {
     marginBottom: normalize(16),
+  },
+  errorText: {
+    color: 'red',
+    fontSize: normalize(16),
+    textAlign: 'center',
+    padding: normalize(16),
   },
 });

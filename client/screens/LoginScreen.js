@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../context/AuthContext'; // Make sure this path is correct
+import { AuthContext } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -61,10 +61,10 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#F4F6FC' }]}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={styles.headerText}>Login</Text>
+        <Text style={[styles.headerText, { color: '#222' }]}>Login</Text>
       </View>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
@@ -74,11 +74,11 @@ const LoginScreen = () => {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.welcomeText}>WELCOME BACK</Text>
+        <Text style={[styles.welcomeText, { color: '#222' }]}>WELCOME BACK</Text>
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>EMAIL</Text>
+          <Text style={[styles.inputLabel, { color: '#222' }]}>EMAIL</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
             value={email}
             onChangeText={setEmail}
             placeholder="Enter your email"
@@ -88,9 +88,9 @@ const LoginScreen = () => {
           />
         </View>
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>PASSWORD</Text>
+          <Text style={[styles.inputLabel, { color: '#222' }]}>PASSWORD</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -99,11 +99,19 @@ const LoginScreen = () => {
           />
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
-          <Text style={styles.signInButtonText}>Sign in</Text>
+        <TouchableOpacity 
+          style={[styles.signInButton, { backgroundColor: '#5D5FEE' }]} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.signInButtonText}>
+            {loading ? 'Signing in...' : 'Sign in'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+          <Text style={[styles.linkText, { color: '#5D5FEE' }]}>
+            Don't have an account? Sign Up
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -115,7 +123,6 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,7 +132,6 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: normalize(28),
     fontWeight: 'bold',
-    color: '#333',
   },
   authContainer: {
     width: '90%',
@@ -142,7 +148,6 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: normalize(20),
     fontWeight: 'bold',
-    color: '#000',
     marginBottom: normalize(20),
     textAlign: 'center',
   },
@@ -152,7 +157,6 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: normalize(14),
-    color: '#555',
     marginBottom: normalize(5),
   },
   input: {
@@ -162,12 +166,10 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: normalize(8),
     paddingHorizontal: normalize(15),
-    backgroundColor: '#fff',
   },
   signInButton: {
     width: '100%',
     height: normalize(50),
-    backgroundColor: '#4a90e2',
     borderRadius: normalize(8),
     justifyContent: 'center',
     alignItems: 'center',
@@ -179,7 +181,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   linkText: {
-    color: '#4a90e2',
     fontSize: normalize(14),
     marginTop: normalize(15),
   },

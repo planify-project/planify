@@ -24,6 +24,37 @@ exports.getUserById = async (req, res) => {
   }
 };
 
+// Create a new user from Firebase auth
+exports.createUserFromFirebase = async (req, res) => {
+  try {
+    const { uid, email, displayName } = req.body;
+
+    // Check if user already exists
+    let user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      // Create new user
+      user = await User.create({
+        name: displayName || email.split('@')[0],
+        email,
+        firebase_uid: uid
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error creating user from Firebase:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to create user', 
+      details: error.message 
+    });
+  }
+};
+
 // Create a new user
 exports.createUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -35,8 +66,6 @@ exports.createUser = async (req, res) => {
       password: hashedPassword
     });
     res.status(201).json(newUser);
- 
-    
   } catch (error) {
     res.status(500).json({ error: 'Failed to create user', details: error.message });
   }
