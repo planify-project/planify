@@ -17,6 +17,13 @@ const validateServiceId = (req, res, next) => {
 // Routes
 router.get('/', ServicesController.getAllServices);
 router.get('/:id', validateServiceId, ServicesController.getServiceById);
-router.post('/', ServicesController.createService); // Add this line
+router.post('/', ServicesController.createService);
+router.put('/:id', validateServiceId, ServicesController.updateService);
+router.delete('/:id', validateServiceId, ServicesController.deleteService);
+
+// 💡 New routes to get services by category
+router.get('/category/equipment', ServicesController.getServicesByEquipment);
+router.get('/category/event-space', ServicesController.getServicesByEventSpace);
+router.get('/category/services', ServicesController.getServicesByServices);
 
 module.exports = router;

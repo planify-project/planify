@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     phone: DataTypes.STRING,
     contact_details: DataTypes.JSON,
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false, // إذا كنت تستخدم كلمة مرور
+    },
   }, {
     underscored: true,
     timestamps: false,

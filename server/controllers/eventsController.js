@@ -27,14 +27,20 @@ exports.getAllEvents = async (req, res) => {
 
 exports.getPublicEvents = async (req, res) => {
   try {
+    console.log('Fetching public events...');
     const publicEvents = await Event.findAll({
       where: { isPublic: true },
-      order: [['startDate', 'ASC']], // Updated to use startDate
+      order: [['startDate', 'ASC']]
     });
-
+    
+    console.log(`Found ${publicEvents.length} public events`);
     res.status(200).json(publicEvents);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch public events', details: error.message });
+    console.error('Error fetching public events:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch public events', 
+      details: error.message 
+    });
   }
 }
 exports.createEvent = async (req, res) => {

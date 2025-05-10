@@ -16,6 +16,7 @@ const servicesRouter = require('./routes/services.js');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
 const authRoutes = require('./routes/auth.routes');
+const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -46,7 +47,11 @@ app.set('io', io);
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -58,10 +63,20 @@ app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/event-spaces', eventSpaceRoutes);
 
 // Test endpoint
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running!' });
+});
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: 'Something broke!',
+    details: err.message 
+  });
 });
 
 // Start server

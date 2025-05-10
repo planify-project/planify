@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
+import { SocketProvider } from './context/SocketContext';
 
 
 
@@ -57,7 +58,7 @@ function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Home"
+        name="HomeMain"
         component={HomeScreen}
         options={screenHeaderOptions}
       />
@@ -106,7 +107,14 @@ function HomeStack() {
         component={AllEventsScreen}
         options={{ ...screenHeaderOptions, title: 'All Events' }}
       />
+      <Stack.Screen
+        name="ServicesScreen"
+        component={ServicesScreen}
+        options={{ ...screenHeaderOptions, title: 'Services' }}
+      />
+      
     </Stack.Navigator>
+    
   );
 }
 

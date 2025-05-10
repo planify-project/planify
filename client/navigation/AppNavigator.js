@@ -1,17 +1,40 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/HomeScreen';
-import CreateEventScreen from '../screens/CreateEventScreen'; // تأكد من مسار الملف
+import EventSpaceScreen from '../screens/EventSpaceScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
-const AppNavigator = () => {
+export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventSpaces"
+        component={EventSpaceScreen}
+        options={{
+          title: 'Event Spaces',
+          headerStyle: {
+            backgroundColor: '#5D5FEE',
+          },
+          headerTintColor: '#fff',
+        }}
+      />
+      {/* ...other screens... */}
     </Stack.Navigator>
   );
-};
+}
 
-export default AppNavigator;
+// In HomeTabs.js
+const handleTabPress = (index) => {
+  console.log('Tab pressed:', index);
+  console.log('Navigation prop:', navigation);
+  onTabPress(index);
+  if (index === 1) {
+    navigation?.navigate('EventSpaces');
+  }
+};

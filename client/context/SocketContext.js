@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import { API_BASE } from '../config';
+import { SOCKET_URL } from '../config';
 
 const SocketContext = createContext();
 
@@ -21,22 +21,14 @@ export const SocketProvider = ({ children }) => {
 
     const initializeSocket = () => {
       try {
-        // Get WebSocket URL by removing /api and ensuring proper protocol
-        const wsUrl = API_BASE.replace('/api', '').replace('http://', 'ws://').replace('https://', 'wss://');
-        console.log('Initializing socket connection to:', wsUrl);
-        
-        // Initialize socket connection with reconnection options
-        newSocket = io(wsUrl, {
-          transports: ['websocket'],
-          autoConnect: true,
+        newSocket = io(SOCKET_URL, {
+          transports: ['websocket', 'polling'],
           reconnection: true,
           reconnectionAttempts: 5,
           reconnectionDelay: 1000,
-          timeout: 10000,
-          forceNew: true
+          timeout: 10000
         });
 
-        // Connection event handlers
         newSocket.on('connect', () => {
           console.log('Socket connected successfully');
           setIsConnected(true);
@@ -46,7 +38,7 @@ export const SocketProvider = ({ children }) => {
 
         newSocket.on('connect_error', (err) => {
           console.error('Socket connection error:', err);
-          setError(err.message);
+          setError('Socket connection error: ' + err.message);
           setIsConnected(false);
           setReconnectAttempts(prev => prev + 1);
         });
@@ -54,8 +46,6 @@ export const SocketProvider = ({ children }) => {
         newSocket.on('disconnect', (reason) => {
           console.log('Socket disconnected:', reason);
           setIsConnected(false);
-          
-          // Attempt to reconnect if not manually disconnected
           if (reason !== 'io client disconnect') {
             reconnectTimer = setTimeout(() => {
               console.log('Attempting to reconnect...');
@@ -64,39 +54,32 @@ export const SocketProvider = ({ children }) => {
           }
         });
 
-        // Notification event handlers
+        newSocket.on('error', (err) => {
+          console.error('Socket general error:', err);
+          setError('Socket error: ' + err.message);
+        });
+
         newSocket.on('newBooking', (data) => {
-          console.log('Received new booking notification:', data);
           setNotifications(prev => [data.notification, ...prev]);
         });
 
         newSocket.on('bookingResponse', (data) => {
-          console.log('Received booking response:', data);
           setNotifications(prev => [data.notification, ...prev]);
-        });
-
-        // Error event handler
-        newSocket.on('error', (err) => {
-          console.error('Socket error:', err);
-          setError(err.message);
         });
 
         setSocket(newSocket);
       } catch (err) {
-        console.error('Error initializing socket:', err);
-        setError(err.message);
+        setError('Socket initialization error: ' + err.message);
       }
     };
 
     initializeSocket();
 
-    // Cleanup on unmount
     return () => {
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
       }
       if (newSocket) {
-        console.log('Cleaning up socket connection');
         newSocket.removeAllListeners();
         newSocket.close();
       }
@@ -105,17 +88,12 @@ export const SocketProvider = ({ children }) => {
 
   const joinUserRoom = (userId) => {
     if (socket && isConnected) {
-      console.log(`Joining room for user ${userId}`);
       socket.emit('join', userId);
-    } else {
-      console.warn('Cannot join room: Socket not connected');
-      setError('Socket connection lost. Please try reconnecting.');
     }
   };
 
   const reconnect = () => {
     if (socket) {
-      console.log('Manually reconnecting socket...');
       socket.connect();
     }
   };
@@ -136,4 +114,4 @@ export const SocketProvider = ({ children }) => {
       {children}
     </SocketContext.Provider>
   );
-}; 
+};

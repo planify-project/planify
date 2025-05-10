@@ -35,10 +35,10 @@ const MonthlyReport = require('./models/monthlyReport')(sequelize, DataTypes);
 const AuditLog = require('./models/auditLog')(sequelize, DataTypes);
 const Admin = require('./models/admin')(sequelize, DataTypes);
 const Agent = require('./models/Agent')(sequelize, DataTypes);
+const EventSpace = require('./models/eventSpace')(sequelize, DataTypes);
 
 // Associations
 
-// ... existing code ...
 User.hasMany(Event, { foreignKey: 'created_by' });
 Event.belongsTo(User, { foreignKey: 'created_by' });
 
@@ -121,6 +121,8 @@ Payment.belongsTo(User, { foreignKey: 'user_id' });
 Service.hasMany(Payment, { foreignKey: 'service_id' });
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
+Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
+EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 
 // sequelize.sync({ alter: true })
 //   .then(() => {
@@ -156,5 +158,6 @@ module.exports = {
     MonthlyReport,
     AuditLog,
     Admin,
-    Agent
+    Agent,
+    EventSpace
 };

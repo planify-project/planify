@@ -12,6 +12,47 @@ const getNotificationsByUser = async (req, res) => {
   }
 };
 
+const getNotificationById = async (req, res) => {
+  try {
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification) return res.status(404).json({ message: 'Notification not found' });
+    res.status(200).json(notification);
+  } catch (err) {
+    res.status(500).json({ error: 'Error getting notification' });
+  }
+};
+
+const createNotification = async (req, res) => {
+  try {
+    const notification = await Notification.create(req.body);
+    res.status(201).json(notification);
+  } catch (err) {
+    res.status(500).json({ error: 'Error creating notification' });
+  }
+};
+
+const updateNotification = async (req, res) => {
+  try {
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification) return res.status(404).json({ message: 'Notification not found' });
+    await notification.update(req.body);
+    res.status(200).json(notification);
+  } catch (err) {
+    res.status(500).json({ error: 'Error updating notification' });
+  }
+};
+
+const deleteNotification = async (req, res) => {
+  try {
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification) return res.status(404).json({ message: 'Notification not found' });
+    await notification.destroy();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Error deleting notification' });
+  }
+};
+
 const markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findByPk(req.params.notificationId);
@@ -28,5 +69,9 @@ const markAsRead = async (req, res) => {
 
 module.exports = {
   getNotificationsByUser,
+  getNotificationById,
+  createNotification,
+  updateNotification,
+  deleteNotification,
   markAsRead,
 };

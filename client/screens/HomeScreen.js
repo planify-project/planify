@@ -149,7 +149,7 @@
 // });
 
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import HomeHeader from '../components/home/HomeHeader';
 import HomeTabs from '../components/home/HomeTabs';
@@ -244,6 +244,23 @@ export default function HomeScreen({ navigation }) {
     locationText = `Lat: ${location.coords.latitude.toFixed(4)}, Lon: ${location.coords.longitude.toFixed(4)}`;
   }
 
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/`);
+        if (!response.ok) throw new Error('Server not responding');
+      } catch (err) {
+        Alert.alert(
+          'Connection Error',
+          'Unable to connect to the server. Please check your internet connection.',
+          [{ text: 'OK' }]
+        );
+      }
+    };
+
+    checkConnection();
+  }, []);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
       <HomeHeader 
@@ -278,12 +295,12 @@ export default function HomeScreen({ navigation }) {
 
       <CreateEventButton onPress={() => setCreateEventModalVisible(true)} />
 
-      {/* <HomeTabs activeTab={activeTab} onTabPress={setActiveTab}  onPress={() => navigation.navigate('AllEvents')} /> */}
+      {/* Make sure navigation prop is passed here */}
       <HomeTabs
-  activeTab={activeTab}
-  onTabPress={setActiveTab}
-  navigation={navigation} // Pass navigation prop
-/>
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+        navigation={navigation}
+      />
 
       <NearbyEvents navigation={navigation} />
       

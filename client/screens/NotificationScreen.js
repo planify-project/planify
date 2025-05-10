@@ -39,7 +39,7 @@ export default function NotificationScreen({ route }) {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get(`${process.env.API_BASE || 'http://192.168.1.211:3000/api'}/notifications/${userId}`);
+      const res = await axios.get(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/notifications/${userId}`);
       setNotifications(res.data);
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -55,7 +55,7 @@ export default function NotificationScreen({ route }) {
 
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`${process.env.API_BASE || 'http://192.168.128.72:3000/api'}/notifications/${id}/read`);
+      await axios.patch(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/notifications/${id}/read`);
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );

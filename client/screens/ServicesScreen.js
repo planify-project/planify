@@ -3,7 +3,6 @@ import { View, Text, FlatList, Modal, TextInput, TouchableOpacity, StyleSheet, P
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-
 export default function ServicesScreen() {
   const [services, setServices] = useState([]);
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
@@ -22,7 +21,7 @@ export default function ServicesScreen() {
 
   const fetchServices = async () => {
     try {
-      const res = await axios.get(`${process.env.API_BASE || 'http://192.168.128.72:3000/api'}/services?type=service`);
+      const res = await axios.get(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/services?type=service`);
       setServices(res.data.data);
     } catch (err) {
       console.error('Error fetching services:', err);
@@ -52,7 +51,7 @@ export default function ServicesScreen() {
       setPopupVisible(true);
       return;
     }
-    // Validate date is in the future
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     if (date < now) {
@@ -61,6 +60,7 @@ export default function ServicesScreen() {
       setPopupVisible(true);
       return;
     }
+
     try {
       const bookingData = {
         user_id: 1, // This should come from your authentication system
@@ -70,9 +70,11 @@ export default function ServicesScreen() {
         space,
         phone_number: phone,
       };
-      const response = await axios.post(`${process.env.API_BASE || 'http://192.168.1.211:3000/api'}/bookings`, bookingData, {
+
+      const response = await axios.post(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/bookings`, bookingData, {
         headers: { 'Content-Type': 'application/json' }
       });
+
       if (response.data.success) {
         setBookingModalVisible(false);
         setPopupMessage('Booking submitted successfully!');
@@ -116,11 +118,11 @@ export default function ServicesScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Book: {selectedService?.description}</Text>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Date</Text>
-              <TouchableOpacity 
-                style={styles.dateButton} 
+              <TouchableOpacity
+                style={styles.dateButton}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateButtonText}>
@@ -141,35 +143,35 @@ export default function ServicesScreen() {
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Place</Text>
-              <TextInput 
-                placeholder="Enter event place" 
-                style={styles.input} 
-                value={space} 
-                onChangeText={setSpace} 
+              <TextInput
+                placeholder="Enter event place"
+                style={styles.input}
+                value={space}
+                onChangeText={setSpace}
               />
             </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Phone Number</Text>
-              <TextInput 
-                placeholder="Enter your phone number" 
-                keyboardType="phone-pad" 
-                style={styles.input} 
-                value={phone} 
-                onChangeText={setPhone} 
+              <TextInput
+                placeholder="Enter your phone number"
+                keyboardType="phone-pad"
+                style={styles.input}
+                value={phone}
+                onChangeText={setPhone}
               />
             </View>
 
-            <TouchableOpacity 
-              style={[styles.bookBtn, (!date || !space || !phone) && styles.bookBtnDisabled]} 
-              onPress={handleBook} 
+            <TouchableOpacity
+              style={[styles.bookBtn, (!date || !space || !phone) && styles.bookBtnDisabled]}
+              onPress={handleBook}
               disabled={!date || !space || !phone}
             >
               <Text style={styles.bookBtnText}>Confirm Booking</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.cancelButton} 
+            <TouchableOpacity
+              style={styles.cancelButton}
               onPress={() => setBookingModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -177,6 +179,7 @@ export default function ServicesScreen() {
           </View>
         </View>
       </Modal>
+
       <Modal visible={popupVisible} transparent animationType="fade">
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', minWidth: 250 }}>
