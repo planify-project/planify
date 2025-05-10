@@ -1,7 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useContext } from 'react';
+import {
+  View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions
+} from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext'; // <-- import
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext'; // Ensure the path is correct
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -10,10 +13,23 @@ function normalize(size) {
 }
 
 export default function SettingsScreen() {
-  const { isDark, toggleTheme, theme } = useTheme(); // <-- use context
+  const navigation = useNavigation();
+  const { logout } = useContext(AuthContext);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Root' }],
+      });
+    } catch (err) {
+      console.error('Logout failed:', err.message);
+    }
+  };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={{ paddingBottom: normalize(40) }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: normalize(40) }}>
       <View style={styles.profileCard}>
         <Image
           source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
@@ -38,6 +54,7 @@ export default function SettingsScreen() {
           <MaterialIcons name="error-outline" size={normalize(18)} color="#FF5A5F" style={{ marginRight: normalize(8) }} />
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.row}>
           <Ionicons name="people-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
@@ -46,19 +63,7 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
-        <View style={styles.row}>
-          <Ionicons name="moon-outline" size={normalize(22)} color={theme.primary} />
-          <View style={styles.rowText}>
-            <Text style={[styles.rowTitle, { color: theme.text }]}>Dark Mode</Text>
-            <Text style={[styles.rowSubtitle, { color: isDark ? '#aaa' : '#888' }]}>Change your theme to dark mode</Text>
-          </View>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            thumbColor={isDark ? theme.primary : "#f4f3f4"}
-            trackColor={{ false: "#ccc", true: "#b3b3ff" }}
-          />
-        </View>
+
         <TouchableOpacity style={styles.row}>
           <Ionicons name="shield-checkmark-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
@@ -67,7 +72,8 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.row}>
+
+        <TouchableOpacity style={styles.row} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Log out</Text>
@@ -85,6 +91,7 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.row}>
           <Ionicons name="information-circle-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
@@ -96,21 +103,12 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F6FC',
     paddingHorizontal: 0,
-    padding: normalize(16)
-  },
-  header: {
-    fontSize: normalize(28),
-    fontWeight: 'bold',
-    color: '#b3b3c6',
-    marginTop: normalize(18),
-    marginLeft: normalize(18),
-    marginBottom: normalize(10),
+    padding: normalize(16),
   },
   profileCard: {
     backgroundColor: '#5D5FEE',
@@ -128,7 +126,7 @@ const styles = StyleSheet.create({
     borderRadius: normalize(28),
     marginRight: normalize(16),
     borderWidth: normalize(2),
-    borderColor: '#fff'
+    borderColor: '#fff',
   },
   profileName: { color: '#fff', fontWeight: 'bold', fontSize: normalize(18) },
   profileHandle: { color: '#e0e0ff', fontSize: normalize(14), marginTop: normalize(2) },
@@ -153,4 +151,3 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: normalize(16), fontWeight: 'bold', color: '#222' },
   rowSubtitle: { fontSize: normalize(13), color: '#888', marginTop: normalize(2) },
 });
-

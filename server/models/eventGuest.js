@@ -1,12 +1,22 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('event_guest', {
+  const eventGuest = sequelize.define('event_guest', {
     event_id: { 
-      type: DataTypes.UUID, // Match the UUID type of the `id` column in the `events` table
-      primaryKey: true 
+      type: DataTypes.UUID, // Match events.id type (STRING or UUID, but both must match)
+      primaryKey: true,
+      allowNull: false,
+      references: {
+        model: 'events',
+        key: 'id'
+      }
     },
     user_id: { 
-      type: DataTypes.INTEGER, 
-      primaryKey: true 
+      type: DataTypes.UUID, 
+      primaryKey: true,
+      allowNull: false,
+      references: {
+        model: 'user',
+        key: 'id'
+      }
     },
     email: {
       type: DataTypes.STRING,
@@ -20,4 +30,6 @@ module.exports = (sequelize, DataTypes) => {
     underscored: true,
     timestamps: true,
   });
+
+  return eventGuest;
 };

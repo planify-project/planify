@@ -1,10 +1,9 @@
-import React from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase'; // Adjust the import based on your project structure
-import axios from 'axios';
-import { API_BASE } from '../config'; // Adjust the import based on your project structure
+import React, { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext'; // Adjust the path if needed
+
+
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -13,42 +12,39 @@ function normalize(size) {
 }
 
 const SignUpScreen = ({ username, setUsername, email, setEmail, password, setPassword, error, setError, switchToLogin }) => {
-  // const handleSignUp = () => {
-  //   console.log('Sign up button pressed');
-  // };
+
+  const { register } = useContext(AuthContext);
+
 const navigation = useNavigation();
-  const handleSignUp = async () => {
-    setError('');
-    try {
-      if (!username || !email || !password) {
-        setError('All fields are required');
-        return;
-      }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
-        return;
-      }
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log('User registered successfully');
-      await axios.post(`${API_BASE}/users/add`, {
-        name:username,
-        email,
-        password,
-      });
-      switchToLogin();
-    } catch (err) {
-      console.error(err.message);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already registered. Please try logging in instead.');
-        setEmail('');
-        setPassword('');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address');
-      } else {
-        setError('Registration failed: ' + err.message);
-      }
+const handleSignUp = async () => {
+  setError('');
+  try {
+    if (!username || !email || !password) {
+      setError('All fields are required');
+      return;
     }
-  };
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+const name=username
+    await register(email, password, name);
+    console.log('User registered successfully');
+    switchToLogin(); // Navigate back to login after successful registration
+  } catch (err) {
+    console.error(err.message);
+    if (err.code === 'auth/email-already-in-use') {
+      setError('This email is already registered. Please try logging in instead.');
+      setEmail('');
+      setPassword('');
+    } else if (err.code === 'auth/invalid-email') {
+      setError('Invalid email address');
+    } else {
+      setError('Registration failed: ' + err.message);
+    }
+  }
+};
+
 
   return (
     <SafeAreaView style={styles.container}>

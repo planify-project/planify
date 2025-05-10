@@ -6,16 +6,28 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: 'user',
+        key: 'id'
+      }
     },
     event_id: {
-      type: DataTypes.UUID, // Match the UUID type of the `id` column in the `events` table
+      type: DataTypes.UUID,
       allowNull: true,
+      references: {
+        model: 'events',
+        key: 'id'
+      }
     },
     service_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: 'Services',
+        key: 'id'
+      }
     },
     amount: {
       type: DataTypes.DECIMAL,
@@ -28,19 +40,9 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.NOW,
-    },
+    }
   }, {
     underscored: true,
-    timestamps: true,
+    timestamps: true
   });
 };

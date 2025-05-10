@@ -54,7 +54,7 @@ const Agents = [
 export default function AgentsListScreen() {
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Event Planning Agents</Text>
+      <Text style={styles.title}>Our Event Planning Agents</Text>
       <FlatList
         data={Agents}
         keyExtractor={item => item.id.toString()}
