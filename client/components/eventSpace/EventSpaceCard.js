@@ -3,14 +3,21 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { normalize } from '../../utils/scaling';
 import { FontAwesome } from '@expo/vector-icons';
 
-export default function EventSpaceCard({ space, onPress }) {
+const EventSpaceCard = ({ space, onPress }) => {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Image 
-        source={{ uri: space.images[0] }} 
-        style={styles.image}
-        defaultSource={require('../../assets/default-venue.png')}
-      />
+    <TouchableOpacity style={styles.container} onPress={onPress}>
+      <View style={styles.imageContainer}>
+        {space.images && space.images.length > 0 ? (
+          <Image
+            source={{ uri: space.images[0] }}
+            style={styles.image}
+          />
+        ) : (
+          <View style={styles.placeholderImage}>
+            <FontAwesome name="image" size={40} color="#ccc" />
+          </View>
+        )}
+      </View>
       <View style={styles.details}>
         <Text style={styles.name}>{space.name}</Text>
         <View style={styles.locationContainer}>
@@ -27,27 +34,36 @@ export default function EventSpaceCard({ space, onPress }) {
       </View>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: 'white',
+  container: {
+    backgroundColor: '#fff',
     borderRadius: normalize(12),
     marginBottom: normalize(16),
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  image: {
+  imageContainer: {
     width: '100%',
     height: normalize(200),
     borderTopLeftRadius: normalize(12),
     borderTopRightRadius: normalize(12),
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   details: {
     padding: normalize(16),
@@ -55,12 +71,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: normalize(18),
     fontWeight: 'bold',
-    marginBottom: normalize(8),
+    marginBottom: normalize(4),
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: normalize(8),
+    marginBottom: normalize(4),
   },
   location: {
     marginLeft: normalize(8),
@@ -87,3 +103,5 @@ const styles = StyleSheet.create({
     color: '#5D5FEE',
   },
 });
+
+export default EventSpaceCard;

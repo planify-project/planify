@@ -6,7 +6,8 @@ import {
   StyleSheet, 
   ActivityIndicator,
   TouchableOpacity,
-  Dimensions 
+  Dimensions,
+  RefreshControl 
 } from 'react-native';
 import { fetchEventSpaces } from '../configs/EventSpaceAPI';
 import EventSpaceCard from '../components/eventSpace/EventSpaceCard';
@@ -20,16 +21,21 @@ export default function EventSpaceScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadEventSpaces = async () => {
     try {
       setLoading(true);
-      const data = await fetchEventSpaces();
-      setSpaces(data);
       setError(null);
+      const data = await fetchEventSpaces();
+      if (Array.isArray(data)) {
+        setSpaces(data);
+      } else {
+        setError('Invalid data format received');
+      }
     } catch (err) {
-      setError('Unable to load event spaces');
-      console.error(err);
+      console.error('Error loading event spaces:', err);
+      setError(err.message || 'Unable to load event spaces');
     } finally {
       setLoading(false);
     }
@@ -39,12 +45,24 @@ export default function EventSpaceScreen({ navigation }) {
     loadEventSpaces();
   }, []);
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    loadEventSpaces().finally(() => setRefreshing(false));
+  }, []);
+
   const filteredSpaces = spaces.filter(space =>
-    space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    space.location.toLowerCase().includes(searchQuery.toLowerCase())
+    space.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    space.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) {
+  const handleSpacePress = (space) => {
+    navigation.navigate('EventSpaceDetails', { 
+      spaceId: space.id,
+      space: space 
+    });
+  };
+
+  if (loading && !refreshing) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#5D5FEE" />
@@ -70,15 +88,29 @@ export default function EventSpaceScreen({ navigation }) {
       ) : (
         <FlatList
           data={filteredSpaces}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
           renderItem={({ item }) => (
             <EventSpaceCard
               space={item}
-              onPress={() => navigation.navigate('EventSpaceDetails', { spaceId: item.id })}
+              onPress={() => handleSpacePress(item)}
             />
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#5D5FEE']}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {searchQuery ? 'No matching event spaces found' : 'No event spaces available'}
+              </Text>
+            </View>
+          }
         />
       )}
     </View>
@@ -102,12 +134,14 @@ const styles = StyleSheet.create({
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    padding: normalize(20)
   },
   errorText: {
-    color: 'red',
+    color: '#ff3b30',
     fontSize: normalize(16),
-    marginBottom: normalize(16)
+    marginBottom: normalize(16),
+    textAlign: 'center'
   },
   retryButton: {
     backgroundColor: '#5D5FEE',
@@ -118,5 +152,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: normalize(14),
     fontWeight: 'bold'
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: normalize(20)
+  },
+  emptyText: {
+    fontSize: normalize(16),
+    color: '#666',
+    textAlign: 'center'
   }
 });

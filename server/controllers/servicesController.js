@@ -1,24 +1,94 @@
-const { Service, ServiceCategory } = require('../database');
+const { Service, User } = require('../database');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure Multer for image storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'services');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG and JPG are allowed.'));
+    }
+  }
+}).single('image');
+
+// Wrap the upload middleware to handle errors
+const uploadMiddleware = (req, res, next) => {
+  upload(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          success: false,
+          message: 'File size too large. Maximum size is 5MB.'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    } else if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    }
+    next();
+  });
+};
 
 class ServicesController {
   static async getAllServices(req, res) {
     try {
+      console.log('Getting all services...');
       const { type } = req.query;
       let query = {};
       
       if (type) {
-        query.type = type;
+        query.serviceType = type.toLowerCase(); // Normalize the type to lowercase
       }
 
       console.log('Query:', query); // Log the query for debugging
 
       const services = await Service.findAll({
         where: query,
-        include: [
-          { model: ServiceCategory, as: 'service_category' }  // Update alias to match association
-        ]
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'email']
+        }],
+        attributes: ['id', 'title', 'description', 'price', 'serviceType', 'imageUrl', 'provider_id', 'createdAt', 'updatedAt']
       });
       
+      if (!services || services.length === 0) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          message: 'No services found'
+        });
+      }
+
       res.status(200).json({
         success: true,
         data: services
@@ -27,20 +97,31 @@ class ServicesController {
       console.error('Error fetching services:', error);
       res.status(500).json({
         success: false,
-        message: error.message,
-        stack: error.stack
+        message: 'Failed to fetch services',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
 
   static async getServiceById(req, res) {
     try {
-      const service = await Service.findByPk(req.params.id, {
-        include: [
-          { model: ServiceCategory, as: 'category' }  // Include category info
-        ]
-      });
+      const { id } = req.params;
       
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Service ID is required'
+        });
+      }
+
+      const service = await Service.findByPk(id, {
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'email']
+        }]
+      });
+
       if (!service) {
         return res.status(404).json({
           success: false,
@@ -63,27 +144,60 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const category = await ServiceCategory.findOne({ where: { name: 'equipment' } });
-
-      if (!category) {
-        return res.status(404).json({
+      const { title, description, price, serviceType } = req.body;
+      
+      // Validate required fields
+      if (!title || !description || !price) {
+        return res.status(400).json({
           success: false,
-          message: 'Category not found'
+          message: 'Missing required fields'
         });
       }
 
-      const service = await Service.create({
-        provider_id: req.body.provider_id,
-        category_id: category.id,
-        type: req.body.type,
-        description: req.body.description,
-        price: req.body.price,
+      // Get user ID from request body or query
+      const provider_id = req.body.provider_id || req.query.provider_id;
+      if (!provider_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Provider ID is required'
+        });
+      }
+
+      // Verify provider exists
+      const provider = await User.findByPk(provider_id);
+      if (!provider) {
+        return res.status(404).json({
+          success: false,
+          message: 'Provider not found'
+        });
+      }
+
+      // Get image URL from uploaded file
+      const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
+
+      console.log('Creating service with data:', {
+        title,
+        description,
+        price,
+        imageUrl,
+        serviceType,
+        provider_id
       });
+
+      const service = await Service.create({
+        title,
+        description,
+        price,
+        imageUrl,
+        serviceType: serviceType || 'general',
+        provider_id
+      });
+
+      console.log('Created service:', service.toJSON());
 
       res.status(201).json({
         success: true,
-        data: service,
-        message: 'Service created successfully'
+        data: service
       });
     } catch (error) {
       console.error('Error creating service:', error);
@@ -96,63 +210,131 @@ class ServicesController {
 
   static async updateService(req, res) {
     try {
-      const service = await Service.findByPk(req.params.id);
-      if (!service) {
-        return res.status(404).json({ success: false, message: 'Service not found' });
+      const { id } = req.params;
+      const { title, description, price, serviceType, provider_id } = req.body;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Service ID is required'
+        });
       }
-      await service.update(req.body);
-      res.status(200).json({ success: true, data: service, message: 'Service updated successfully' });
+
+      const service = await Service.findByPk(id);
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
+
+      // If provider_id is provided, verify it exists
+      if (provider_id) {
+        const provider = await User.findByPk(provider_id);
+        if (!provider) {
+          return res.status(404).json({
+            success: false,
+            message: 'Provider not found'
+          });
+        }
+      }
+
+      // Handle image update
+      let imageUrl = service.imageUrl;
+      if (req.file) {
+        // Delete old image if it exists
+        if (service.imageUrl) {
+          const oldImagePath = path.join(__dirname, '..', service.imageUrl);
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+        imageUrl = `/uploads/services/${req.file.filename}`;
+      }
+
+      console.log('Updating service with data:', {
+        title,
+        description,
+        price,
+        imageUrl,
+        serviceType,
+        provider_id
+      });
+
+      await service.update({
+        title,
+        description,
+        price,
+        imageUrl,
+        serviceType,
+        provider_id
+      });
+
+      console.log('Updated service:', service.toJSON());
+
+      res.status(200).json({
+        success: true,
+        data: service
+      });
     } catch (error) {
       console.error('Error updating service:', error);
-      res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
   static async deleteService(req, res) {
     try {
-      const service = await Service.findByPk(req.params.id);
-      if (!service) {
-        return res.status(404).json({ success: false, message: 'Service not found' });
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Service ID is required'
+        });
       }
+
+      const service = await Service.findByPk(id);
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
+
+      // Delete the image file if it exists
+      if (service.imageUrl) {
+        const imagePath = path.join(__dirname, '..', service.imageUrl);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      }
+
       await service.destroy();
-      res.status(204).send();
+
+      res.status(200).json({
+        success: true,
+        message: 'Service deleted successfully'
+      });
     } catch (error) {
       console.error('Error deleting service:', error);
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
-
-  // ✅ New methods to fetch services by category
-  static async getServicesByCategoryName(req, res, categoryName) {
-    try {
-      const category = await ServiceCategory.findOne({ where: { name: categoryName } });
-      if (!category) {
-        return res.status(404).json({ success: false, message: 'Category not found' });
-      }
-
-      const services = await Service.findAll({
-        where: { category_id: category.id },
-        include: [{ model: ServiceCategory, as: 'service_category' }]
+      res.status(500).json({
+        success: false,
+        message: error.message
       });
-
-      res.status(200).json({ success: true, data: services });
-    } catch (error) {
-      console.error(`Error fetching ${categoryName} services:`, error);
-      res.status(500).json({ success: false, message: error.message });
     }
-  }
-
-  static getServicesByEquipment(req, res) {
-    return this.getServicesByCategoryName(req, res, 'equipment');
-  }
-
-  static getServicesByEventSpace(req, res) {
-    return this.getServicesByCategoryName(req, res, 'event space');
-  }
-
-  static getServicesByServices(req, res) {
-    return this.getServicesByCategoryName(req, res, 'services');
   }
 }
 
-module.exports = ServicesController;
+module.exports = {
+  upload: uploadMiddleware,
+  getAllServices: ServicesController.getAllServices,
+  getServiceById: ServicesController.getServiceById,
+  createService: ServicesController.createService,
+  updateService: ServicesController.updateService,
+  deleteService: ServicesController.deleteService
+};

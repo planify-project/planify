@@ -6,15 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true,
     },
-    provider_id: {
-      type: DataTypes.STRING, // Change to STRING to match the User model's id
-      allowNull: false,
-    },
-    category_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    type: {
+    title: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -23,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
     price: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     createdAt: {
@@ -35,7 +27,34 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
+    },
+    serviceType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: 'general',
+    },
+    imageUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    provider_id: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'service_categories',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
     }
+  }, {
+    timestamps: true,
+    tableName: 'services',
+    underscored: true
   });
 
   return Service;
