@@ -128,12 +128,11 @@ export default function HomeScreen({ navigation }) {
 
       <CreateEventButton onPress={() => setCreateEventModalVisible(true)} />
 
-      {/* <HomeTabs activeTab={activeTab} onTabPress={setActiveTab}  onPress={() => navigation.navigate('AllEvents')} /> */}
       <HomeTabs
-  activeTab={activeTab}
-  onTabPress={setActiveTab}
-  navigation={navigation} // Pass navigation prop
-/>
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+        navigation={navigation} // Pass navigation prop
+      />
 
       <NearbyEvents navigation={navigation} />
       

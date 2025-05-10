@@ -1,13 +1,11 @@
+const { CHAR } = require("sequelize");
+
 module.exports = (sequelize, DataTypes) => {
   const eventGuest = sequelize.define('event_guest', {
     event_id: { 
       type: DataTypes.UUID, // Match events.id type (STRING or UUID, but both must match)
       primaryKey: true,
       allowNull: false,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
     },
     user_id: { 
       type: DataTypes.UUID, 

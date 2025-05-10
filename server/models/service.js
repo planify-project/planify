@@ -28,9 +28,36 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
     price: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
+    serviceType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: 'general',
+    },
+    imageUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    provider_id: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'service_categories',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
+    }
+  }, {
+    timestamps: true,
+    tableName: 'services',
+    underscored: true
   });
 
   return Service;

@@ -6,7 +6,4 @@ const eventsController = require('../controllers/eventsController');
 router.get('/getAll', eventsController.getAllEvents);
 router.get('/public', eventsController.getPublicEvents);
 
-// POST /api/events
-router.post('/', eventsController.createEvent);
-
 module.exports = router;
