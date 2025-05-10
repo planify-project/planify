@@ -4,11 +4,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
-import { useEffect, useState } from 'react';
-import { auth } from './configs/config';
+import { useState } from 'react';
+import { Auth } from './configs/firebase_config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View, ActivityIndicator } from 'react-native';
 
 // Enable screens for better performance
 enableScreens();
@@ -78,10 +79,9 @@ function HomeStack() {
         component={CreateEventScreen}
         options={screenHeaderOptions}
       />
-
-        <Stack.Screen
-          name="EventDetail"
-          component={EventDetailScreen}
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
         options={{ headerShown: true,
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
@@ -145,6 +145,28 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
+      <Stack.Screen 
+        name="AddService" 
+        component={AddServiceScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Add New Service",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="ServiceDetail" 
+        component={ServiceDetailScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Service Details",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
     </Stack.Navigator>
   );
 }
@@ -181,17 +203,6 @@ function SettingsStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Settings" component={SettingsScreen} options={screenHeaderOptions} />
-      <Stack.Screen 
-        name="AddService" 
-        component={AddServiceScreen} 
-        options={{
-          headerShown: true,
-          headerTitle: "Add New Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }} 
-      />
       <Stack.Screen 
         name="EditService" 
         component={EditServiceScreen} 
@@ -266,17 +277,6 @@ function ServicesStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
       />
-      <Stack.Screen 
-        name="ServiceDetail" 
-        component={ServiceDetailScreen} 
-        options={{
-          headerShown: true,
-          headerTitle: "Service Details",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }} 
-      />
     </Stack.Navigator>
   );
 }
@@ -286,25 +286,29 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          switch (route.name) {
-            case 'Home': iconName = 'home-outline'; break;
-            case 'Schedule': iconName = 'calendar-outline'; break;
-            case 'Services': iconName = 'grid-outline'; break;
-            case 'Settings': iconName = 'person-outline'; break;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Schedule') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Wishlist') {
+            iconName = focused ? 'heart' : 'heart-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
           }
+
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: '#000',
+        tabBarActiveTintColor: '#5D5FEE',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Schedule" component={ScheduleStack} />
-      <Tab.Screen name="Services" component={ServicesStack} />
+      <Tab.Screen name="Wishlist" component={WishlistStack} />
       <Tab.Screen name="Settings" component={SettingsStack} />
     </Tab.Navigator>
   );
@@ -313,60 +317,24 @@ function MainTabs() {
 // Main App Component
 export default function App() {
   return (
-    
-    <AuthProvider>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen 
-            name="Root" 
-            component={MainTabs} 
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="Auth" 
-            component={AuthNavigator} 
-            options={{ headerShown: false }} 
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </AuthProvider>
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  if (loading) {
-    return null;
-  }
-
-  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <NavigationContainer>
-          <RootStack.Navigator screenOptions={{ headerShown: false }}>
-            {user ? (
-              <RootStack.Screen 
-                name="Main" 
+        <AuthProvider>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen 
+                name="Root" 
                 component={MainTabs}
                 options={{ headerShown: false }}
               />
-            ) : (
-              <RootStack.Screen 
+              <Stack.Screen 
                 name="Auth" 
                 component={AuthNavigator}
                 options={{ headerShown: false }}
               />
-            )}
-          </RootStack.Navigator>
-        </NavigationContainer>
-        <StatusBar style="auto" />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

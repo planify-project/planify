@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../configs/api';
+import { normalize } from '../utils/scaling';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
@@ -112,28 +113,34 @@ export default function AllServicesScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Add Service Button */}
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={() => navigation.navigate('Services', { screen: 'AddService' })}
-      >
-        <Text style={styles.addButtonText}>+</Text>
-      </TouchableOpacity>
-
       {services.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: theme.text }]}>No services created yet</Text>
+          <TouchableOpacity
+            style={[styles.createButton, { backgroundColor: theme.primary }]}
+            onPress={() => navigation.navigate('AddService')}
+          >
+            <Text style={styles.createButtonText}>Create Service</Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={services}
-          renderItem={renderServiceItem}
-          keyExtractor={item => item.id.toString()}
-          numColumns={numColumns}
-          contentContainerStyle={styles.listContainer}
-          onRefresh={fetchServices}
-          refreshing={loading}
-        />
+        <>
+          <FlatList
+            data={services}
+            renderItem={renderServiceItem}
+            keyExtractor={item => item.id.toString()}
+            numColumns={numColumns}
+            contentContainerStyle={styles.listContainer}
+            onRefresh={fetchServices}
+            refreshing={loading}
+          />
+          <TouchableOpacity
+            style={[styles.createButton, { backgroundColor: theme.primary }]}
+            onPress={() => navigation.navigate('AddService')}
+          >
+            <Text style={styles.createButtonText}>Create Service</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -185,25 +192,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  addButton: {
-    position: 'absolute',
-    right: 20,
-    top: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
+  createButton: {
+    padding: normalize(12),
+    borderRadius: normalize(8),
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 1,
+    marginVertical: normalize(16),
+    marginHorizontal: normalize(16),
   },
-  addButtonText: {
+  createButtonText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: normalize(16),
     fontWeight: 'bold',
   },
   loadingText: {

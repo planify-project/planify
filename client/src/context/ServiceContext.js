@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = 'http://192.168.128.126:3001';
+const API_URL = 'http://192.168.147.126:3000';
 
 const ServiceContext = createContext();
 

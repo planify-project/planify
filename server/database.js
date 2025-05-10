@@ -121,15 +121,14 @@ Payment.belongsTo(User, { foreignKey: 'user_id' });
 Service.hasMany(Payment, { foreignKey: 'service_id' });
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
-
-// sequelize.sync({ alter: true })
+// Sync database
+// sequelize.sync({ force: true })
 //   .then(() => {
 //     console.log('All models were synchronized successfully.');
 //   })
 //   .catch((error) => {
 //     console.error('Error synchronizing models:', error);
 //   });
-
 
 // Export all models and sequelize instance
 module.exports = {

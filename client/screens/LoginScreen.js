@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../context/AuthContext'; // Make sure this path is correct
+import { AuthContext } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -61,10 +61,10 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#F4F6FC' }]}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <Text style={[styles.headerText, { color: theme.text }]}>Login</Text>
+        <Text style={[styles.headerText, { color: '#222' }]}>Login</Text>
       </View>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
@@ -74,11 +74,11 @@ const LoginScreen = () => {
             resizeMode="contain"
           />
         </View>
-        <Text style={[styles.welcomeText, { color: theme.text }]}>WELCOME BACK</Text>
+        <Text style={[styles.welcomeText, { color: '#222' }]}>WELCOME BACK</Text>
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>EMAIL</Text>
+          <Text style={[styles.inputLabel, { color: '#222' }]}>EMAIL</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
             value={email}
             onChangeText={setEmail}
             placeholder="Enter your email"
@@ -88,9 +88,9 @@ const LoginScreen = () => {
           />
         </View>
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.text }]}>PASSWORD</Text>
+          <Text style={[styles.inputLabel, { color: '#222' }]}>PASSWORD</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -99,11 +99,19 @@ const LoginScreen = () => {
           />
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={[styles.signInButton, { backgroundColor: theme.primary }]} onPress={handleLogin}>
-          <Text style={styles.signInButtonText}>Sign in</Text>
+        <TouchableOpacity 
+          style={[styles.signInButton, { backgroundColor: '#5D5FEE' }]} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.signInButtonText}>
+            {loading ? 'Signing in...' : 'Sign in'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+          <Text style={[styles.linkText, { color: '#5D5FEE' }]}>
+            Don't have an account? Sign Up
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

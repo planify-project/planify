@@ -9,12 +9,14 @@ import {
   Image,
   Dimensions,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -26,6 +28,7 @@ const API_URL = 'http://192.168.43.149:3000/api';
 
 export default function EditServiceScreen({ route, navigation }) {
   const { service } = route.params;
+  const { theme } = useTheme();
   const [title, setTitle] = useState(service.title);
   const [description, setDescription] = useState(service.description);
   const [price, setPrice] = useState(service.price.toString());
@@ -105,34 +108,6 @@ export default function EditServiceScreen({ route, navigation }) {
     }
   };
 
-  const handleDelete = async () => {
-    Alert.alert(
-      'Delete Service',
-      'Are you sure you want to delete this service?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await axios.delete(`${API_URL}/services/${service.id}`);
-              Alert.alert('Success', 'Service deleted successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() }
-              ]);
-            } catch (error) {
-              console.error('Error deleting service:', error);
-              Alert.alert('Error', 'Failed to delete service. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageContainer}>
@@ -196,23 +171,30 @@ export default function EditServiceScreen({ route, navigation }) {
           />
         </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleUpdate}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Updating Service...' : 'Update Service'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="close-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Cancel</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.deleteButton, loading && styles.submitButtonDisabled]}
-          onPress={handleDelete}
-          disabled={loading}
-        >
-          <Text style={styles.deleteButtonText}>Delete Service</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+            onPress={handleUpdate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text style={styles.actionButtonText}>Save Changes</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -273,31 +255,28 @@ const styles = StyleSheet.create({
     height: normalize(100),
     textAlignVertical: 'top',
   },
-  submitButton: {
-    backgroundColor: '#5D5FEE',
-    borderRadius: normalize(8),
-    padding: normalize(16),
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    paddingHorizontal: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: normalize(16),
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitButtonText: {
+  actionButtonText: {
     color: '#fff',
-    fontSize: normalize(16),
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#FF5A5F',
-    borderRadius: normalize(8),
-    padding: normalize(16),
-    alignItems: 'center',
-    marginTop: normalize(12),
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: normalize(16),
+    marginLeft: 8,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 }); 

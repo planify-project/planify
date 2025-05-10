@@ -128,19 +128,11 @@ export default function HomeScreen({ navigation }) {
 
       <CreateEventButton onPress={() => setCreateEventModalVisible(true)} />
 
-      {/* <HomeTabs activeTab={activeTab} onTabPress={setActiveTab}  onPress={() => navigation.navigate('AllEvents')} /> */}
       <HomeTabs
-  activeTab={activeTab}
-  onTabPress={setActiveTab}
-  navigation={navigation} // Pass navigation prop
-/>
-
-      <TouchableOpacity 
-        style={styles.servicesButton}
-        onPress={() => navigation.navigate('AddService')}
-      >
-        <Text style={styles.servicesButtonText}>Add New Service</Text>
-      </TouchableOpacity>
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+        navigation={navigation} // Pass navigation prop
+      />
 
       <NearbyEvents navigation={navigation} />
       
@@ -165,15 +157,6 @@ const styles = StyleSheet.create({
     padding: normalize(16),
     backgroundColor: '#f9f9f9'
   },
-  servicesButton: {
-    backgroundColor: '#5D5FEE',
-    padding: normalize(12),
-    borderRadius: normalize(8),
-    marginHorizontal: normalize(16),
-    marginVertical: normalize(8),
-    alignItems: 'center',
-  },
-  servicesButtonText: {
   allEventsButton: {
     backgroundColor: '#5D5FEE',
     padding: normalize(12),
@@ -186,5 +169,4 @@ const styles = StyleSheet.create({
     fontSize: normalize(16),
     fontWeight: 'bold',
   },
-}
-})
+});

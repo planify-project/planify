@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { auth } from './config';
+import { Auth } from './firebase_config';
 
-// Use your computer's local IP address for mobile development
-const API_BASE_URL = 'http://192.168.128.126:3000/api';
+// Use IP address for development to ensure mobile device can connect
+const API_BASE_URL = 'http://192.168.147.126:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,7 +17,7 @@ api.interceptors.request.use(
   async (config) => {
     try {
       // Get the current user's ID token
-      const user = auth.currentUser;
+      const user = Auth.currentUser;
       if (user) {
         const token = await user.getIdToken();
         config.headers.Authorization = `Bearer ${token}`;

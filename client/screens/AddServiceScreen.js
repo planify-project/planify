@@ -16,7 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
 import api from '../configs/api';
 import { normalize } from '../utils/scaling';
-import { auth } from '../configs/config';
+import { Auth } from '../configs/firebase_config';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AddServiceScreen({ navigation }) {
@@ -29,7 +29,7 @@ export default function AddServiceScreen({ navigation }) {
   const { theme } = useTheme();
 
   useEffect(() => {
-    if (!auth.currentUser) {
+    if (!Auth.currentUser) {
       Alert.alert('Error', 'You must be logged in to create a service');
       navigation.goBack();
     }
@@ -53,7 +53,7 @@ export default function AddServiceScreen({ navigation }) {
     if (!result.canceled) {
       setImage({
         uri: result.assets[0].uri,
-        type: 'image/jpeg',
+      type: 'image/jpeg',
         name: 'photo.jpg'
       });
     }
@@ -61,13 +61,13 @@ export default function AddServiceScreen({ navigation }) {
 
   const ensureUserExists = async () => {
     try {
-      const token = await auth.currentUser.getIdToken();
+      const token = await Auth.currentUser.getIdToken();
       const response = await api.post('/users/firebase', {
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        displayName: auth.currentUser.displayName
+        uid: Auth.currentUser.uid,
+        email: Auth.currentUser.email,
+        displayName: Auth.currentUser.displayName
       }, {
-        headers: {
+          headers: {
           'Authorization': `Bearer ${token}`
         }
       });
@@ -79,7 +79,7 @@ export default function AddServiceScreen({ navigation }) {
   };
 
   const handleSubmit = async () => {
-    if (!auth.currentUser) {
+    if (!Auth.currentUser) {
       Alert.alert('Error', 'You must be logged in to create a service');
       return;
     }
@@ -109,7 +109,7 @@ export default function AddServiceScreen({ navigation }) {
       formData.append('price', priceNum.toString());
       formData.append('serviceType', serviceType);
       formData.append('provider_id', user.id);
-
+      
       if (image) {
         formData.append('image', {
           uri: image.uri,
@@ -119,7 +119,7 @@ export default function AddServiceScreen({ navigation }) {
       }
 
       // Get the Firebase ID token
-      const token = await auth.currentUser.getIdToken();
+      const token = await Auth.currentUser.getIdToken();
 
       console.log('Creating service with data:', {
         title,
@@ -139,12 +139,12 @@ export default function AddServiceScreen({ navigation }) {
       console.log('Service creation response:', response.data);
 
       if (response.data.success) {
-        Alert.alert('Success', 'Service created successfully', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Services', { screen: 'AllServices' })
-          }
-        ]);
+      Alert.alert('Success', 'Service created successfully', [
+        {
+          text: 'OK',
+            onPress: () => navigation.navigate('AllServices')
+        }
+      ]);
       } else {
         throw new Error(response.data.message || 'Failed to create service');
       }
@@ -177,50 +177,50 @@ export default function AddServiceScreen({ navigation }) {
         </View>
 
         {/* Form Section */}
-        <View style={styles.form}>
+      <View style={styles.form}>
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>Title</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Enter service title"
-              placeholderTextColor={theme.textSecondary}
-            />
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter service title"
+          placeholderTextColor={theme.textSecondary}
+        />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>Description</Text>
-            <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: theme.card, color: theme.text }]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Enter service description"
-              placeholderTextColor={theme.textSecondary}
-              multiline
-              numberOfLines={4}
-            />
+        <TextInput
+          style={[styles.input, styles.textArea, { backgroundColor: theme.card, color: theme.text }]}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Enter service description"
+          placeholderTextColor={theme.textSecondary}
+          multiline
+          numberOfLines={4}
+        />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>Price ($)</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
-              value={price}
-              onChangeText={setPrice}
-              placeholder="Enter price"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="numeric"
-            />
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+          value={price}
+          onChangeText={setPrice}
+          placeholder="Enter price"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+        />
           </View>
 
           {/* Image Upload Section - Moved below the form */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>Service Image</Text>
-            <TouchableOpacity 
+        <TouchableOpacity 
               style={styles.imageSection} 
-              onPress={pickImage}
-            >
+          onPress={pickImage}
+        >
               {image ? (
                 <Image source={{ uri: image.uri }} style={styles.previewImage} />
               ) : (
@@ -231,22 +231,22 @@ export default function AddServiceScreen({ navigation }) {
                   </Text>
                 </View>
               )}
-            </TouchableOpacity>
+        </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.primary }]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>Create Service</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <TouchableOpacity
+          style={[styles.submitButton, { backgroundColor: theme.primary }]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Create Service</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
     </KeyboardAvoidingView>
   );
 }

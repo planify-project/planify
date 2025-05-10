@@ -89,7 +89,9 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const handleTabPress = (tabId) => {
     onTabPress(tabId);
     if (tabId === 'event') {
-      navigation.navigate('AllEvents'); // Navigate to AllEventsScreen when "Event" is clicked
+      navigation.navigate('AllEvents');
+    } else if (tabId === 'services') {
+      navigation.navigate('AllServices');
     }
   };
 
