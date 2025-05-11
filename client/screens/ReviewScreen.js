@@ -1,50 +1,80 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import { API_URL } from '../config';
 
-export default function ReviewScreen({ route }) {
+export default function ReviewScreen({ route, navigation }) {
   const { event } = route.params;
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: 'Sarah M.',
-      date: 'Jan 15, 2024',
-      rating: 5,
-      title: 'Fantastic Experience!',
-      text: 'The pool party exceeded all expectations. Great music, amazing atmosphere, and professional staff.',
-      helpful: 12,
-    },
-    {
-      id: 2,
-      name: 'Michael R.',
-      date: 'Jan 10, 2024',
-      rating: 4,
-      title: 'Good Time Overall',
-      text: 'Really enjoyed the event. The location was perfect and the crowd was great.',
-      helpful: 8,
-    },
-  ]);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Test the API connection first
+    testApiConnection();
+    fetchReviews();
+  }, []);
+
+  const testApiConnection = async () => {
+    try {
+      console.log('Testing API connection...');
+      const response = await axios.get(`http://192.168.0.89:3000/api/reviews/event/${event.id}`);
+      console.log('API test response:', response.data);
+    } catch (error) {
+      console.error('API test error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+      });
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      console.log('Fetching reviews for event:', event.id);
+      const response = await axios.get(`http://192.168.0.89:3000/api/reviews/event/${event.id}`);
+      console.log('Reviews response:', response.data);
+      setReviews(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      Alert.alert('Error', 'Failed to load reviews');
+      setLoading(false);
+    }
+  };
 
   const handleRating = (value) => setRating(value);
 
-  const handleSubmit = () => {
-    if (!title || !comment || rating === 0) return;
-    const newReview = {
-      id: Date.now(),
-      name: 'You',
-      date: new Date().toDateString(),
-      rating,
-      title,
-      text: comment,
-      helpful: 0,
-    };
-    setReviews([newReview, ...reviews]);
-    setTitle('');
-    setComment('');
-    setRating(0);
+  const handleSubmit = async () => {
+    if (!title || !comment || rating === 0) {
+      Alert.alert('Error', 'Please fill in all fields and provide a rating');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`http://192.168.0.89:3000/api/reviews`, {
+        event_id: event.id, // Use the numeric ID
+        rating,
+        title,
+        comment
+      });
+
+      if (response.status === 201) {
+        Alert.alert('Success', 'Review submitted successfully');
+        setTitle('');
+        setComment('');
+        setRating(0);
+        fetchReviews();
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      Alert.alert('Error', 'Failed to submit review');
+    }
   };
 
   return (
@@ -88,30 +118,36 @@ export default function ReviewScreen({ route }) {
 
       {/* Recent Reviews */}
       <Text style={styles.sectionTitle}>Recent Reviews</Text>
-      {reviews.map((review) => (
-        <View key={review.id} style={styles.reviewCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{review.name.charAt(0)}</Text>
+      {loading ? (
+        <Text style={styles.loadingText}>Loading reviews...</Text>
+      ) : reviews.length === 0 ? (
+        <Text style={styles.noReviewsText}>No reviews yet</Text>
+      ) : (
+        reviews.map((review) => (
+          <View key={review.id} style={styles.reviewCard}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{review.user?.first_name?.charAt(0) || 'U'}</Text>
+            </View>
+            <View style={styles.reviewContent}>
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewer}>
+                  {review.user ? `${review.user.first_name} ${review.user.last_name}` : 'Anonymous'}
+                </Text>
+                <Text style={styles.date}>
+                  {new Date(review.created_at).toLocaleDateString()}
+                </Text>
+              </View>
+              <View style={styles.starRow}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Ionicons key={i} name={i <= review.rating ? "star" : "star-outline"} size={16} color="#FFD700" />
+                ))}
+              </View>
+              <Text style={styles.reviewTitle}>{review.title}</Text>
+              <Text style={styles.reviewText}>{review.comment}</Text>
+            </View>
           </View>
-          <View style={styles.reviewContent}>
-            <View style={styles.reviewHeader}>
-              <Text style={styles.reviewer}>{review.name}</Text>
-              <Text style={styles.date}>{review.date}</Text>
-            </View>
-            <View style={styles.starRow}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Ionicons key={i} name={i <= review.rating ? "star" : "star-outline"} size={16} color="#FFD700" />
-              ))}
-            </View>
-            <Text style={styles.reviewTitle}>{review.title}</Text>
-            <Text style={styles.reviewText}>{review.text}</Text>
-            <View style={styles.reviewActions}>
-              <Text style={styles.helpful}>{review.helpful} Helpful</Text>
-              <TouchableOpacity><Text style={styles.report}>Report</Text></TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      ))}
+        ))
+      )}
     </ScrollView>
   );
 }
@@ -122,7 +158,11 @@ const styles = StyleSheet.create({
   subHeader: { fontSize: 16, marginBottom: 10 },
   starsContainer: { flexDirection: 'row', marginBottom: 20 },
   input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 10, padding: 12, marginBottom: 12
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12
   },
   textArea: { height: 100, textAlignVertical: 'top' },
   addPhotoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
@@ -130,14 +170,23 @@ const styles = StyleSheet.create({
   photoText: { color: '#5D5FEE', fontWeight: '500' },
   optionalText: { marginLeft: 10, color: '#aaa', fontSize: 12 },
   submitButton: {
-    backgroundColor: '#5D5FEE', paddingVertical: 14, borderRadius: 30, alignItems: 'center', marginBottom: 30
+    backgroundColor: '#5D5FEE',
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginBottom: 30
   },
   submitText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 15 },
   reviewCard: { flexDirection: 'row', marginBottom: 20 },
   avatar: {
-    backgroundColor: '#5D5FEE', width: 40, height: 40, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center', marginRight: 10
+    backgroundColor: '#5D5FEE',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
   },
   avatarText: { color: '#fff', fontWeight: 'bold' },
   reviewContent: { flex: 1 },
@@ -147,7 +196,6 @@ const styles = StyleSheet.create({
   starRow: { flexDirection: 'row', marginVertical: 5 },
   reviewTitle: { fontWeight: '600', marginBottom: 2 },
   reviewText: { color: '#333', marginBottom: 5 },
-  reviewActions: { flexDirection: 'row', justifyContent: 'space-between' },
-  helpful: { fontSize: 12, color: '#666' },
-  report: { fontSize: 12, color: '#5D5FEE', fontWeight: '500' }
+  loadingText: { textAlign: 'center', color: '#666', marginTop: 20 },
+  noReviewsText: { textAlign: 'center', color: '#666', marginTop: 20 }
 });
