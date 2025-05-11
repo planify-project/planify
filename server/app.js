@@ -21,25 +21,36 @@ const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+// Socket.io setup with improved configuration
 const io = socketIo(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  },
+  path: '/socket.io',
+  transports: ['websocket'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 10000
 });
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected');
+  console.log('New client connected:', socket.id);
 
   socket.on('join', (userId) => {
     socket.join(`user_${userId}`);
     console.log(`User ${userId} joined their room`);
   });
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
+  socket.on('disconnect', (reason) => {
+    console.log('Client disconnected:', socket.id, 'Reason:', reason);
+  });
+
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
 });
 
@@ -50,10 +61,12 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: '*',  // Allow all origins
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Increase payload limit for image uploads

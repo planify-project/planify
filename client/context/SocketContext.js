@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { SOCKET_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SocketContext = createContext();
 
@@ -13,7 +14,6 @@ export const SocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   useEffect(() => {
     let newSocket = null;
@@ -22,30 +22,38 @@ export const SocketProvider = ({ children }) => {
     const initializeSocket = () => {
       try {
         newSocket = io(SOCKET_URL, {
-          transports: ['websocket', 'polling'],
-          reconnection: true,
+          transports: ['websocket'],
           reconnectionAttempts: 5,
           reconnectionDelay: 1000,
-          timeout: 10000
+          timeout: 10000,
+          forceNew: true,
+          path: '/socket.io',
+          auth: {
+            token: AsyncStorage.getItem('token')
+          }
         });
 
         newSocket.on('connect', () => {
           console.log('Socket connected successfully');
           setIsConnected(true);
           setError(null);
-          setReconnectAttempts(0);
         });
 
         newSocket.on('connect_error', (err) => {
-          console.error('Socket connection error:', err);
-          setError('Socket connection error: ' + err.message);
+          console.error('Socket connection error details:', {
+            error: err.message,
+            description: err.description,
+            context: err.context,
+            type: err.type
+          });
+          setError(`Connection error: ${err.message}`);
           setIsConnected(false);
-          setReconnectAttempts(prev => prev + 1);
         });
 
         newSocket.on('disconnect', (reason) => {
           console.log('Socket disconnected:', reason);
           setIsConnected(false);
+          
           if (reason !== 'io client disconnect') {
             reconnectTimer = setTimeout(() => {
               console.log('Attempting to reconnect...');
@@ -56,7 +64,7 @@ export const SocketProvider = ({ children }) => {
 
         newSocket.on('error', (err) => {
           console.error('Socket general error:', err);
-          setError('Socket error: ' + err.message);
+          setError('Connection error. Please check your internet connection.');
         });
 
         newSocket.on('newBooking', (data) => {
@@ -69,7 +77,8 @@ export const SocketProvider = ({ children }) => {
 
         setSocket(newSocket);
       } catch (err) {
-        setError('Socket initialization error: ' + err.message);
+        console.error('Socket initialization error:', err);
+        setError('Failed to initialize connection. Please try again.');
       }
     };
 
@@ -89,6 +98,8 @@ export const SocketProvider = ({ children }) => {
   const joinUserRoom = (userId) => {
     if (socket && isConnected) {
       socket.emit('join', userId);
+    } else {
+      console.warn('Socket not connected. Cannot join room.');
     }
   };
 
@@ -105,8 +116,7 @@ export const SocketProvider = ({ children }) => {
     joinUserRoom,
     isConnected,
     error,
-    reconnect,
-    reconnectAttempts
+    reconnect
   };
 
   return (
