@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER 
     },
     event_id: { 
-      type: DataTypes.STRING, // <-- Change from UUID to STRING to match events.id
+      type: DataTypes.UUID, // <-- Change from UUID to STRING to match events.id
     },
     status: {
       type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),

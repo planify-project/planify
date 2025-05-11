@@ -6,6 +6,7 @@ const userController = require('../controllers/user.controller');
 router.get('/getAll', userController.getAllUsers); // Get all users
 router.get('/:id', userController.getUserById); // Get a user by ID
 router.post('/add', userController.createUser); // Create a new user
+router.post('/firebase', userController.createUserFromFirebase);
 router.put('/:id', userController.updateUser); // Update a user by ID
 router.delete('/:id', userController.deleteUser); // Delete a user by ID
 
