@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     event_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER, // Changed from UUID to INTEGER to match events table
       allowNull: true,
       references: {
         model: 'events',
@@ -25,12 +25,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Services',
+        model: 'services', // Changed from Services to services (lowercase)
         key: 'id'
       }
     },
     amount: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     method: {
@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     }
   }, {
+    tableName: 'payments',
     underscored: true,
     timestamps: true
   });

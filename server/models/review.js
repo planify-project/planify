@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     reviewer_id: {
-      type: DataTypes.UUID, // Match the type of `users.id`
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'user',
@@ -14,10 +14,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     event_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER, // Changed from UUID to INTEGER to match events table
       allowNull: true,
       references: {
-        model: 'event',
+        model: 'events',
         key: 'id',
       },
     },
@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'service',
+        model: 'services', // Changed from Services to services
         key: 'id',
       },
     },
@@ -38,14 +38,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         min: 1,
-        max: 5,
-      },
+        max: 5
+      }
     },
     comment: {
       type: DataTypes.TEXT,
       allowNull: false,
-    },
+    }
   }, {
+    tableName: 'reviews',
     underscored: true,
     timestamps: true,
   });

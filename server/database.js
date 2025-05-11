@@ -143,7 +143,8 @@ Payment.belongsTo(Service, { foreignKey: 'service_id' });
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
 Review.belongsTo(User, { foreignKey: 'reviewer_id' });
 
-
+Event.hasMany(Review, { foreignKey: 'event_id' });
+Review.belongsTo(Event, { foreignKey: 'event_id' });
 // Sync database (optional, uncomment if needed)
 // sequelize.sync({ force: true })
 //   .then(() => {

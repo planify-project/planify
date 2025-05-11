@@ -1,16 +1,11 @@
 const db = require('../database');
-const { review, user } = db;
+const { Review, User } = db;
 
 exports.createReview = async (req, res) => {
   try {
     const { event_id, service_id, rating, comment, title } = req.body;
-    const reviewer_id = req.user.id; // Assuming auth middleware sets req.user
-
-    // Validation
-    if (!reviewer_id) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
+    
+    // Basic validation
     if (!rating || !comment || !title) {
       return res.status(400).json({ message: 'Rating, comment and title are required' });
     }
@@ -19,20 +14,9 @@ exports.createReview = async (req, res) => {
       return res.status(400).json({ message: 'Either event_id or service_id is required' });
     }
 
-    // Check for existing review
-    const existingReview = await review.findOne({
-      where: {
-        reviewer_id,
-        ...(event_id ? { event_id } : { service_id }),
-      }
-    });
-
-    if (existingReview) {
-      return res.status(400).json({ message: 'You have already reviewed this item' });
-    }
-
-    const newReview = await review.create({
-      reviewer_id,
+    // Create the review
+    const newReview = await Review.create({
+      reviewer_id: req.session?.userId, // Use session ID instead of JWT
       event_id,
       service_id,
       rating,
@@ -51,10 +35,34 @@ exports.getReviewsByEvent = async (req, res) => {
   try {
     const { event_id } = req.params;
 
-    const reviews = await review.findAll({
+    if (!event_id) {
+      return res.status(400).json({ message: 'Event ID is required' });
+    }
+
+    const reviews = await Review.findAll({
       where: { event_id },
       include: [{
-        model: user,
+        model: User,
+        attributes: ['name'], // Changed from first_name/last_name to name
+      }],
+      order: [['created_at', 'DESC']],
+    });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getReviewsByService = async (req, res) => {
+  try {
+    const { service_id } = req.params;
+
+    const reviews = await Review.findAll({
+      where: { service_id },
+      include: [{
+        model: User,
         attributes: ['first_name', 'last_name'],
       }],
       order: [['created_at', 'DESC']],

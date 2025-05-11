@@ -1,33 +1,33 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('event', {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,  // Keep using INTEGER
       primaryKey: true,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false, // Event name is required
+      allowNull: false,
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true, // Optional field for event details
+      allowNull: true,
     },
     type: {
       type: DataTypes.STRING,
-      allowNull: true, // Supports event categories like "wedding", "meeting", etc.
+      allowNull: true,
     },
     startDate: {
       type: DataTypes.DATE,
-      allowNull: false, // Start date is required
+      allowNull: false,
     },
     endDate: {
       type: DataTypes.DATE,
-      allowNull: true, // Optional for multi-day events
+      allowNull: true,
     },
     location: {
       type: DataTypes.STRING,
-      allowNull: true, // Optional for private events
+      allowNull: true,
     },
     latitude: {
       type: DataTypes.FLOAT,
@@ -97,10 +97,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true, // Optional field for event ratings
     },
   }, {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
-    paranoid: true, // Enables soft deletes (adds deletedAt field)
+    underscored: true,
+    timestamps: true
   });
-  
-
-  return Event;
 };

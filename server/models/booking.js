@@ -6,16 +6,28 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     user_id: { 
-      type: DataTypes.UUID, // Match the type of `users.id`
+      type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: 'user',
+        key: 'id'
+      }
     },
     service_id: { 
       type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: 'services',
+        key: 'id'
+      }
     },
     event_id: { 
-      type: DataTypes.UUID, // Match the type of `events.id`
+      type: DataTypes.INTEGER, // Changed from UUID to INTEGER
       allowNull: true,
+      references: {
+        model: 'events',
+        key: 'id'
+      }
     },
     status: {
       type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),
@@ -24,11 +36,9 @@ module.exports = (sequelize, DataTypes) => {
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-    },
+    }
   }, {
     underscored: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
+    timestamps: true
   });
 };

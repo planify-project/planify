@@ -7,6 +7,7 @@ const db = require('./database');
 const { Event } = db;
 const path = require('path');
 const morgan = require('morgan');
+const session = require('express-session');
 
 
 
@@ -35,6 +36,21 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Add this after session middleware
+app.use((req, res, next) => {
+  // For testing purposes only - you should handle actual user authentication
+  req.session.userId = req.session.userId || 1; 
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {

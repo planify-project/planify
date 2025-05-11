@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     from_user_id: {
-      type: DataTypes.UUID, // Match the type of `users.id`
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'user',
@@ -14,34 +14,24 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     to_user_id: {
-      type: DataTypes.UUID, // Match the type of `users.id`
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'user',
         key: 'id',
       },
     },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
     event_id: {
-      type: DataTypes.UUID, // Match the type of `events.id`
+      type: DataTypes.INTEGER, // Changed from UUID to INTEGER
       allowNull: true,
       references: {
         model: 'events',
         key: 'id',
       },
     },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.NOW,
-    },
+    content: DataTypes.TEXT
   }, {
     underscored: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
+    timestamps: true
   });
 };
