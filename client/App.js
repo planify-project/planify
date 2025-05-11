@@ -24,7 +24,7 @@ import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
 import AddServiceScreen from './screens/AddServiceScreen';
 import EditServiceScreen from './screens/EditServiceScreen';
-import AllEventsScreen from './screens/NearbyEventScreen';
+import AllEventsScreen from './screens/AllEventsScreen';
 import AllServicesScreen from './screens/AllServicesScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
 import CreateEventScreen from './screens/CreateEventScreen';
@@ -36,6 +36,7 @@ import AboutScreen from './screens/AboutScreen';
 import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
+import ReviewScreen from './screens/ReviewScreen';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
@@ -103,10 +104,13 @@ function HomeStack() {
       <Stack.Screen
         name="AllEvents"
         component={AllEventsScreen}
-        options={{ headerShown: true,
+        options={{
+          headerShown: true,
+          headerTitle: "All Events",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
       />
       <Stack.Screen
         name="JoinEvent"
@@ -166,6 +170,17 @@ function HomeStack() {
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
+      />
+      <Stack.Screen
+        name="Review"
+        component={ReviewScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Write a Review",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
       />
     </Stack.Navigator>
   );

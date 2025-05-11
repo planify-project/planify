@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id',
       },
     },
-    service_id: {
+    event_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

@@ -145,13 +145,13 @@ Review.belongsTo(User, { foreignKey: 'reviewer_id' });
 
 
 // Sync database (optional, uncomment if needed)
-sequelize.sync({ force: true })
-  .then(() => {
-    console.log('All models were synchronized successfully.');
-  })
-  .catch((error) => {
-    console.error('Error synchronizing models:', error);
-  });
+// sequelize.sync({ force: true })
+//   .then(() => {
+//     console.log('All models were synchronized successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error synchronizing models:', error);
+//   });
 
 // Export all models and sequelize instance
 module.exports = {

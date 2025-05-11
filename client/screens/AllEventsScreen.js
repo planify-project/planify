@@ -302,6 +302,10 @@
 //   },
 // });
 
+
+
+
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, Image, TouchableOpacity,

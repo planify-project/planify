@@ -86,6 +86,7 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
     { id: 'services', icon: 'construct-outline', label: 'Services' },
   ];
 
+  
   const handleTabPress = (tabId) => {
     onTabPress(tabId);
     if (tabId === 'event') {

@@ -113,6 +113,14 @@ export default function EventDetailScreen({ route }) {
       >
         <Text style={styles.joinBtnText}>Join Event</Text>
       </TouchableOpacity>
+      {/* Write Review Button */}
+<TouchableOpacity 
+  style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#5D5FEE' }]}
+  onPress={() => navigation.navigate('Review', { event })}
+>
+  <Text style={[styles.joinBtnText, { color: '#5D5FEE' }]}>Write a Review</Text>
+</TouchableOpacity>
+
     </View>
   );
 }

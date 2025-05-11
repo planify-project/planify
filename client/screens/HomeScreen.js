@@ -10,6 +10,7 @@ import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
 import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
+import AllEventsScreen from './AllEventsScreen';
 
 export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -20,7 +21,7 @@ export default function HomeScreen({ navigation }) {
   const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
 
   const getLocation = async () => {
     try {
@@ -130,8 +131,15 @@ export default function HomeScreen({ navigation }) {
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={setActiveTab}
-        navigation={navigation} // Pass navigation prop
+        onTabPress={(tabId) => {
+          setActiveTab(tabId);
+          // Add console.log to debug
+          console.log('Tab pressed:', tabId);
+          if (tabId === 'event') {
+            navigation.navigate('AllEvents'); // Make sure this matches the screen name in App.js
+          }
+        }}
+        navigation={navigation}
       />
 
       <NearbyEvents navigation={navigation} />
@@ -139,7 +147,7 @@ export default function HomeScreen({ navigation }) {
       <PopularEvents 
         navigation={navigation} 
         events={popularEvents}/>
-        
+
     </ScrollView>
   );
 }

@@ -67,10 +67,65 @@ exports.getAllEvents = async (req, res) => {
 //   }
 // };
 
+
+
+
+// exports.getPublicEvents = async (req, res) => {
+//   try {
+//     const eventType = req.query.type;
+//     const searchQuery = req.query.search?.toLowerCase();
+
+//     const whereClause = {
+//       isPublic: true,
+//     };
+
+//     if (eventType && eventType !== 'All') {
+//       whereClause.type = eventType;
+//     }
+
+//     if (searchQuery) {
+//       whereClause[Op.or] = [
+//         { name: { [Op.like]: `%${searchQuery}%` } },
+//         { location: { [Op.like]: `%${searchQuery}%` } },
+//         { startDate: { [Op.like]: `%${searchQuery}%` } }
+//       ];
+//     }
+
+//     const publicEvents = await Event.findAll({
+//       where: whereClause,
+//       attributes: ['id', 'name', 'location', 'ticketPrice', 'is_free', 'coverImage', 'type', 'startDate'],
+//       order: [['startDate', 'ASC']],
+//       include: [
+//         {
+//           model: User,
+//           as: 'creator',
+//           attributes: ['id', 'name', 'email'],
+//         },
+//         {
+//           model: User,
+//           as: 'attendees',
+//           attributes: ['id', 'name'],
+//           through: { attributes: [] },
+//         },
+//       ],
+//     });
+
+//     const formattedEvents = publicEvents.map((event) => ({
+//       ...event.toJSON(),
+//       attendees_count: event.attendees?.length || 0,
+//     }));
+
+//     res.status(200).json(formattedEvents);
+//   } catch (error) {
+//     console.error('Error fetching public events:', error);
+//     res.status(500).json({ error: 'Server error while fetching public events' });
+//   }
+// };
+
 exports.getPublicEvents = async (req, res) => {
   try {
     const eventType = req.query.type;
-    const searchQuery = req.query.search?.toLowerCase();
+    const searchQuery = req.query.search;
 
     const whereClause = {
       isPublic: true,
@@ -82,15 +137,39 @@ exports.getPublicEvents = async (req, res) => {
 
     if (searchQuery) {
       whereClause[Op.or] = [
-        { name: { [Op.like]: `%${searchQuery}%` } },
-        { location: { [Op.like]: `%${searchQuery}%` } },
-        { startDate: { [Op.like]: `%${searchQuery}%` } }
+        { 
+          name: { 
+            [Op.like]: `%${searchQuery}%` 
+          }
+        },
+        { 
+          location: { 
+            [Op.like]: `%${searchQuery}%` 
+          }
+        },
+        { 
+          startDate: { 
+            [Op.like]: `%${searchQuery}%` 
+          }
+        }
       ];
     }
 
+    console.log('Search Query:', searchQuery); // Add logging
+    console.log('Where Clause:', whereClause); // Add logging
+
     const publicEvents = await Event.findAll({
       where: whereClause,
-      attributes: ['id', 'name', 'location', 'ticketPrice', 'is_free', 'coverImage', 'type', 'startDate'],
+      attributes: [
+        'id', 
+        'name', 
+        'location', 
+        'ticketPrice', 
+        'is_free', 
+        'coverImage', 
+        'type', 
+        'startDate'
+      ],
       order: [['startDate', 'ASC']],
       include: [
         {
@@ -115,10 +194,12 @@ exports.getPublicEvents = async (req, res) => {
     res.status(200).json(formattedEvents);
   } catch (error) {
     console.error('Error fetching public events:', error);
-    res.status(500).json({ error: 'Server error while fetching public events' });
+    res.status(500).json({ 
+      error: 'Server error while fetching public events',
+      details: error.message 
+    });
   }
 };
-
 // POST /api/events
 exports.createEvent = async (req, res) => {
   try {

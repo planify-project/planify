@@ -7,3 +7,4 @@ router.get('/getAll', eventsController.getAllEvents);
 router.get('/public', eventsController.getPublicEvents);
 
 module.exports = router;
+
