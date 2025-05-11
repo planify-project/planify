@@ -105,56 +105,35 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={screenHeaderOptions}
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
+      <HomeHeader 
+        loading={loading}
+        city={city}
+        errorMsg={errorMsg}
+        onLocationPress={() => setModalVisible(true)}
+        onNotificationPress={() => navigation.navigate('Notification')}
+        onAgentPress={() => navigation.navigate('Agent List')}
       />
-      <Stack.Screen
-        name="CreateEvent"
-        component={CreateEventScreen}
-        options={screenHeaderOptions}
+
+      <LocationPickerModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSelectCity={handleSelectCity}
+        onUseCurrentLocation={getLocation}
       />
-      <Stack.Screen
-        name="EventDetail"
-        component={EventDetailScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Notification"
-        component={NotificationScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Popular Events"
-        component={PopularEventsScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="JoinEvent"
-        component={JoinEventWrapper}
-        options={{ ...screenHeaderOptions, title: 'Join Event' }}
-      />
-      <Stack.Screen
-        name="Agent Chat"
-        component={AgentChatScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Agent List"
-        component={AgentListScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="AgentProfile"
-        component={AgentProfileScreen}
-        options={{ ...screenHeaderOptions, title: "Agent Profile" }}
-      />
-      <Stack.Screen
-        name="AllEvents"
-        component={AllEventsScreen}
-        options={{ ...screenHeaderOptions, title: 'All Events' }}
+
+      <CreateEventModal 
+        visible={createEventModalVisible}
+        eventName={eventName}
+        selectedDate={selectedDate}
+        onClose={() => {
+          setCreateEventModalVisible(false);
+          setEventName('');
+          setSelectedDate('');
+        }}
+        onEventNameChange={setEventName}
+        onDateSelect={handleDateSelect}
+        onCreateEvent={handleCreateEvent}
       />
 
       <CreateEventButton 
@@ -184,63 +163,22 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-// Main Tabs Navigator
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          switch (route.name) {
-            case 'Home': 
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Schedule': 
-              iconName = focused ? 'calendar' : 'calendar-outline';
-              break;
-            case 'Wishlist': 
-              iconName = focused ? 'heart' : 'heart-outline';
-              break;
-            case 'Settings': 
-              iconName = focused ? 'settings' : 'settings-outline';
-              break;
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#5D5FEE',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-        tabBarShowLabel: false,
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Schedule" component={ScheduleStack} />
-      <Tab.Screen name="Wishlist" component={WishlistStack} />
-      <Tab.Screen name="Settings" component={SettingsStack} />
-    </Tab.Navigator>
-  );
-}
-
-// Main App Component
-export default function App() {
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen 
-                name="Root" 
-                component={MainTabs} 
-              />
-              <Stack.Screen 
-                name="Auth" 
-                component={AuthNavigator} 
-              />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </AuthProvider>
-      </ThemeProvider>
-    </GestureHandlerRootView>
-  );
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: normalize(16),
+    backgroundColor: '#f9f9f9'
+  },
+  allEventsButton: {
+    backgroundColor: '#5D5FEE',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    alignItems: 'center',
+    marginVertical: normalize(16),
+  },
+  allEventsButtonText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+  },
+});

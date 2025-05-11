@@ -70,99 +70,6 @@ function HomeStack() {
         component={HomeScreen}
         options={screenHeaderOptions}
       />
-      <Stack.Screen
-        name="CreateEvent"
-        component={CreateEventScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="EventDetail"
-        component={EventDetailScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
-      />
-      <Stack.Screen
-        name="Notification"
-        component={NotificationScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Popular Events"
-        component={PopularEventsScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
-      />
-      <Stack.Screen
-        name="AllEvents"
-        component={AllEventsScreen}
-        options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
-      />
-      <Stack.Screen
-        name="JoinEvent"
-        component={JoinEventWrapper}
-        options={{ ...screenHeaderOptions, title: 'Join Event' }}
-      />
-      <Stack.Screen
-        name="Agent Chat"
-        component={AgentChatScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Agent List"
-        component={AgentListScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="AgentProfile"
-        component={AgentProfileScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "Agent Profile",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
-      />
-      <Stack.Screen
-        name="AllServices"
-        component={AllServicesScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "All Services",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
-      />
-      <Stack.Screen 
-        name="AddService" 
-        component={AddServiceScreen} 
-        options={{
-          headerShown: true,
-          headerTitle: "Add New Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }} 
-      />
-      <Stack.Screen 
-        name="ServiceDetail" 
-        component={ServiceDetailScreen} 
-        options={{
-          headerShown: true,
-          headerTitle: "Service Details",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }} 
-      />
     </Stack.Navigator>
   );
 }
@@ -300,12 +207,13 @@ function MainTabs() {
         tabBarActiveTintColor: '#5D5FEE',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
+        tabBarShowLabel: false, // <-- Add this line to hide labels
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Schedule" component={ScheduleStack} />
-      <Tab.Screen name="Wishlist" component={WishlistStack} />
-      <Tab.Screen name="Settings" component={SettingsStack} />
+      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+      <Tab.Screen name="Schedule" component={ScheduleStack} options={{ headerShown: false }} />
+      <Tab.Screen name="Wishlist" component={WishlistStack} options={{ headerShown: false }} />
+      <Tab.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }
