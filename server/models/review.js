@@ -15,6 +15,22 @@ module.exports = (sequelize, DataTypes) => {
     },
     event_id: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'event',
+        key: 'id',
+      },
+    },
+    service_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'service',
+        key: 'id',
+      },
+    },
+    title: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     rating: {
@@ -27,16 +43,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     comment: {
       type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      allowNull: false,
     },
   }, {
     underscored: true,
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
   });
 };
