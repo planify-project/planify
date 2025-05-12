@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
 const http = require('http');
 const socketIo = require('socket.io');
 require('dotenv').config();
@@ -21,43 +20,38 @@ const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup with improved configuration
+// Configure Socket.IO
 const io = socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
   },
-  path: '/socket.io',
-  transports: ['websocket'],
   pingTimeout: 60000,
   pingInterval: 25000,
-  connectTimeout: 10000
+  connectTimeout: 45000,
+  transports: ['websocket', 'polling']
 });
 
-// Socket.io connection handling
+// Add better connection logging
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-
-  socket.on('join', (userId) => {
-    socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined their room`);
+  const clientIp = socket.handshake.address;
+  console.log(`New client connected - ID: ${socket.id}, IP: ${clientIp}`);
+  
+  socket.on('error', (error) => {
+    console.error(`Socket error for ${socket.id}:`, error);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Client disconnected:', socket.id, 'Reason:', reason);
-  });
-
-  socket.on('error', (error) => {
-    console.error('Socket error:', error);
+    console.log(`Client disconnected - ID: ${socket.id}, Reason: ${reason}`);
   });
 });
 
 // Make io accessible to our routes
 app.set('io', io);
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
+const HOST = '172.20.10.3'; // Updated IP address
 
 // Middleware
 app.use(cors({
@@ -96,9 +90,7 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  console.error('Stack:', err.stack);
-  
+  console.error('API Error:', err);
   // Handle specific error types
   if (err.name === 'ValidationError') {
     return res.status(400).json({
@@ -123,21 +115,25 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on port ${port}`);
-  console.log(`Server URLs:`);
-  console.log(`- http://localhost:${port}`);
-  console.log(`- http://0.0.0.0:${port}`);
-  console.log(`- http://172.20.10.3:${port}`);
+// Listen on specific network interface
+server.listen(PORT, HOST, () => {
+  console.log('Server running on:');
+  console.log(`- http://${HOST}:${PORT}`);
 });
 
-// Handle server errors
+// Error handling for server
 server.on('error', (error) => {
-  console.error('Server error:', error);
-  if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use`);
-    process.exit(1);
+  if (error.code === 'EADDRNOTAVAIL') {
+    console.error('Address not available, falling back to all interfaces');
+    // Fallback to listen on all available network interfaces
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log('Server running on all network interfaces:');
+      console.log(`- http://localhost:${PORT}`);
+      console.log(`- http://0.0.0.0:${PORT}`);
+      console.log(`- http://${HOST}:${PORT}`);
+    });
+  } else {
+    console.error('Server error:', error);
   }
 });
 

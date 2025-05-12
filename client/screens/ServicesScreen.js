@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Modal, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import axios from 'axios';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function ServicesScreen() {
   const [services, setServices] = useState([]);

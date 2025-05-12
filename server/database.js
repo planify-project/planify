@@ -155,7 +155,7 @@ const syncDatabase = async () => {
 };
 
 // Run the sync
-syncDatabase();
+// syncDatabase();
 
 // Export all models and sequelize instance
 module.exports = {

@@ -13,6 +13,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, ActivityIndicator } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 // Enable screens for better performance
 enableScreens();
@@ -355,27 +356,28 @@ function MainTabs() {
 
 // Main App Component
 export default function App() {
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (!state.isConnected) {
+        console.warn('No internet connection. Some features may be limited.');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      
       <ThemeProvider>
         <SocketProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen 
-                name="Root" 
-                component={MainTabs}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="Auth" 
-                component={AuthNavigator}
-                options={{ headerShown: false }}
-              />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </AuthProvider>
+          <AuthProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Root" component={MainTabs} />
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </AuthProvider>
         </SocketProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

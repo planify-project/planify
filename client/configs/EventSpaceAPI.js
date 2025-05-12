@@ -1,70 +1,49 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Update the base URL to match your backend route
-const API_BASE = 'http://172.20.10.3:3000/api';
+import { API_BASE } from '../config';
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
 
-// Add request interceptor for authentication if needed
+// Add better error handling
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem('userToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      console.log('Making request to:', config.url);
       return config;
     } catch (error) {
-      console.error('Error getting token:', error);
+      console.error('Request interceptor error:', error);
       return config;
     }
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      try {
-        await AsyncStorage.removeItem('token');
-        // Note: In React Native, we need to handle navigation differently
-        // You might want to use a navigation service or context
-      } catch (e) {
-        console.error('Error removing token:', e);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-export const fetchEventSpaces = async (filters = {}) => {
+export const fetchEventSpaces = async () => {
   try {
-    const response = await api.get('/event-spaces', { params: filters });
+    console.log('Fetching event spaces...');
+    const response = await api.get('/event-spaces');
+    console.log('Response:', response.data);
     if (!response.data) {
-      throw new Error('Invalid response format');
+      throw new Error('No data received');
     }
     return response.data;
   } catch (error) {
-    console.error('API Error:', error);
-    if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-    }
-    throw new Error(error.response?.data?.message || 'Failed to fetch event spaces');
+    console.error('Error fetching event spaces:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    throw new Error('Failed to fetch event spaces');
   }
 };
 
