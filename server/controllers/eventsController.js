@@ -11,7 +11,7 @@ exports.getAllEvents = async (req, res) => {
     const { count, rows } = await Event.findAndCountAll({
       offset,
       limit,
-      order: [['startDate', 'ASC']], // Updated to use startDate
+      order: [['startDate', 'ASC']],
     });
 
     res.json({
@@ -27,22 +27,41 @@ exports.getAllEvents = async (req, res) => {
 
 exports.getPublicEvents = async (req, res) => {
   try {
+    console.log('Fetching public events...');
     const publicEvents = await Event.findAll({
       where: { isPublic: true },
-      order: [['startDate', 'ASC']], // Updated to use startDate
+      order: [['startDate', 'ASC']]
     });
-
+    
+    console.log(`Found ${publicEvents.length} public events`);
     res.status(200).json(publicEvents);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch public events', details: error.message });
+    console.error('Error fetching public events:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch public events', 
+      details: error.message 
+    });
   }
-}
+};
+
+exports.getEventById = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch event', details: error.message });
+  }
+};
+
 exports.createEvent = async (req, res) => {
   try {
     console.log('Received event data:', req.body);
 
     const {
-      title,
+      name,      
       type,
       date,
       venue,
@@ -50,15 +69,14 @@ exports.createEvent = async (req, res) => {
       equipment = []
     } = req.body;
 
-    // Create the event with existing model structure
     const event = await Event.create({
-      title,
+      name,
       type: type || 'social',
-      event_date: date,
-      venue_id: venue?.id,
+      startDate: date,
+      location: venue?.name || '',
       status: 'pending',
-      user_id: 1, // Default user ID until auth is implemented
-      budget: parseFloat(venue?.price || 0)
+      created_by: 1,
+      budget: venue?.price ? parseFloat(venue.price) : 0
     });
 
     console.log('Event created:', event);
@@ -75,5 +93,40 @@ exports.createEvent = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+exports.updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.update(req.body);
+    res.json({
+      success: true,
+      data: event,
+      message: 'Event updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update event', details: error.message });
+  }
+};
+
+exports.deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.destroy();
+    res.json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete event', details: error.message });
   }
 };

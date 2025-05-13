@@ -83,6 +83,6 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
-    paranoid: true, // Enables soft deletes (adds deletedAt field)
+    paranoid: false, // Enables soft deletes (adds deletedAt field)
   });
 };

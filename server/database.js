@@ -3,14 +3,23 @@ require('dotenv').config();
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.USER_NAME, process.env.DB_PASSWORD, {
     host: 'localhost',
-    dialect: 'mysql'
+    dialect: 'mysql',
+    logging: false // Disable logging for production
 });
-try {
-    sequelize.authenticate();
-    console.log('Connection has been established successfully.');
-} catch (error) {
-    console.error('Unable to connect to the database:', error);
-}
+
+// Test the connection
+const testConnection = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+        process.exit(1); // Exit if we can't connect to the database
+    }
+};
+
+// Call the connection test
+testConnection();
 
 // Import models
 const User = require('./models/user')(sequelize, DataTypes);
@@ -35,10 +44,10 @@ const MonthlyReport = require('./models/monthlyReport')(sequelize, DataTypes);
 const AuditLog = require('./models/auditLog')(sequelize, DataTypes);
 const Admin = require('./models/admin')(sequelize, DataTypes);
 const Agent = require('./models/Agent')(sequelize, DataTypes);
+const EventSpace = require('./models/eventSpace')(sequelize, DataTypes);
 
 // Associations
 
-// ... existing code ...
 User.hasMany(Event, { foreignKey: 'created_by' });
 Event.belongsTo(User, { foreignKey: 'created_by' });
 
@@ -121,14 +130,32 @@ Payment.belongsTo(User, { foreignKey: 'user_id' });
 Service.hasMany(Payment, { foreignKey: 'service_id' });
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
-// Sync database
-// sequelize.sync({ force: true })
-//   .then(() => {
-//     console.log('All models were synchronized successfully.');
-//   })
-//   .catch((error) => {
-//     console.error('Error synchronizing models:', error);
-//   });
+Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
+EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
+
+// Sync database and seed data
+const syncDatabase = async () => {
+  try {
+    // First, sync the ServiceCategory model
+    await ServiceCategory.sync({ alter: true });
+    console.log('Service categories table synchronized successfully.');
+
+    // Then sync all other models
+    await sequelize.sync({ alter: true });
+    console.log('All models were synchronized successfully.');
+
+    // Import and run the event spaces seeder
+    const seedEventSpaces = require('./seeds/eventSpaces');
+    await seedEventSpaces();
+    console.log('Event spaces seeded successfully!');
+  } catch (error) {
+    console.error('Error during database sync:', error);
+    process.exit(1);
+  }
+};
+
+// Run the sync
+// syncDatabase();
 
 // Export all models and sequelize instance
 module.exports = {
@@ -155,5 +182,6 @@ module.exports = {
     MonthlyReport,
     AuditLog,
     Admin,
-    Agent
+    Agent,
+    EventSpace
 };
