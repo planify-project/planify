@@ -1,5 +1,6 @@
 const db = require('../database');
 const { Event } = db;
+const { Op } = require('sequelize');
 
 // GET /api/events?page=1&limit=10
 exports.getAllEvents = async (req, res) => {
@@ -37,6 +38,7 @@ exports.getPublicEvents = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch public events', details: error.message });
   }
 }
+
 exports.createEvent = async (req, res) => {
   try {
     console.log('Received event data:', req.body);
@@ -75,5 +77,87 @@ exports.createEvent = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// Helper function to calculate distance between two points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// GET /api/events/nearby?lat=36.8065&lon=10.1815&radius=50
+exports.getNearbyEvents = async (req, res) => {
+  try {
+    const { lat, lon, radius = 50 } = req.query; // radius in km
+    const userLat = parseFloat(lat);
+    const userLon = parseFloat(lon);
+    const radiusKm = parseFloat(radius);
+
+    if (!userLat || !userLon) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    // Get all public events
+    const events = await Event.findAll({
+      where: { 
+        isPublic: true,
+        status: 'approved',
+        latitude: { [Op.not]: null },
+        longitude: { [Op.not]: null }
+      }
+    });
+
+    // Filter events by distance
+    const nearbyEvents = events.filter(event => {
+      const distance = calculateDistance(
+        userLat, 
+        userLon, 
+        event.latitude, 
+        event.longitude
+      );
+      return distance <= radiusKm;
+    });
+
+    // Sort by distance
+    nearbyEvents.sort((a, b) => {
+      const distA = calculateDistance(userLat, userLon, a.latitude, a.longitude);
+      const distB = calculateDistance(userLat, userLon, b.latitude, b.longitude);
+      return distA - distB;
+    });
+
+    res.json(nearbyEvents);
+  } catch (error) {
+    console.error('Error fetching nearby events:', error);
+    res.status(500).json({ error: 'Failed to fetch nearby events', details: error.message });
+  }
+};
+
+// GET /api/events/popular
+exports.getPopularEvents = async (req, res) => {
+  try {
+    const events = await Event.findAll({
+      where: { 
+        isPublic: true,
+        status: 'approved'
+      },
+      order: [
+        ['attendees_count', 'DESC'],
+        ['createdAt', 'DESC']
+      ],
+      limit: 10
+    });
+
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching popular events:', error);
+    res.status(500).json({ error: 'Failed to fetch popular events', details: error.message });
   }
 };

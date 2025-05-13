@@ -14,17 +14,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
+import api from '../configs/api';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 function normalize(size) {
   return Math.round(scale * size);
 }
-
-const API_URL = 'http://192.168.43.149:3000/api';
 
 export default function EditServiceScreen({ route, navigation }) {
   const { service } = route.params;
@@ -72,37 +70,45 @@ export default function EditServiceScreen({ route, navigation }) {
       return;
     }
 
-    setLoading(true);
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('User not authenticated');
+      setLoading(true);
+      const token = await auth.currentUser.getIdToken();
 
       const formData = new FormData();
       formData.append('title', title);
       formData.append('description', description);
       formData.append('price', price);
       formData.append('serviceType', serviceType);
-      formData.append('agentId', user.uid);
-      if (image && image !== service.imageUrl) {
+      
+      if (image && image.startsWith('file://')) {
+        const imageUri = image;
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        
         formData.append('image', {
-          uri: image,
-          type: 'image/jpeg',
-          name: 'service-image.jpg',
+          uri: imageUri,
+          name: filename,
+          type
         });
       }
 
-      await axios.put(`${API_URL}/services/${service.id}`, formData, {
+      const response = await api.put(`/services/${service.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-        },
+          Authorization: `Bearer ${token}`
+        }
       });
 
-      Alert.alert('Success', 'Service updated successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      if (response.data.success) {
+        Alert.alert('Success', 'Service updated successfully');
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to update service');
+      }
     } catch (error) {
-      console.error('Error updating service:', error);
-      Alert.alert('Error', 'Failed to update service. Please try again.');
+      console.error('API Error:', error);
+      Alert.alert('Error', error.message || 'Failed to update service');
     } finally {
       setLoading(false);
     }
@@ -172,19 +178,19 @@ export default function EditServiceScreen({ route, navigation }) {
         </View>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity
+        <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
             onPress={() => navigation.goBack()}
-          >
+        >
             <Ionicons name="close-outline" size={20} color="#fff" />
             <Text style={styles.actionButtonText}>Cancel</Text>
-          </TouchableOpacity>
+        </TouchableOpacity>
 
-          <TouchableOpacity
+        <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
             onPress={handleUpdate}
-            disabled={loading}
-          >
+          disabled={loading}
+        >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -193,7 +199,7 @@ export default function EditServiceScreen({ route, navigation }) {
                 <Text style={styles.actionButtonText}>Save Changes</Text>
               </>
             )}
-          </TouchableOpacity>
+        </TouchableOpacity>
         </View>
       </View>
     </ScrollView>

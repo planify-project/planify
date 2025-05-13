@@ -8,7 +8,6 @@ import LocationPickerModal from '../components/home/LocationPickerModal';
 import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
-import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
 
 export default function HomeScreen({ navigation }) {
@@ -131,14 +130,12 @@ export default function HomeScreen({ navigation }) {
       <HomeTabs
         activeTab={activeTab}
         onTabPress={setActiveTab}
-        navigation={navigation} // Pass navigation prop
+        navigation={navigation}
       />
 
       <NearbyEvents navigation={navigation} />
       
-      <PopularEvents 
-        navigation={navigation} 
-        events={popularEvents}/>
+      <PopularEvents navigation={navigation} />
 
       {/* Button to navigate to All Events */}
       <TouchableOpacity 

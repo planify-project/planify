@@ -7,11 +7,37 @@ import CreateEventScreen from '../screens/CreateEventScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import EventDetailScreen from '../screens/EventDetailScreen';
 import { useTheme } from '../context/ThemeContext';
 import { TouchableOpacity } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const screenHeaderOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
+};
+
+// Root Stack Navigator
+function RootStack() {
+  return (
+    <Stack.Navigator screenOptions={screenHeaderOptions}>
+      <Stack.Screen
+        name="MainTabs"
+        component={MainTabs}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{ title: 'Event Details' }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 const MainTabs = () => {
   const { theme } = useTheme();
@@ -51,4 +77,4 @@ const MainTabs = () => {
   );
 };
 
-export default MainTabs;
+export default RootStack;

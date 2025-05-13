@@ -8,21 +8,21 @@ const { Event } = db;
 const path = require('path');
 const morgan = require('morgan');
 
-
-
 // Import routes
 const eventsRouter = require('./routes/events');
 const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const servicesRouter = require('./routes/services.js');
 const authRoutes = require('./routes/auth.routes');
+const stripeRoutes = require("./routes/stripeRoutes");
+const wishlistRoutes = require('./routes/wishlist.route');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://192.168.147.126:3000', 'http://localhost:8081', 'http://192.168.147.126:8081'],
+  origin: ['http://localhost:3000', 'http://192.168.149.126:3000', 'http://localhost:8081', 'http://192.168.149.126:8081'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -48,6 +48,8 @@ app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // Test endpoint
 app.get('/', (req, res) => {
@@ -88,7 +90,7 @@ const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Server URLs:`);
   console.log(`- http://localhost:${port}`);
-  console.log(`- http://192.168.147.126:${port}`);
+  console.log(`- http://192.168.149.126:${port}`);
 });
 
 // Handle server errors

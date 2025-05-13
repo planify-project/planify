@@ -36,8 +36,10 @@ import AboutScreen from './screens/AboutScreen';
 import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
+import PaymentScreen from './screens/PaymentScreen';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
 
 // Navigators
 const Stack = createNativeStackNavigator();
@@ -167,6 +169,11 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
       />
+      <Stack.Screen
+        name="Payment"
+        component={PaymentScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -194,6 +201,11 @@ function WishlistStack() {
   return (
     <Stack.Navigator screenOptions={screenHeaderOptions}>
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{ title: 'Event Details' }}
+      />
     </Stack.Navigator>
   );
 }
@@ -320,20 +332,26 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AuthProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen 
-                name="Root" 
-                component={MainTabs}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="Auth" 
-                component={AuthNavigator}
-                options={{ headerShown: false }}
-              />
-            </Stack.Navigator>
-          </NavigationContainer>
+          <WishlistProvider>
+            <NavigationContainer>
+              <Stack.Navigator
+                screenOptions={{
+                  headerShown: false,
+                }}
+              >
+                <Stack.Screen 
+                  name="Root" 
+                  component={MainTabs}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                  name="Auth" 
+                  component={AuthNavigator}
+                  options={{ headerShown: false }}
+                />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </WishlistProvider>
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

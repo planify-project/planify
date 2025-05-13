@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useWishlist } from '../context/WishlistContext';
 
 // Responsive scaling
 const { width } = Dimensions.get('window');
@@ -9,7 +10,20 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-export default function EventCard({ image, title, location, price, rating, per, horizontal, onPress }) {
+export default function EventCard({ image, title, location, price, rating, per, horizontal, onPress, id }) {
+  const { isInWishlist, toggleWishlistItem } = useWishlist();
+  const isWishlisted = isInWishlist(id);
+
+  const handleWishlistPress = (e) => {
+    e.stopPropagation();
+    if (id && id !== 0) {
+      console.log('Toggling wishlist for event:', id);
+      toggleWishlistItem(id, 'event');
+    } else {
+      console.error('Invalid event ID for wishlist toggle:', id);
+    }
+  };
+
   return (
     <TouchableOpacity 
       style={[styles.card, horizontal && styles.horizontal]}
@@ -22,7 +36,13 @@ export default function EventCard({ image, title, location, price, rating, per, 
       <View style={styles.info}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={styles.title}>{title}</Text>
-          <Ionicons name="heart-outline" size={normalize(20)} color="red" />
+          <TouchableOpacity onPress={handleWishlistPress}>
+            <Ionicons 
+              name={isWishlisted ? "heart" : "heart-outline"} 
+              size={normalize(20)} 
+              color={isWishlisted ? "red" : "gray"} 
+            />
+          </TouchableOpacity>
         </View>
         <Text style={styles.location}>{location}</Text>
         <View style={styles.bottomRow}>

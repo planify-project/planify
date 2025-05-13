@@ -124,10 +124,10 @@ Payment.belongsTo(Service, { foreignKey: 'service_id' });
 // Sync database
 // sequelize.sync({ force: true })
 //   .then(() => {
-//     console.log('All models were synchronized successfully.');
+//     console.log('Database synced successfully');
 //   })
-//   .catch((error) => {
-//     console.error('Error synchronizing models:', error);
+//   .catch(err => {
+//     console.error('Error syncing database:', err);
 //   });
 
 // Export all models and sequelize instance
