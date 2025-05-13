@@ -35,12 +35,12 @@ const CreateEventModal = ({
           <Calendar
             onDayPress={onDateSelect}
             markedDates={{
-              [selectedDate]: { selected: true, selectedColor: '#5D5FEE' }
+              [selectedDate]: { selected: true, selectedColor: '#4f78f1' }
             }}
             theme={{
-              selectedDayBackgroundColor: '#5D5FEE',
-              todayTextColor: '#5D5FEE',
-              arrowColor: '#5D5FEE',
+              selectedDayBackgroundColor: '#4f78f1',
+              todayTextColor: '#4f78f1',
+              arrowColor: '#4f78f1',
             }}
             style={styles.calendar}
           />
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   createButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

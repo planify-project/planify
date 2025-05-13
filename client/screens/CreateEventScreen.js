@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 60,
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   activeTab: {
-    backgroundColor: '#5D5FEE'
+    backgroundColor: '#4f78f1'
   },
   tabText: {
     color: '#7C7C7C',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     color: '#1E1E1E'
   },
   selectButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   retryButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8

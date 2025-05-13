@@ -116,7 +116,7 @@ export default function EditServiceScreen({ route, navigation }) {
             <Image source={{ uri: image }} style={styles.image} />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Ionicons name="camera-outline" size={normalize(40)} color="#5D5FEE" />
+              <Ionicons name="camera-outline" size={normalize(40)} color="#4f78f1" />
               <Text style={styles.imagePlaceholderText}>Add Service Image</Text>
             </View>
           )}
@@ -173,7 +173,7 @@ export default function EditServiceScreen({ route, navigation }) {
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+            style={[styles.actionButton, { backgroundColor: '#4f78f1' }]}
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="close-outline" size={20} color="#fff" />
@@ -181,7 +181,7 @@ export default function EditServiceScreen({ route, navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+            style={[styles.actionButton, { backgroundColor: '#4f78f1' }]}
             onPress={handleUpdate}
             disabled={loading}
           >
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   imagePlaceholderText: {
     marginTop: normalize(8),
-    color: '#5D5FEE',
+    color: '#4f78f1',
     fontSize: normalize(16),
   },
   form: {

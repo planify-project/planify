@@ -14,7 +14,7 @@ export default function EventDetail({ route, navigation }) {
       fetchServiceDetails();
     }
   }, [event.id]);
-
+  
   const fetchServiceDetails = async () => {
     try {
       setLoading(true);
@@ -42,7 +42,7 @@ export default function EventDetail({ route, navigation }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5D5FEE" />
+        <ActivityIndicator size="large" color="#4f78f1" />
       </View>
     );
   }
@@ -152,7 +152,7 @@ function normalize(size) {
 //   price: {
 //     fontSize: normalize(24),
 //     fontWeight: 'bold',
-//     color: '#5D5FEE'
+//     color: '#4f78f1'
 //   },
 //   per: {
 //     fontSize: normalize(14),
@@ -189,7 +189,7 @@ function normalize(size) {
 //     color: '#666'
 //   },
 //   bookButton: {
-//     backgroundColor: '#5D5FEE',
+//     backgroundColor: '#4f78f1',
 //     padding: normalize(16),
 //     borderRadius: normalize(8),
 //     alignItems: 'center'
@@ -217,7 +217,7 @@ function normalize(size) {
 //     marginBottom: normalize(10)
 //   },
 //   retryButton: {
-//     backgroundColor: '#5D5FEE',
+//     backgroundColor: '#4f78f1',
 //     paddingHorizontal: normalize(20),
 //     paddingVertical: normalize(10),
 //     borderRadius: normalize(8)
@@ -318,16 +318,16 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: normalize(14),
-    color: '#5D5FEE',
+    color: '#4f78f1',
     fontWeight: '600'
   },
   bookButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     padding: normalize(16),
     borderRadius: normalize(12),
     alignItems: 'center',
     marginTop: normalize(10),
-    shadowColor: '#5D5FEE',
+    shadowColor: '#4f78f1',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 5,

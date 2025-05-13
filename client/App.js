@@ -9,7 +9,7 @@ import { Auth } from './configs/firebase_config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Image } from 'react-native';
 
 // Enable screens for better performance
 enableScreens();
@@ -73,7 +73,16 @@ function HomeStack() {
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={screenHeaderOptions}
+        options={{
+          headerTitle: () => (
+            <Image
+              source={require('./assets/homelogo3.png')}
+              style={{ width: 130, height: 80, resizeMode: 'contain' , marginLeft: -5 }}
+            />
+          ),
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTintColor: '#22223B',
+        }}
       />
       <Stack.Screen
         name="CreateEvent"

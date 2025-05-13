@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   price: { 
     fontSize: normalize(14), 
     fontWeight: 'bold', 
-    color: '#5D5FEE' 
+    color: '#4f78f1' 
   },
   per: { 
     fontSize: normalize(12), 

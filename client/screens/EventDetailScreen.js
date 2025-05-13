@@ -1,5 +1,5 @@
 import React, { useState , useContext } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
@@ -12,20 +12,16 @@ function normalize(size) {
 }
 
 export default function EventDetailScreen({ route }) {
+  const { event } = route.params;
+
   const { user } = useContext(AuthContext); // Access the user context
   console.log('User:', user); 
   const [isFavorite, setIsFavorite] = useState(false);
   const navigation = useNavigation();
+  console.log("🛖🛖🛖");
+  console.log("🛖🛖🛖",event);    
   
   // Get the event data from the route params
-  const event = route.params?.event || {
-    title: 'Event Title',
-    price: '0 DT',
-    location: 'Location',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    rating: '0.0',
-    per: 'person'
-  };
 
   // Generate additional images for preview
   const images = [
@@ -55,7 +51,7 @@ export default function EventDetailScreen({ route }) {
           <Text style={styles.eventTitle}>{event.title}</Text>
           
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={normalize(16)} color="#5D5FEE" />
+            <Ionicons name="location-outline" size={normalize(16)} color="#4f78f1" />
             <Text style={styles.locationText}>{event.location}</Text>
           </View>
 
@@ -115,10 +111,13 @@ export default function EventDetailScreen({ route }) {
       </TouchableOpacity>
       {/* Write Review Button */}
 <TouchableOpacity 
-  style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#5D5FEE' }]}
-  onPress={() => navigation.navigate('Review', { event })}
+  style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#4f78f1' }]}
+  onPress={() => {
+    console.log("😍😍😍😍😍",event);
+    
+    navigation.navigate('Review', { event})}}
 >
-  <Text style={[styles.joinBtnText, { color: '#5D5FEE' }]}>Write a Review</Text>
+  <Text style={[styles.joinBtnText, { color: '#4f78f1' }]}>Write a Review</Text>
 </TouchableOpacity>
 
     </View>
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: normalize(20),
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#4f78f1',
   },
   perText: {
     fontSize: normalize(14),
@@ -230,7 +229,7 @@ const styles = StyleSheet.create({
     marginRight: normalize(10),
   },
   joinBtn: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     paddingVertical: normalize(16),
     borderRadius: normalize(30),
     position: 'absolute',

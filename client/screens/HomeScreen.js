@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9'
   },
   allEventsButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     padding: normalize(12),
     borderRadius: normalize(8),
     alignItems: 'center',

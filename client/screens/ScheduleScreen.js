@@ -79,13 +79,13 @@ export default function ScheduleScreen({ navigation, route }) {
       <Calendar
         onDayPress={day => setSelectedDate(day.dateString)}
         markedDates={{
-          [selectedDate]: { selected: true, selectedColor: '#5D5FEE' },
+          [selectedDate]: { selected: true, selectedColor: '#4f78f1' },
         }}
         style={styles.calendar}
         theme={{
-          selectedDayBackgroundColor: '#5D5FEE',
-          todayTextColor: '#5D5FEE',
-          arrowColor: '#5D5FEE',
+          selectedDayBackgroundColor: '#4f78f1',
+          todayTextColor: '#4f78f1',
+          arrowColor: '#4f78f1',
         }}
       />
 
@@ -97,7 +97,7 @@ export default function ScheduleScreen({ navigation, route }) {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#5D5FEE" style={styles.loader} />
+        <ActivityIndicator size="large" color="#4f78f1" style={styles.loader} />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -137,10 +137,10 @@ const styles = StyleSheet.create({
   myEventsText: {
     fontSize: normalize(18),
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#4f78f1',
   },
   seeAllText: {
-    color: '#5D5FEE',
+    color: '#4f78f1',
     fontWeight: 'bold',
     fontSize: normalize(14),
   },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     marginBottom: normalize(12),
     borderRadius: normalize(12),
     alignItems: 'center',
-    shadowColor: '#5D5FEE',
+    shadowColor: '#4f78f1',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: normalize(2) },
     shadowRadius: normalize(4),
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     fontSize: normalize(12),
   },
   eventPrice: {
-    color: '#5D5FEE',
+    color: '#4f78f1',
     marginTop: normalize(2),
     fontWeight: 'bold',
     fontSize: normalize(13),
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   eventStatus: {
     fontSize: normalize(12),
-    color: '#5D5FEE',
+    color: '#4f78f1',
     marginTop: normalize(2)
   }
 });

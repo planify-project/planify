@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     lineHeight: 24
   },
   chooseAgentButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,

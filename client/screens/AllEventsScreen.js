@@ -96,7 +96,7 @@
 //   if (loading) {
 //     return (
 //       <View style={styles.loadingContainer}>
-//         <ActivityIndicator size="large" color="#5D5FEE" />
+//         <ActivityIndicator size="large" color="#4f78f1" />
 //       </View>
 //     );
 //   }
@@ -404,7 +404,7 @@ export default function AllEventsScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5D5FEE" />
+        <ActivityIndicator size="large" color="#4f78f1" />
       </View>
     );
   }

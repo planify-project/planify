@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { API_URL } from '../config';
+// import { API_URL } from '../config';
+import { API_BASE } from '../config';
+
+const API_ENDPOINT = `${API_BASE}/reviews/event`;
 
 export default function ReviewScreen({ route, navigation }) {
   const { event } = route.params;
+  // console.log("🛖🛖🛖",event);
+  
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -18,10 +23,11 @@ export default function ReviewScreen({ route, navigation }) {
     fetchReviews();
   }, []);
 
-  const testApiConnection = async () => {
+ const testApiConnection = async () => {
     try {
       console.log('Testing API connection...');
-      const response = await axios.get(`http://192.168.0.89:3000/api/reviews/event/${event.id}`);
+      const response = await axios.get(`${API_ENDPOINT}/${event.id}`);
+      // const response = await axios.get(`${API_ENDPOINT}/2`);
       console.log('API test response:', response.data);
     } catch (error) {
       console.error('API test error:', error);
@@ -37,7 +43,8 @@ export default function ReviewScreen({ route, navigation }) {
   const fetchReviews = async () => {
     try {
       console.log('Fetching reviews for event:', event.id);
-      const response = await axios.get(`http://192.168.0.89:3000/api/reviews/event/${event.id}`);
+      const response = await axios.get(`${API_ENDPOINT}/${event.id}`);
+      // const response = await axios.get(`${API_ENDPOINT}/2`);
       console.log('Reviews response:', response.data);
       setReviews(response.data);
       setLoading(false);
@@ -106,7 +113,7 @@ export default function ReviewScreen({ route, navigation }) {
 
       <View style={styles.addPhotoContainer}>
         <TouchableOpacity style={styles.photoButton}>
-          <Ionicons name="cloud-upload-outline" size={20} color="#5D5FEE" />
+          <Ionicons name="cloud-upload-outline" size={20} color="#4f78f1" />
           <Text style={styles.photoText}>Add Photos</Text>
         </TouchableOpacity>
         <Text style={styles.optionalText}>Optional</Text>
@@ -131,7 +138,7 @@ export default function ReviewScreen({ route, navigation }) {
             <View style={styles.reviewContent}>
               <View style={styles.reviewHeader}>
                 <Text style={styles.reviewer}>
-                  {review.user ? `${review.user.first_name} ${review.user.last_name}` : 'Anonymous'}
+                  {review.user ? `${review.user.name}` : 'Anonymous'}
                 </Text>
                 <Text style={styles.date}>
                   {new Date(review.created_at).toLocaleDateString()}
@@ -153,49 +160,175 @@ export default function ReviewScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#fff' },
-  header: { fontSize: 22, fontWeight: '600', marginBottom: 10 },
-  subHeader: { fontSize: 16, marginBottom: 10 },
-  starsContainer: { flexDirection: 'row', marginBottom: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12
+  container: {
+    padding: 20,
+    backgroundColor: '#F7F8FA',
+    minHeight: '100%',
   },
-  textArea: { height: 100, textAlignVertical: 'top' },
-  addPhotoContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  photoButton: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  photoText: { color: '#5D5FEE', fontWeight: '500' },
-  optionalText: { marginLeft: 10, color: '#aaa', fontSize: 12 },
+  header: {
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 8,
+    color: '#22223B',
+    letterSpacing: 0.5,
+  },
+  subHeader: {
+    fontSize: 16,
+    color: '#4A4E69',
+    marginBottom: 18,
+    fontWeight: '500',
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    alignSelf: 'flex-start',
+  },
+  input: {
+  borderWidth: 1.5,
+  borderColor: '#4f78f1',
+  backgroundColor: '#F0F4FF',
+  borderRadius: 14,
+  padding: 16,
+  marginBottom: 14,
+  fontSize: 15,
+  shadowColor: '#000',
+  shadowOpacity: 0.04,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 6,
+  elevation: 2,
+},
+textArea: {
+  height: 110,
+  textAlignVertical: 'top',
+  borderWidth: 1.5,
+  borderColor: '#4f78f1',
+  backgroundColor: '#F0F4FF',
+},
+  addPhotoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 22,
+  },
+  photoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FB',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  photoText: {
+    color: '#4f78f1',
+    fontWeight: '600',
+    marginLeft: 6,
+    fontSize: 15,
+  },
+  optionalText: {
+    color: '#A0A3BD',
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
   submitButton: {
-    backgroundColor: '#5D5FEE',
-    paddingVertical: 14,
+    backgroundColor: '#4f78f1',
+    paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
-    marginBottom: 30
+    marginBottom: 32,
+    shadowColor: '#4f78f1',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 3,
   },
-  submitText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 15 },
-  reviewCard: { flexDirection: 'row', marginBottom: 20 },
+  submitText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 17,
+    letterSpacing: 0.5,
+  },
+  sectionTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+    marginBottom: 18,
+    color: '#22223B',
+    marginTop: 10,
+  },
+  reviewCard: {
+    flexDirection: 'row',
+    marginBottom: 22,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
   avatar: {
-    backgroundColor: '#5D5FEE',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: '#4f78f1',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10
+    marginRight: 14,
+    shadowColor: '#4f78f1',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 2,
   },
-  avatarText: { color: '#fff', fontWeight: 'bold' },
-  reviewContent: { flex: 1 },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between' },
-  reviewer: { fontWeight: '600' },
-  date: { fontSize: 12, color: '#888' },
-  starRow: { flexDirection: 'row', marginVertical: 5 },
-  reviewTitle: { fontWeight: '600', marginBottom: 2 },
-  reviewText: { color: '#333', marginBottom: 5 },
-  loadingText: { textAlign: 'center', color: '#666', marginTop: 20 },
-  noReviewsText: { textAlign: 'center', color: '#666', marginTop: 20 }
+  avatarText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  reviewContent: {
+    flex: 1,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  reviewer: {
+    fontWeight: '600',
+    color: '#22223B',
+    fontSize: 15,
+  },
+  date: {
+    fontSize: 12,
+    color: '#A0A3BD',
+    fontWeight: '500',
+  },
+  starRow: {
+    flexDirection: 'row',
+    marginVertical: 4,
+  },
+  reviewTitle: {
+    fontWeight: '700',
+    marginBottom: 2,
+    color: '#4A4E69',
+    fontSize: 15,
+  },
+  reviewText: {
+    color: '#333',
+    marginBottom: 5,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  loadingText: {
+    textAlign: 'center',
+    color: '#A0A3BD',
+    marginTop: 24,
+    fontSize: 15,
+  },
+  noReviewsText: {
+    textAlign: 'center',
+    color: '#A0A3BD',
+    marginTop: 24,
+    fontSize: 15,
+  },
 });
