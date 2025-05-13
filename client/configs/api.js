@@ -1,72 +1,48 @@
 import axios from 'axios';
-import { Auth } from './firebase_config';
-
-// Use IP address for development to ensure mobile device can connect
-const API_BASE_URL = 'http://192.168.147.126:3000/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
+  baseURL: 'http://172.20.10.3:3000/api',
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add a request interceptor
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Get the current user's ID token
-      const user = Auth.currentUser;
-      if (user) {
-        const token = await user.getIdToken();
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     } catch (error) {
-      console.error('Error in request interceptor:', error);
-      return Promise.reject(error);
+      console.error('Request interceptor error:', error);
+      return config;
     }
   },
-  (error) => {
-    console.error('Request interceptor error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add a response interceptor
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    console.error('API Error:', error);
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout');
+      throw new Error('Connection timeout. Please check your internet connection.');
+    }
 
     if (error.code === 'ECONNREFUSED') {
-      console.error('Connection refused. Please check if the server is running.');
-      throw new Error('Unable to connect to the server. Please check if the server is running.');
+      console.error('Connection refused');
+      throw new Error('Server is not running. Please try again later.');
     }
 
-    if (error.code === 'ETIMEDOUT') {
-      console.error('Request timed out. Please check your internet connection.');
-      throw new Error('Request timed out. Please check your internet connection.');
+    if (!error.response) {
+      throw new Error('Network error. Please check your connection.');
     }
 
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      console.error('Server response error:', error.response.status, error.response.data);
-      throw new Error(error.response.data?.message || 'An error occurred on the server');
-    }
-
-    if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-      throw new Error('No response received from the server. Please check if the server is running.');
-    }
-
-    // Something happened in setting up the request
-    console.error('Request setup error:', error.message);
-    throw new Error('An error occurred while processing your request.');
+    throw error;
   }
 );
 

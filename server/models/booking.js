@@ -1,9 +1,11 @@
-module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('booking', {
-    id: { 
-      type: DataTypes.INTEGER, 
-      primaryKey: true, 
-      autoIncrement: true,
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Booking = sequelize.define('Booking', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
     user_id: { 
       type: DataTypes.UUID,
@@ -12,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
         model: 'user',
         key: 'id'
       }
+    serviceId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     service_id: { 
       type: DataTypes.INTEGER,
@@ -20,6 +25,9 @@ module.exports = (sequelize, DataTypes) => {
         model: 'services',
         key: 'id'
       }
+    providerId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     event_id: { 
       type: DataTypes.INTEGER, // Changed from UUID to INTEGER
@@ -28,17 +36,32 @@ module.exports = (sequelize, DataTypes) => {
         model: 'events',
         key: 'id'
       }
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     status: {
       type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),
       allowNull: false,
     },
     created_at: {
+    date: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
+    },
+    space: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+      defaultValue: 'pending'
     }
-  }, {
-    underscored: true,
-    timestamps: true
   });
+
+  return Booking;
 };

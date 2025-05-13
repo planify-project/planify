@@ -4,12 +4,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
+import { SocketProvider } from './context/SocketContext';
+
+
 import { useState } from 'react';
 import { Auth } from './configs/firebase_config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, ActivityIndicator, Image } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 // Enable screens for better performance
 enableScreens();
@@ -37,8 +41,11 @@ import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
 import ReviewScreen from './screens/ReviewScreen';
+import EventSpaceScreen from './screens/EventSpaceScreen';
+import EventSpaceDetails from './screens/EventSpaceDetails';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import ServicesScreen from './screens/ServicesScreen';
 
 // Navigators
 const Stack = createNativeStackNavigator();
@@ -71,7 +78,7 @@ function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Home"
+        name="HomeMain"
         component={HomeScreen}
         options={{
           headerTitle: () => (
@@ -82,6 +89,28 @@ function HomeStack() {
           ),
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#22223B',
+        }}
+      />
+      <Stack.Screen
+        name="EventSpaces"
+        component={EventSpaceScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Event Spaces",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="EventSpaceDetails"
+        component={EventSpaceDetails}
+        options={{
+          headerShown: true,
+          headerTitle: "Space Details",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
       <Stack.Screen
@@ -98,9 +127,15 @@ function HomeStack() {
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
       />
       <Stack.Screen
-        name="Notification"
+        name="Notifications"
         component={NotificationScreen}
-        options={screenHeaderOptions}
+        options={{
+          headerShown: true,
+          headerTitle: "Notifications",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
       />
       <Stack.Screen
         name="Popular Events"
@@ -190,6 +225,11 @@ function HomeStack() {
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
+        />
+        <Stack.Screen
+        name="ServicesScreen"
+        component={ServicesScreen}
+        options={{ ...screenHeaderOptions, title: 'Services' }}
       />
     </Stack.Navigator>
   );
@@ -340,25 +380,29 @@ function MainTabs() {
 
 // Main App Component
 export default function App() {
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (!state.isConnected) {
+        console.warn('No internet connection. Some features may be limited.');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen 
-                name="Root" 
-                component={MainTabs}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="Auth" 
-                component={AuthNavigator}
-                options={{ headerShown: false }}
-              />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </AuthProvider>
+        <SocketProvider>
+          <AuthProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Root" component={MainTabs} />
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </AuthProvider>
+        </SocketProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

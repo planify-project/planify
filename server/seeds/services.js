@@ -5,134 +5,139 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const services = [
       {
-        id: uuidv4(),
-        title: 'Wedding Photography',
-        description: 'Professional wedding photography services with high-quality equipment and experienced photographers.',
-        price: 500,
-        category: 'Photography',
-        duration: '8 hours',
-        availability: 'Weekends',
-        imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
+        id: '1',
+        name: 'Premium Catering Service',
+        description: 'High-end catering service with international cuisine',
+        price: 1500,
+        type: 'service',
+        images: [
+          'https://images.unsplash.com/photo-1555244162-803834f70033',
+          'https://images.unsplash.com/photo-1555244162-803834f70033'
+        ],
+        location: 'Tunis',
+        amenities: {
+          international_cuisine: true,
+          vegetarian_options: true,
+          dessert_service: true,
+          beverage_service: true
+        },
+        availability: {
+          monday: '08:00-22:00',
+          tuesday: '08:00-22:00',
+          wednesday: '08:00-22:00',
+          thursday: '08:00-22:00',
+          friday: '08:00-23:00',
+          saturday: '08:00-23:00',
+          sunday: '08:00-22:00'
+        }
       },
       {
-        id: uuidv4(),
-        title: 'Event Catering',
-        description: 'Full-service catering for events of all sizes. Custom menus available.',
-        price: 25,
-        category: 'Catering',
-        duration: 'Per person',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        title: 'DJ Services',
-        description: 'Professional DJ services with state-of-the-art equipment and extensive music library.',
-        price: 300,
-        category: 'Entertainment',
-        duration: '4 hours',
-        availability: 'Weekends',
-        imageUrl: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        title: 'Event Decoration',
-        description: 'Complete event decoration services including flowers, lighting, and custom themes.',
-        price: 400,
-        category: 'Decoration',
-        duration: 'Full day',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        title: 'Videography Services',
-        description: 'Professional event videography with cinematic quality and drone footage.',
+        id: '2',
+        name: 'Professional Photography',
+        description: 'Professional event photography and videography',
         price: 800,
-        category: 'Photography',
-        duration: 'Full day',
-        availability: 'Weekends',
-        imageUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
+        type: 'service',
+        images: [
+          'https://images.unsplash.com/photo-1516035069371-29a1b244cc32',
+          'https://images.unsplash.com/photo-1516035069371-29a1b244cc32'
+        ],
+        location: 'Tunis',
+        amenities: {
+          photo_editing: true,
+          drone_photography: true,
+          video_coverage: true,
+          same_day_delivery: true
+        },
+        availability: {
+          monday: '09:00-20:00',
+          tuesday: '09:00-20:00',
+          wednesday: '09:00-20:00',
+          thursday: '09:00-20:00',
+          friday: '09:00-21:00',
+          saturday: '09:00-21:00',
+          sunday: '09:00-20:00'
+        }
       },
       {
-        id: uuidv4(),
-        title: 'Wedding Cake Design',
-        description: 'Custom wedding cakes and desserts made to order.',
-        price: 200,
-        category: 'Catering',
-        duration: 'Per cake',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
+        id: '3',
+        name: 'Live Band Entertainment',
+        description: 'Professional live music band for events',
+        price: 1200,
+        type: 'service',
+        images: [
+          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7'
+        ],
+        location: 'Tunis',
+        amenities: {
+          custom_playlist: true,
+          sound_system: true,
+          multiple_genres: true,
+          backup_singers: true
+        },
+        availability: {
+          monday: '10:00-22:00',
+          tuesday: '10:00-22:00',
+          wednesday: '10:00-22:00',
+          thursday: '10:00-22:00',
+          friday: '10:00-23:00',
+          saturday: '10:00-23:00',
+          sunday: '10:00-22:00'
+        }
       },
       {
-        id: uuidv4(),
-        title: 'Live Band',
-        description: 'Professional live band for events with customizable playlist.',
-        price: 1000,
-        category: 'Entertainment',
-        duration: '4 hours',
-        availability: 'Weekends',
-        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
+        id: '4',
+        name: 'Professional Sound System',
+        description: 'High-quality sound system for events',
+        price: 500,
+        type: 'equipment',
+        images: [
+          'https://images.unsplash.com/photo-1571330735066-03aaa9429d89',
+          'https://images.unsplash.com/photo-1571330735066-03aaa9429d89'
+        ],
+        location: 'Tunis',
+        amenities: {
+          wireless_microphones: true,
+          mixing_board: true,
+          speakers: true,
+          technical_support: true
+        },
+        availability: {
+          monday: '08:00-20:00',
+          tuesday: '08:00-20:00',
+          wednesday: '08:00-20:00',
+          thursday: '08:00-20:00',
+          friday: '08:00-22:00',
+          saturday: '08:00-22:00',
+          sunday: '08:00-20:00'
+        }
       },
       {
-        id: uuidv4(),
-        title: 'Floral Arrangements',
-        description: 'Custom floral arrangements and centerpieces for any event.',
-        price: 150,
-        category: 'Decoration',
-        duration: 'Per arrangement',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        title: 'Photo Booth',
-        description: 'Fun photo booth with props and instant prints.',
-        price: 250,
-        category: 'Entertainment',
-        duration: '4 hours',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        title: 'Event Planning',
-        description: 'Full-service event planning and coordination.',
-        price: 1000,
-        category: 'Planning',
-        duration: 'Full service',
-        availability: 'All week',
-        imageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622',
-        created_by: 'demo-user',
-        created_at: new Date(),
-        updated_at: new Date()
+        id: '5',
+        name: 'Professional Lighting Setup',
+        description: 'Professional lighting equipment for events',
+        price: 600,
+        type: 'equipment',
+        images: [
+          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+          'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7'
+        ],
+        location: 'Tunis',
+        amenities: {
+          spotlights: true,
+          color_lights: true,
+          fog_machine: true,
+          technical_support: true
+        },
+        availability: {
+          monday: '08:00-20:00',
+          tuesday: '08:00-20:00',
+          wednesday: '08:00-20:00',
+          thursday: '08:00-20:00',
+          friday: '08:00-22:00',
+          saturday: '08:00-22:00',
+          sunday: '08:00-20:00'
+        }
       }
     ];
 

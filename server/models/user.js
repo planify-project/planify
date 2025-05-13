@@ -22,9 +22,9 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.STRING(36),
       primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
     },
     name: DataTypes.STRING,
     email: {
@@ -34,9 +34,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     phone: DataTypes.STRING,
     contact_details: DataTypes.JSON,
+    password: {
+      type: DataTypes.STRING,
+      allowNull: true, // إذا كنت تستخدم كلمة مرور
+    },
   }, {
     tableName: 'user', 
     underscored: true,
-    timestamps: false,
+    timestamps: true,
+    tableName: 'users'
   });
 };
