@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AgentModal from '../components/AgentModal';
-import { API_BASE } from '../configs/url';
+import { API_BASE } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import axios from 'axios';
 
 // Update the axios configuration
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: process.env.API_BASE || 'http://172.20.10.3:3000/api', // Use environment variable for base URL
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
@@ -28,6 +30,26 @@ api.interceptors.response.use(
   }
 );
 
+// Example of setting an item
+const setItem = async (key, value) => {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error('Error saving data', error);
+  }
+};
+
+// Example of getting an item
+const getItem = async (key) => {
+  try {
+    const value = await AsyncStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  } catch (error) {
+    console.error('Error reading data', error);
+    return null;
+  }
+};
+
 export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
   const [venues, setVenues] = useState([]);
@@ -47,22 +69,61 @@ export default function CreateEventScreen({ navigation, route }) {
     try {
       setLoading(true);
       setError(null);
+
+      let endpoint;
+      let serviceType;
       
-      console.log(`Fetching ${type} data from: ${api.defaults.baseURL}/services?type=${type}`);
-      const response = await api.get(`/services?type=${type}`);
+      switch(type) {
+        case 'space':
+          endpoint = '/event-spaces';
+          break;
+        case 'services':
+          endpoint = '/services';
+          serviceType = 'service';
+          break;
+        case 'equipment':
+          endpoint = '/services';
+          serviceType = 'equipment';
+          break;
+        default:
+          throw new Error('Invalid type');
+      }
+
+      const url = serviceType ? `${endpoint}?serviceType=${serviceType}` : endpoint;
+      console.log(`Fetching ${type} data from: ${api.defaults.baseURL}${url}`);
       
-      if (response.data.success) {
+      const response = await api.get(url);
+      const responseData = Array.isArray(response.data) ? response.data : response.data.data;
+
+      if (responseData) {
+        const formattedData = responseData.map(item => ({
+          id: item.id,
+          name: item.title || item.name,
+          description: item.description || item.title || item.name,
+          price: parseFloat(item.price) || 0,
+          type: item.serviceType || item.type,
+          images: item.imageUrl ? [item.imageUrl] : (item.images || []),
+          location: item.location || '',
+          amenities: item.amenities || {},
+          availability: item.availability || {}
+        }));
+
+        console.log(`Formatted ${type} data:`, formattedData);
+
         switch(type) {
-          case 'venue':
-            setVenues(response.data.data);
+          case 'space':
+            setVenues(formattedData);
             break;
-          case 'service':
-            setServices(response.data.data);
+          case 'services':
+            setServices(formattedData);
             break;
           case 'equipment':
-            setEquipment(response.data.data);
+            setEquipment(formattedData);
             break;
         }
+      } else {
+        console.error(`No data received for ${type}`);
+        setError(`No ${type} available. Please try again later.`);
       }
     } catch (err) {
       console.error(`Error fetching ${type}:`, err);
@@ -80,19 +141,12 @@ export default function CreateEventScreen({ navigation, route }) {
   };
 
   useEffect(() => {
-    let type;
-    switch(activeTab) {
-      case 'space':
-        type = 'venue';
-        break;
-      case 'services':
-        type = 'service';
-        break;
-      case 'equipment':
-        type = 'equipment';
-        break;
-    }
-    fetchData(type);
+    const fetchInitialData = async () => {
+      if (activeTab) {
+        await fetchData(activeTab);
+      }
+    };
+    fetchInitialData();
   }, [activeTab]);
 
   const getCurrentData = () => {
@@ -112,24 +166,27 @@ export default function CreateEventScreen({ navigation, route }) {
     <View style={styles.tableHeader}>
       <Text style={[styles.headerCell, { flex: 2 }]}>Name</Text>
       <Text style={[styles.headerCell, { flex: 1 }]}>Price</Text>
-      <Text style={[styles.headerCell, { flex: 1 }]}>Status</Text>
       <Text style={[styles.headerCell, { flex: 1 }]}>Action</Text>
     </View>
   );
 
   const renderTableRow = (item) => {
     const isSelected = isItemSelected(item);
-    
+
     return (
       <TouchableOpacity 
+        key={item.id}
         style={[styles.tableRow, isSelected && styles.selectedRow]} 
         onPress={() => handleSelectItem(item)}
       >
         <View style={[styles.cell, { flex: 2 }]}>
-          <Text style={styles.cellText}>{item.description}</Text>
+          <Text style={styles.cellText}>{item.name}</Text>
+          {item.location && (
+            <Text style={styles.locationText}>{item.location}</Text>
+          )}
         </View>
         <View style={[styles.cell, { flex: 1 }]}>
-          <Text style={styles.cellText}>${item.price}</Text>
+          <Text style={styles.cellText}>{item.price} DT</Text>
         </View>
         <View style={[styles.cell, { flex: 1 }]}>
           <View style={[styles.selectButton, isSelected && styles.selectedButton]}>
@@ -196,7 +253,7 @@ export default function CreateEventScreen({ navigation, route }) {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity 
             style={styles.retryButton} 
-            onPress={() => retryWithDelay(activeTab === 'space' ? 'venue' : activeTab === 'services' ? 'service' : 'equipment')}
+            onPress={() => retryWithDelay(activeTab)}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -214,7 +271,7 @@ export default function CreateEventScreen({ navigation, route }) {
 
   const handleDone = async () => {
     if (!selectedItems.venue) {
-      setError('Please select a venue first');
+      Alert.alert('Error', 'Please select a venue first');
       return;
     }
 
@@ -224,33 +281,99 @@ export default function CreateEventScreen({ navigation, route }) {
         name: route.params?.eventName || 'New Event',
         type: route.params?.eventType || 'social',
         date: route.params?.eventDate || new Date().toISOString(),
-        location: selectedItems.venue?.description,
-        budget: parseFloat(selectedItems.venue?.price || 0),
-        status: 'pending',
-        is_self_planned: true,
-        visibility: 'public'
+        venue: {
+          name: selectedItems.venue.name,
+          price: parseFloat(selectedItems.venue.price),
+          location: selectedItems.venue.location
+        },
+        services: selectedItems.services.map(s => ({
+          id: s.id,
+          name: s.name,
+          price: s.price
+        })),
+        equipment: selectedItems.equipment.map(e => ({
+          id: e.id,
+          name: e.name,
+          price: e.price
+        }))
       };
 
-      const response = await api.post('/events', eventData);
+      console.log('Sending event data:', JSON.stringify(eventData));
+      
+      try {
+        // Create the event in the database
+        const response = await api.post('/events', eventData);
+        console.log('Event created:', response.data);
 
-      if (response.data.success) {
+        if (response.data.success) {
+          // Then navigate to Schedule with the new event data
+          Alert.alert(
+            'Success',
+            'Event created successfully!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  // Navigate back to the root and then to Schedule
+                  navigation.reset({
+                    index: 0,
+                    routes: [
+                      { 
+                        name: 'Schedule',
+                        params: { 
+                          refresh: true,
+                          newEvent: {
+                            ...response.data.data,
+                            venue: selectedItems.venue,
+                            services: selectedItems.services,
+                            equipment: selectedItems.equipment
+                          }
+                        }
+                      }
+                    ],
+                  });
+                }
+              }
+            ]
+          );
+        } else {
+          throw new Error(response.data.message || 'Failed to create event');
+        }
+      } catch (apiError) {
+        console.error('API Error:', apiError);
         Alert.alert(
-          'Success',
-          'Event created successfully!',
+          'Error',
+          apiError.response?.data?.message || 'Failed to create event. Please try again.',
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('Schedule', { // Changed from 'ScheduleMain' to 'Schedule'
-                newEvent: response.data.data,
-                refresh: true
-              })
+              onPress: () => {
+                // Navigate back to the root and then to Schedule
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    { 
+                      name: 'Schedule',
+                      params: { 
+                        refresh: true,
+                        newEvent: {
+                          ...eventData,
+                          venue: selectedItems.venue,
+                          services: selectedItems.services,
+                          equipment: selectedItems.equipment
+                        }
+                      }
+                    }
+                  ],
+                });
+              }
             }
           ]
         );
       }
     } catch (err) {
       console.error('Error creating event:', err);
-      setError('Failed to create event. Please try again.');
+      Alert.alert('Error', 'Failed to create event. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -263,8 +386,6 @@ export default function CreateEventScreen({ navigation, route }) {
         onClose={() => setAgentModalVisible(false)}
         onChooseAgent={() => {
           setAgentModalVisible(false);
-          // Add navigation to agent selection screen if needed
-          navigation.navigate('Agent List');
         }}
       />
       {/* Header */}
@@ -272,9 +393,9 @@ export default function CreateEventScreen({ navigation, route }) {
         <View>
           <Text style={styles.headerTitle}>Create Event</Text>
           <View style={styles.subHeader}>
-            <Text style={styles.eventType}>Birthday</Text>
+            <Text style={styles.eventType}>{route.params?.eventType || 'Event Type'}</Text>
             <Ionicons name="pencil" size={16} color="#007bff" style={{ marginHorizontal: 4 }} />
-            <Text style={styles.date}>2 June</Text>
+            <Text style={styles.date}>{route.params?.eventDate || 'Event Date'}</Text>
           </View>
         </View>
         <TouchableOpacity 
@@ -287,13 +408,22 @@ export default function CreateEventScreen({ navigation, route }) {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity onPress={() => setActiveTab('space')} style={[styles.tabButton, activeTab === 'space' && styles.activeTab]}>
+        <TouchableOpacity 
+          onPress={() => setActiveTab('space')} 
+          style={[styles.tabButton, activeTab === 'space' && styles.activeTab]}
+        >
           <Text style={activeTab === 'space' ? styles.activeTabText : styles.tabText}>Event space</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab('services')} style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}>
+        <TouchableOpacity 
+          onPress={() => setActiveTab('services')} 
+          style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}
+        >
           <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>Services</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab('equipment')} style={[styles.tabButton, activeTab === 'equipment' && styles.activeTab]}>
+        <TouchableOpacity 
+          onPress={() => setActiveTab('equipment')} 
+          style={[styles.tabButton, activeTab === 'equipment' && styles.activeTab]}
+        >
           <Text style={activeTab === 'equipment' ? styles.activeTabText : styles.tabText}>Equipment</Text>
         </TouchableOpacity>
       </View>
@@ -501,5 +631,10 @@ const styles = StyleSheet.create({
     color: '#7C7C7C',
     marginTop: 20,
     fontSize: 16
-  }
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
 });

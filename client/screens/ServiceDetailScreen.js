@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../configs/api';
+import BookingModal from '../components/BookingModal';
+import { useSocket } from '../context/SocketContext';
+import { getAuth } from 'firebase/auth'; // Replace AWS Amplify with Firebase Auth
 
 export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
   const { service } = route.params;
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const { socket } = useSocket();
+  const auth = getAuth(); // Get Firebase Auth instance
 
   const handleDelete = async () => {
     Alert.alert(
@@ -31,6 +37,61 @@ export default function ServiceDetailScreen({ route, navigation }) {
         }
       ]
     );
+  };
+
+  const handleBooking = async (bookingData) => {
+    try {
+      if (!auth.currentUser) {
+        Alert.alert('Error', 'Please login to book a service');
+        navigation.navigate('Login');
+        return;
+      }
+
+      // Format the booking payload to match server requirements
+      const bookingPayload = {
+        user_id: auth.currentUser.uid,
+        service_id: service.id,
+        event_id: "1", // Required field
+        date: new Date(bookingData.date).toISOString(),
+        space: bookingData.space.trim(),
+        phone_number: bookingData.phone.replace(/\D/g, ''), // Clean phone number
+        status: 'pending'
+      };
+
+      // Validate required fields before sending
+      const requiredFields = ['user_id', 'service_id', 'event_id', 'date', 'space', 'phone_number'];
+      const missingFields = requiredFields.filter(field => !bookingPayload[field]);
+      
+      if (missingFields.length > 0) {
+        Alert.alert('Error', `Missing required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      // Validate date is in the future
+      if (new Date(bookingPayload.date) <= new Date()) {
+        Alert.alert('Error', 'Booking date must be in the future');
+        return;
+      }
+
+      const response = await api.post('/bookings', bookingPayload);
+
+      if (response.data.success) {
+        setShowBookingModal(false);
+        Alert.alert('Success', 'Booking request sent! Waiting for provider response.');
+
+        // Emit socket event for real-time notification
+        socket.emit('newBooking', {
+          serviceId: service.id,
+          providerId: service.provider_id
+        });
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      Alert.alert(
+        'Error', 
+        error.response?.data?.message || 'Failed to send booking request'
+      );
+    }
   };
 
   return (
@@ -86,8 +147,23 @@ export default function ServiceDetailScreen({ route, navigation }) {
             <Ionicons name="trash-outline" size={20} color="#fff" />
             <Text style={styles.actionButtonText}>Delete</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.success }]}
+            onPress={() => setShowBookingModal(true)}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Book Now</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <BookingModal
+        visible={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onSubmit={handleBooking}
+        service={service}
+      />
     </ScrollView>
   );
 }
@@ -165,4 +241,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-}); 
+});

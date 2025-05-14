@@ -66,8 +66,10 @@ class ServicesController {
       let query = {};
       
       if (type) {
-        query.serviceType = type;
+        query.serviceType = type.toLowerCase(); // Normalize the type to lowercase
       }
+
+      console.log('Query:', query); // Log the query for debugging
 
       const services = await Service.findAll({
         where: query,
@@ -79,6 +81,14 @@ class ServicesController {
         attributes: ['id', 'title', 'description', 'price', 'serviceType', 'imageUrl', 'provider_id', 'createdAt', 'updatedAt']
       });
       
+      if (!services || services.length === 0) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          message: 'No services found'
+        });
+      }
+
       res.status(200).json({
         success: true,
         data: services
@@ -87,7 +97,8 @@ class ServicesController {
       console.error('Error fetching services:', error);
       res.status(500).json({
         success: false,
-        message: error.message
+        message: 'Failed to fetch services',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }

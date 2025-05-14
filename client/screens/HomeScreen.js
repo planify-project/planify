@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { AuthContext } from '../context/AuthContext';
 import HomeHeader from '../components/home/HomeHeader';
@@ -11,8 +11,9 @@ import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
 import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
+import { useNavigation } from '@react-navigation/native';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -22,6 +23,7 @@ export default function HomeScreen({ navigation }) {
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const navigation = useNavigation();
   const { user } = useContext(AuthContext);
 
   const getLocation = async () => {
@@ -95,6 +97,12 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const handleTabPress = (index) => {
+    setActiveTab(index);
+    const screens = ['AllEvents', 'EventSpaces', 'AllServices'];
+    navigation.navigate(screens[index]);
+  };
+
   let locationText = 'Detecting...';
   if (errorMsg) {
     locationText = errorMsg;
@@ -111,8 +119,8 @@ export default function HomeScreen({ navigation }) {
         city={city}
         errorMsg={errorMsg}
         onLocationPress={() => setModalVisible(true)}
-        onNotificationPress={() => navigation.navigate('Notification')}
-        onAgentPress={() => navigation.navigate('Agent List')}
+        onNotificationPress={() => navigation.navigate('Notifications')}
+        onAgentPress={() => navigation.navigate('AgentList')}
       />
 
       <LocationPickerModal
@@ -142,7 +150,7 @@ export default function HomeScreen({ navigation }) {
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={setActiveTab}
+        onTabPress={handleTabPress}
         navigation={navigation}
       />
 
@@ -151,6 +159,7 @@ export default function HomeScreen({ navigation }) {
       <PopularEvents 
         navigation={navigation} 
         events={popularEvents}
+      
       />
 
       <TouchableOpacity 
