@@ -2,27 +2,19 @@ const express = require('express');
 const router = express.Router();
 const ServicesController = require('../controllers/servicesController');
 
-// Get all services
+// GET /api/services
 router.get('/', ServicesController.getAllServices);
 
-// Get service by ID
+// GET /api/services/:id
 router.get('/:id', ServicesController.getServiceById);
 
-// Create new service (with image upload)
-router.post('/', 
-  ServicesController.upload,
-  ServicesController.createService
-);
+// POST /api/services
+router.post('/', ServicesController.upload, ServicesController.createService);
 
-// Update service (with image upload)
-router.put('/:id',
-  ServicesController.upload,
-  ServicesController.updateService
-);
+// PUT /api/services/:id
+router.put('/:id', ServicesController.upload, ServicesController.updateService);
 
-// Delete service
-router.delete('/:id',
-  ServicesController.deleteService
-);
+// DELETE /api/services/:id
+router.delete('/:id', ServicesController.deleteService);
 
 module.exports = router;

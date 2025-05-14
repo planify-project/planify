@@ -1,27 +1,22 @@
-const db = require('../database');
-const { Event } = db;
+const { Event } = require('../database');
 
 // GET /api/events?page=1&limit=10
 exports.getAllEvents = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    const { count, rows } = await Event.findAndCountAll({
-      offset,
-      limit,
-      order: [['startDate', 'ASC']],
+    console.log('Fetching all events...');
+    const events = await Event.findAll({
+      order: [['startDate', 'ASC']]
     });
-
-    res.json({
-      events: rows,
-      total: count,
-      page,
-      totalPages: Math.ceil(count / limit),
-    });
+    
+    console.log(`Found ${events.length} events`);
+    res.status(200).json(events);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch events', details: error.message });
+    console.error('Error fetching events:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch events',
+      error: error.message 
+    });
   }
 };
 
@@ -116,9 +111,15 @@ exports.updateEvent = async (req, res) => {
 
 exports.deleteEvent = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id);
+    const { id } = req.params;
+    console.log('Deleting event with ID:', id);
+
+    const event = await Event.findByPk(id);
     if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Event not found' 
+      });
     }
 
     await event.destroy();
@@ -127,6 +128,11 @@ exports.deleteEvent = async (req, res) => {
       message: 'Event deleted successfully'
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete event', details: error.message });
+    console.error('Error deleting event:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to delete event',
+      error: error.message 
+    });
   }
 };

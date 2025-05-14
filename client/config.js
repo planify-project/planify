@@ -1,9 +1,17 @@
-// Get the local IP address from environment or use localhost
-const getLocalIP = () => {
-  // Use the same IP address as your API_BASE in EventSpaceAPI.js
-  return '192.168.75.181';
-};
-
 // API and Socket configuration
-export const API_BASE = 'http://172.20.10.3:3000/api';
-export const SOCKET_URL = 'http://172.20.10.3:3000';
+const LOCAL_IP = '192.168.149.72'; // Updated IP address
+const PORT = 3000;
+
+export const API_BASE = `http://${LOCAL_IP}:${PORT}/api`;
+export const SOCKET_URL = `http://${LOCAL_IP}:${PORT}`;
+
+export const SOCKET_CONFIG = {
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  timeout: 20000,
+  autoConnect: true,
+  forceNew: true,
+  transports: ['polling', 'websocket']
+};

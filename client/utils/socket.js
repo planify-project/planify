@@ -1,7 +1,6 @@
 import { io } from 'socket.io-client';
 import { Platform } from 'react-native';
-
-const SOCKET_URL = 'http://192.168.75.181:3000';
+import { SOCKET_URL } from '../config';
 
 const socket = io(SOCKET_URL, {
   reconnection: true,
@@ -11,7 +10,6 @@ const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ['websocket', 'polling'],
   path: '/socket.io',
-  // Add platform-specific settings
   extraHeaders: Platform.select({
     ios: {
       'Accept': 'application/json',
@@ -24,7 +22,6 @@ const socket = io(SOCKET_URL, {
   })
 });
 
-// Add connection state monitoring
 let isConnected = false;
 
 socket.on('connect', () => {
@@ -33,23 +30,10 @@ socket.on('connect', () => {
 });
 
 socket.on('connect_error', (error) => {
-  console.warn('Socket connection error:', {
-    message: error.message,
-    type: error.type,
-    description: error.description,
-    isConnected
-  });
-  
+  console.warn('Socket connection error:', error);
   if (!isConnected) {
-    // Try to reconnect with polling if websocket fails
     socket.io.opts.transports = ['polling', 'websocket'];
-    socket.connect();
   }
-});
-
-socket.on('disconnect', (reason) => {
-  isConnected = false;
-  console.log('Socket disconnected:', reason);
 });
 
 export default socket;

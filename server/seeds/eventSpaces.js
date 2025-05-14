@@ -160,4 +160,17 @@ const seedEventSpaces = async () => {
   }
 };
 
-module.exports = seedEventSpaces;
+const seedEventSpaces = require('./eventSpaces');
+
+async function runSeed() {
+  try {
+    await seedEventSpaces();
+    console.log('Event spaces seeded successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error seeding event spaces:', error);
+    process.exit(1);
+  }
+}
+
+runSeed();

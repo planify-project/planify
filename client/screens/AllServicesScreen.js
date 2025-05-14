@@ -25,34 +25,27 @@ export default function AllServicesScreen({ navigation }) {
       setError(null);
       
       const response = await api.get('/services');
-      console.log('Raw API Response:', response);
-      console.log('Response data:', response.data);
+      console.log('Services response:', response.data);
       
-      if (response.data.success) {
-        const formattedServices = response.data.data.map(service => {
-          console.log('Processing service:', service);
-          // Construct the full image URL using the API base URL, removing /api from the path
-          const baseUrl = api.defaults.baseURL.replace('/api', '');
-          const fullImageUrl = service.imageUrl 
-            ? `${baseUrl}${service.imageUrl}`
-            : 'https://via.placeholder.com/150';
-          
-          console.log('Full image URL:', fullImageUrl);
-          return {
-            ...service,
-            imageUrl: fullImageUrl
-          };
-        });
-        console.log('Formatted services:', formattedServices);
+      // Check if response.data exists and is an array
+      if (Array.isArray(response.data)) {
+        const formattedServices = response.data.map(service => ({
+          ...service,
+          imageUrl: service.imageUrl 
+            ? `http://172.20.10.3:3000${service.imageUrl}`
+            : 'https://via.placeholder.com/150'
+        }));
         setServices(formattedServices);
       } else {
-        console.error('API returned success: false');
-        setError('Failed to fetch services');
+        // If response.data is not an array, handle accordingly
+        console.error('Unexpected response format:', response.data);
+        setError('Invalid response format from server');
+        setServices([]);
       }
     } catch (error) {
       console.error('Error fetching services:', error);
-      console.error('Error details:', error.response?.data);
-      setError(error.message || 'Failed to fetch services');
+      setError(error.response?.data?.message || 'Failed to fetch services');
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -225,4 +218,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});

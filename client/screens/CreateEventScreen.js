@@ -30,25 +30,25 @@ api.interceptors.response.use(
   }
 );
 
-// Example of setting an item
-const setItem = async (key, value) => {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Error saving data', error);
-  }
-};
+// // Example of setting an item
+// const setItem = async (key, value) => {
+//   try {
+//     await AsyncStorage.setItem(key, JSON.stringify(value));
+//   } catch (error) {
+//     console.error('Error saving data', error);
+//   }
+// };
 
-// Example of getting an item
-const getItem = async (key) => {
-  try {
-    const value = await AsyncStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
-  } catch (error) {
-    console.error('Error reading data', error);
-    return null;
-  }
-};
+// // Example of getting an item
+// const getItem = async (key) => {
+//   try {
+//     const value = await AsyncStorage.getItem(key);
+//     return value ? JSON.parse(value) : null;
+//   } catch (error) {
+//     console.error('Error reading data', error);
+//     return null;
+//   }
+// };
 
 export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
@@ -280,7 +280,7 @@ export default function CreateEventScreen({ navigation, route }) {
       const eventData = {
         name: route.params?.eventName || 'New Event',
         type: route.params?.eventType || 'social',
-        date: route.params?.eventDate || new Date().toISOString(),
+        date: route.params?.date || new Date().toISOString(),
         venue: {
           name: selectedItems.venue.name,
           price: parseFloat(selectedItems.venue.price),
@@ -289,91 +289,33 @@ export default function CreateEventScreen({ navigation, route }) {
         services: selectedItems.services.map(s => ({
           id: s.id,
           name: s.name,
-          price: s.price
+          price: parseFloat(s.price)
         })),
         equipment: selectedItems.equipment.map(e => ({
           id: e.id,
           name: e.name,
-          price: e.price
+          price: parseFloat(e.price)
         }))
       };
 
-      console.log('Sending event data:', JSON.stringify(eventData));
-      
-      try {
-        // Create the event in the database
-        const response = await api.post('/events', eventData);
-        console.log('Event created:', response.data);
+      console.log('Sending event data:', eventData);
+      const response = await api.post('/events', eventData);
 
-        if (response.data.success) {
-          // Then navigate to Schedule with the new event data
-          Alert.alert(
-            'Success',
-            'Event created successfully!',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  // Navigate back to the root and then to Schedule
-                  navigation.reset({
-                    index: 0,
-                    routes: [
-                      { 
-                        name: 'Schedule',
-                        params: { 
-                          refresh: true,
-                          newEvent: {
-                            ...response.data.data,
-                            venue: selectedItems.venue,
-                            services: selectedItems.services,
-                            equipment: selectedItems.equipment
-                          }
-                        }
-                      }
-                    ],
-                  });
-                }
-              }
-            ]
-          );
-        } else {
-          throw new Error(response.data.message || 'Failed to create event');
-        }
-      } catch (apiError) {
-        console.error('API Error:', apiError);
-        Alert.alert(
-          'Error',
-          apiError.response?.data?.message || 'Failed to create event. Please try again.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Navigate back to the root and then to Schedule
-                navigation.reset({
-                  index: 0,
-                  routes: [
-                    { 
-                      name: 'Schedule',
-                      params: { 
-                        refresh: true,
-                        newEvent: {
-                          ...eventData,
-                          venue: selectedItems.venue,
-                          services: selectedItems.services,
-                          equipment: selectedItems.equipment
-                        }
-                      }
-                    }
-                  ],
-                });
-              }
-            }
-          ]
-        );
+      if (response.data.success) {
+        navigation.navigate('Schedule', {
+          refresh: true,
+          newEvent: response.data.data,
+          selectedDate: route.params?.date
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to create event');
       }
-    } catch (err) {
-      console.error('Error creating event:', err);
-      Alert.alert('Error', 'Failed to create event. Please try again.');
+    } catch (error) {
+      console.error('Error creating event:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to create event. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

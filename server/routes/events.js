@@ -3,7 +3,21 @@ const router = express.Router();
 const eventsController = require('../controllers/eventsController');
 
 // GET /api/events
-router.get('/getAll', eventsController.getAllEvents);
+router.get('/', eventsController.getAllEvents);
+
+// GET /api/events/public
 router.get('/public', eventsController.getPublicEvents);
 
-module.exports = router; 
+// GET /api/events/:id
+router.get('/:id', eventsController.getEventById);
+
+// POST /api/events
+router.post('/', eventsController.createEvent);
+
+// PUT /api/events/:id
+router.put('/:id', eventsController.updateEvent);
+
+// DELETE /api/events/:id
+router.delete('/:id', eventsController.deleteEvent);
+
+module.exports = router;
