@@ -85,19 +85,18 @@ export default function AllEventsScreen() {
 
       {/* Events List */}
       <ScrollView style={styles.eventsContainer}>
-        {events.map((event) => (
-          <View key={event.id} style={styles.eventCardContainer}>
-            <EventCard
-              image={event.image}
-              title={event.title}
-              location={event.location}
-              price={event.price}
-              rating={event.rating}
-              per={event.per}
-              horizontal={true}
-              onPress={() => handleEventPress(event)}
-            />
-          </View>
+        {events.map((event, index) => (
+          <EventCard
+            key={event.id || index}
+            id={event.id}
+            image={event.image}
+            title={event.title}
+            location={event.location}
+            price={event.price}
+            rating={event.rating}
+            per={event.per}
+            onPress={() => navigation.navigate('EventDetail', { event })}
+          />
         ))}
       </ScrollView>
     </View>

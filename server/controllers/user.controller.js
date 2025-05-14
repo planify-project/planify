@@ -73,7 +73,7 @@ exports.createUser = async (req, res) => {
 
 // Update a user by ID
 exports.updateUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, photoURL } = req.body;
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) {
@@ -81,20 +81,22 @@ exports.updateUser = async (req, res) => {
     }
 
     const updatedData = {
-      name,
-      email,
-      phone,
-      contact_details,
+      name: name || user.name,
+      photoURL: photoURL || user.photoURL
     };
 
-    if (password) {
-      updatedData.password = await bcrypt.hash(password, 10);
-    }
-
     await user.update(updatedData);
-    res.json(user);
+    res.json({
+      success: true,
+      data: user
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update user', details: error.message });
+    console.error('Error updating user:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update user', 
+      details: error.message 
+    });
   }
 };
 

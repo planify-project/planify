@@ -15,6 +15,8 @@ const servicesRouter = require('./routes/services.js');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
 const authRoutes = require('./routes/auth.routes');
+const stripeRoutes = require("./routes/stripeRoutes");
+const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 
 const app = express();
@@ -23,20 +25,22 @@ const server = http.createServer(app);
 // Configure Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: '*',
+    methods: ['GET', 'POST'],
     credentials: true
   },
   pingTimeout: 60000,
   pingInterval: 25000,
   connectTimeout: 45000,
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
 });
 
 // Add better connection logging
 io.on('connection', (socket) => {
-  const clientIp = socket.handshake.address;
-  console.log(`New client connected - ID: ${socket.id}, IP: ${clientIp}`);
+  console.log(`New client connected - ID: ${socket.id}`);
   
   socket.on('error', (error) => {
     console.error(`Socket error for ${socket.id}:`, error);
@@ -55,12 +59,10 @@ const HOST = '172.20.10.3'; // Updated IP address
 
 // Middleware
 app.use(cors({
-  origin: '*',
+  origin: '*', // Allow all origins in development
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  credentials: true
 }));
 
 // Increase payload limit for image uploads
@@ -79,6 +81,8 @@ app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
@@ -115,10 +119,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Listen on specific network interface
-server.listen(PORT, HOST, () => {
-  console.log('Server running on:');
-  console.log(`- http://${HOST}:${PORT}`);
+// Start server
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`- http://localhost:${PORT}`);
+  console.log(`- http://192.168.149.126:${PORT}`);
 });
 
 // Error handling for server

@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
@@ -24,6 +25,9 @@ const Auth = initializeAuth(app, {
 // Initialize Firestore with offline persistence
 const db = getFirestore(app);
 
+// Initialize Firebase Storage
+const storage = getStorage(app);
+
 // Enable offline persistence
 try {
   enableIndexedDbPersistence(db).catch((err) => {
@@ -37,4 +41,4 @@ try {
   console.warn('Error enabling offline persistence:', error);
 }
 
-export { app, Auth, db };
+export { app, Auth, db, storage };
