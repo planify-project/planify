@@ -8,12 +8,13 @@ import LocationPickerModal from '../components/home/LocationPickerModal';
 import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
-import { popularEvents } from '../constants/mockData';
+// import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
 import AllEventsScreen from './AllEventsScreen';
-import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import { API_BASE } from '../config'; // Make sure this points to your backend
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -22,9 +23,8 @@ export default function HomeScreen() {
   const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
-  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
+  const [publicEvents, setPublicEvents] = useState([]);
 
   const getLocation = async () => {
     try {
@@ -64,6 +64,18 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getLocation();
+  }, []);
+
+  useEffect(() => {
+    axios.get(`${API_BASE}/events/public`)
+      .then(res => {
+        setPublicEvents(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setLoading(false);
+        // handle error
+      });
   }, []);
 
   const handleSelectCity = (selectedCity) => {
@@ -140,8 +152,6 @@ export default function HomeScreen() {
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={handleTabPress}
-        navigation={navigation}
         onTabPress={(tabId) => {
           setActiveTab(tabId);
           // Add console.log to debug
@@ -153,19 +163,10 @@ export default function HomeScreen() {
         navigation={navigation}
       />
 
-      <NearbyEvents navigation={navigation} />
+      <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
       
-      <PopularEvents 
-        navigation={navigation} 
-        events={popularEvents}
-      />
+      <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
 
-      <TouchableOpacity 
-        style={styles.allEventsButton} 
-        onPress={() => navigation.navigate('AllEvents')}
-      >
-        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

@@ -65,10 +65,6 @@ module.exports = (sequelize, DataTypes) => {
     created_by: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'user', // Assuming the user model is defined in the same database
-        key: 'id',
-      },
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     },

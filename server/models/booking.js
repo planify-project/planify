@@ -7,44 +7,18 @@ module.exports = (sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    user_id: { 
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'user',
-        key: 'id'
-      }
     serviceId: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    service_id: { 
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'services',
-        key: 'id'
-      }
     providerId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false
     },
-    event_id: { 
-      type: DataTypes.INTEGER, // Changed from UUID to INTEGER
-      allowNull: true,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false
     },
-    status: {
-      type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),
-      allowNull: false,
-    },
-    created_at: {
     date: {
       type: DataTypes.DATE,
       allowNull: false

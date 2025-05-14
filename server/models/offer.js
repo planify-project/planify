@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     provider_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'user',
-        key: 'id'
-      }
     },
     description: DataTypes.TEXT,
     discount_percent: DataTypes.DECIMAL,

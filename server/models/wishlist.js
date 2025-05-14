@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     user_id: { 
       type: DataTypes.UUID, // Match the type of `users.id`
       allowNull: false,
-      references: {
-        model: 'user',
-        key: 'id',
-      },
     },
     name: {
       type: DataTypes.STRING,

@@ -9,7 +9,7 @@ const API_ENDPOINT = `${API_BASE}/reviews/event`;
 
 export default function ReviewScreen({ route, navigation }) {
   const { event } = route.params;
-  // console.log("🛖🛖🛖",event);
+  console.log("🛖🛖🛖",event);
   
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState('');

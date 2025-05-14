@@ -10,15 +10,15 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   ];
 
   
-  // const handleTabPress = (tabId) => {
-  //   onTabPress(tabId);
-  //   if (tabId === 'event') {
-  //     navigation.navigate('AllEvents');
-  //   } else if (tabId === 'services') {
-  //     navigation.navigate('AllServices');
-  //   }
-  const handleTabPress = (index) => {
-    onTabPress(index);
+  const handleTabPress = (tabId) => {
+    onTabPress(tabId);
+    if (tabId === 'event') {
+      navigation.navigate('AllEvents');
+    } else if (tabId === 'services') {
+      navigation.navigate('AllServices');
+    }
+  // const handleTabPress = (index) => {
+  //   onTabPress(index);
   };
 
   return (

@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     reviewer_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'user',
-        key: 'id',
-      },
     },
     event_id: {
       type: DataTypes.INTEGER, // Changed from UUID to INTEGER to match events table

@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 const PORT = process.env.PORT || 3000;
-const HOST = '172.20.10.3'; // Updated IP address
+const HOST = '192.168.75.232'; // Updated IP address
 
 // Middleware
 app.use(cors({

@@ -161,36 +161,27 @@ Review.belongsTo(User, { foreignKey: 'reviewer_id' });
 Event.hasMany(Review, { foreignKey: 'event_id' });
 Review.belongsTo(Event, { foreignKey: 'event_id' });
 // Sync database (optional, uncomment if needed)
-// sequelize.sync({ force: true })
-//   .then(() => {
-//     console.log('All models were synchronized successfully.');
-//   })
-//   .catch((error) => {
-//     console.error('Error synchronizing models:', error);
-//   });
 Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
 EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 
 // Sync database and seed data
-const syncDatabase = async () => {
-  try {
-    // First, sync the ServiceCategory model
-    await ServiceCategory.sync({ alter: true });
-    console.log('Service categories table synchronized successfully.');
+// const syncDatabase = async () => {
+//   try {
+   
 
-    // Then sync all other models
-    await sequelize.sync({ alter: true });
-    console.log('All models were synchronized successfully.');
+//     // Then sync all other models
+//     // await sequelize.sync({ force: true });
+//     // console.log('All models were synchronized successfully.');
 
-    // Import and run the event spaces seeder
-    const seedEventSpaces = require('./seeds/eventSpaces');
-    await seedEventSpaces();
-    console.log('Event spaces seeded successfully!');
-  } catch (error) {
-    console.error('Error during database sync:', error);
-    process.exit(1);
-  }
-};
+//     // Import and run the event spaces seeder
+//     const seedEventSpaces = require('./seeds/eventSpaces');
+//     await seedEventSpaces();
+//     console.log('Event spaces seeded successfully!');
+//   } catch (error) {
+//     console.error('Error during database sync:', error);
+//     process.exit(1);
+//   }
+// };
 
 // Run the sync
 // syncDatabase();

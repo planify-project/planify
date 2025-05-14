@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
     provider_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'user',
-        key: 'id'
-      },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
