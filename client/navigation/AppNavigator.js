@@ -8,6 +8,7 @@ import ScheduleScreen from '../screens/ScheduleScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import { useTheme } from '../context/ThemeContext';
 import { TouchableOpacity } from 'react-native';
 
@@ -34,6 +35,11 @@ function RootStack() {
         name="EventDetail"
         component={EventDetailScreen}
         options={{ title: 'Event Details' }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
       />
     </Stack.Navigator>
   );

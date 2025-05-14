@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../configs/api';
+import api from '../configs/api';
 
 const WishlistContext = createContext();
 
@@ -29,24 +29,19 @@ export const WishlistProvider = ({ children }) => {
     try {
       setError(null);
       
-      // Validate itemId
       if (!itemId) {
         console.error('Invalid item ID:', itemId);
         setError('Invalid item ID');
         return;
       }
 
-      // Don't parse string IDs to integers
       const isInWishlist = wishlistItems.some(item => item.item_id === itemId);
       console.log('Toggling wishlist item:', { itemId, itemType, isInWishlist });
 
       if (isInWishlist) {
-        // Remove from wishlist
-        console.log('Removing from wishlist');
         await api.delete(`/wishlist/${itemId}`);
         setWishlistItems(prev => prev.filter(item => item.item_id !== itemId));
       } else {
-        // Add to wishlist
         const data = {
           item_id: itemId,
           item_type: itemType || 'event'

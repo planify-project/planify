@@ -1,3 +1,4 @@
+// models/service.js
 module.exports = (sequelize, DataTypes) => {
   const Service = sequelize.define('Service', {
     id: {
@@ -16,6 +17,16 @@ module.exports = (sequelize, DataTypes) => {
     price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
     },
     serviceType: {
       type: DataTypes.STRING,

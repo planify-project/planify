@@ -1,53 +1,53 @@
 import axios from 'axios';
-import { Auth } from './firebase_config';
-
-// Use IP address for development to ensure mobile device can connect
-const API_BASE_URL = 'http://192.168.149.126:3000/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
+  baseURL: 'http://192.168.149.126:3000/api',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor
+// Add request interceptor for authentication
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Get the current user's ID token
-      const user = Auth.currentUser;
-      if (user) {
-        const token = await user.getIdToken();
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     } catch (error) {
-      console.error('Error in request interceptor:', error);
-      return Promise.reject(error);
+      console.error('Request interceptor error:', error);
+      return config;
     }
   },
   (error) => {
-    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor for better error handling
+// Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout');
-      return Promise.reject(new Error('Request timeout. Please try again.'));
+      throw new Error('Connection timeout. Please check your internet connection.');
     }
+
+    if (error.code === 'ECONNREFUSED') {
+      console.error('Connection refused');
+      throw new Error('Server is not running. Please try again later.');
+    }
+
     if (!error.response) {
-      console.error('Network error:', error);
-      return Promise.reject(new Error('Network error. Please check your connection.'));
+      throw new Error('Network error. Please check your connection.');
     }
-    return Promise.reject(error);
+
+    throw error;
   }
 );
 
-export { API_BASE_URL, api };
+export default api;

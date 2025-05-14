@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../configs/api';
 
 const { width } = Dimensions.get('window');
@@ -60,15 +61,16 @@ export default function ScheduleScreen({ navigation, route }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.eventItem}
-      onPress={() => navigation.navigate('EventDetails', { event: item })}
+      onPress={() => navigation.navigate('EventDetail', { event: item })}
     >
+      <Image 
+        source={{ uri: item.coverImage }} 
+        style={styles.eventImage} 
+      />
       <View style={styles.eventInfo}>
-        <Text style={styles.eventTitle}>{item.name || 'Untitled Event'}</Text>
-        <Text style={styles.eventDate}>
-          {new Date(item.date || item.created_at).toLocaleDateString()}
-        </Text>
-        <Text style={styles.eventStatus}>{item.status}</Text>
-        <Text style={styles.eventPrice}>${parseFloat(item.budget || 0).toFixed(2)}</Text>
+        <Text style={styles.eventTitle}>{item.name}</Text>
+        <Text style={styles.eventDate}>{new Date(item.startDate).toLocaleDateString()}</Text>
+        <Text style={styles.eventPrice}>{item.ticketPrice} DT</Text>
       </View>
       <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>

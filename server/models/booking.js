@@ -1,29 +1,41 @@
-module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('booking', {
-    id: { 
-      type: DataTypes.INTEGER, 
-      primaryKey: true, 
-      autoIncrement: true 
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Booking = sequelize.define('Booking', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    user_id: { 
-      type: DataTypes.STRING, // user_id is a string
+    serviceId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
-    service_id: { 
-      type: DataTypes.INTEGER 
+    providerId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
-    event_id: { 
-      type: DataTypes.UUID, // <-- Change from UUID to STRING to match events.id
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    space: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('requested', 'confirmed', 'canceled', 'completed'),
-    },
-    created_at: {
-      type: DataTypes.DATE,
-    },
-  }, {
-    underscored: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
+      type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+      defaultValue: 'pending'
+    }
   });
+
+  return Booking;
 };

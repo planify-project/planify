@@ -8,25 +8,28 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
-import { auth } from '../configs/config';
-import { signOut } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function ProfileScreen({ navigation }) {
+const { width } = Dimensions.get('window');
+
+const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
+  const auth = getAuth();
 
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUser({
-        displayName: currentUser.displayName || 'User',
+        name: currentUser.displayName || 'User',
         email: currentUser.email,
         photoURL: currentUser.photoURL,
-        uid: currentUser.uid
       });
     }
     setLoading(false);
@@ -55,13 +58,21 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.profileHeader}>
-        <Image
-          source={{ uri: user?.photoURL || 'https://via.placeholder.com/150' }}
-          style={styles.profileImage}
-        />
-        <Text style={[styles.name, { color: theme.text }]}>{user?.displayName || 'User'}</Text>
-        <Text style={[styles.email, { color: theme.textSecondary }]}>{user?.email}</Text>
+      <View style={styles.header}>
+        <View style={styles.avatarContainer}>
+          {user.photoURL ? (
+            <Image
+              source={{ uri: user.photoURL }}
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={normalize(60)} color="#5D5FEE" />
+            </View>
+          )}
+        </View>
+        <Text style={[styles.name, { color: theme.text }]}>{user.name}</Text>
+        <Text style={[styles.email, { color: theme.textSecondary }]}>{user.email}</Text>
       </View>
 
       <View style={styles.statsContainer}>
@@ -79,14 +90,45 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </View>
 
-      <View style={styles.menuContainer}>
+      <View style={styles.section}>
         <TouchableOpacity
           style={[styles.menuItem, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('EditProfile')}
         >
-          <Text style={[styles.menuText, { color: theme.text }]}>Edit Profile</Text>
+          <Ionicons name="person-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.menuItemText}>
+            <Text style={[styles.menuItemTitle, { color: theme.text }]}>Edit Profile</Text>
+            <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Update your personal information</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.menuItem, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('ChangePassword')}
+        >
+          <Ionicons name="lock-closed-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.menuItemText}>
+            <Text style={[styles.menuItemTitle, { color: theme.text }]}>Change Password</Text>
+            <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Update your password</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuItem, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('NotificationSettings')}
+        >
+          <Ionicons name="notifications-outline" size={normalize(22)} color="#5D5FEE" />
+          <View style={styles.menuItemText}>
+            <Text style={[styles.menuItemTitle, { color: theme.text }]}>Notification Settings</Text>
+            <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Manage your notifications</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.menuContainer}>
         <TouchableOpacity
           style={[styles.menuItem, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('MyServices')}
@@ -117,29 +159,44 @@ export default function ProfileScreen({ navigation }) {
       </View>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  profileHeader: {
-    alignItems: 'center',
+  header: {
+    backgroundColor: '#fff',
     padding: normalize(20),
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  profileImage: {
+  avatarContainer: {
+    marginBottom: normalize(15),
+  },
+  avatar: {
     width: normalize(120),
     height: normalize(120),
     borderRadius: normalize(60),
-    marginBottom: normalize(16),
+  },
+  avatarPlaceholder: {
+    width: normalize(120),
+    height: normalize(120),
+    borderRadius: normalize(60),
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   name: {
     fontSize: normalize(24),
-    fontWeight: 'bold',
-    marginBottom: normalize(8),
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: normalize(5),
   },
   email: {
     fontSize: normalize(16),
+    color: '#666',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -160,13 +217,36 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: normalize(14),
   },
-  menuContainer: {
-    padding: normalize(16),
+  section: {
+    backgroundColor: '#fff',
+    marginTop: normalize(20),
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
   },
   menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: normalize(15),
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  menuItemText: {
+    flex: 1,
+    marginLeft: normalize(15),
+  },
+  menuItemTitle: {
+    fontSize: normalize(16),
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: normalize(2),
+  },
+  menuItemSubtitle: {
+    fontSize: normalize(14),
+    color: '#666',
+  },
+  menuContainer: {
     padding: normalize(16),
-    borderRadius: normalize(8),
-    marginBottom: normalize(12),
   },
   menuText: {
     fontSize: normalize(16),
@@ -182,4 +262,6 @@ const styles = StyleSheet.create({
     fontSize: normalize(16),
     fontWeight: 'bold',
   },
-}); 
+});
+
+export default ProfileScreen; 

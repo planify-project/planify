@@ -5,7 +5,8 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged,
+    onAuthStateChanged,updateProfile, updateEmail, updatePassword,
+    
 } from 'firebase/auth';
 import { API_BASE } from '../config';
 

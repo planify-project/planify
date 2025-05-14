@@ -1,119 +1,27 @@
-// import React from 'react';
-// import { View, Text, TouchableOpacity } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import { normalize } from '../../utils/scaling';
-// import { styles } from './styles';
-
-// const HomeTabs = ({ activeTab, onTabPress }) => {
-//   const tabs = [
-//     { id: 'event', icon: 'calendar-outline', label: 'Event' },
-//     { id: 'space', icon: 'home-outline', label: 'Event space' },
-//     { id: 'services', icon: 'construct-outline', label: 'Services' }
-//   ];
-
-//   return (
-//     <View style={styles.tabs}>
-//       {tabs.map(tab => (
-//         <TouchableOpacity key={tab.id} style={[styles.tab, activeTab === tab.id && styles.activeTab]} onPress={() => onTabPress(tab.id)}>
-//           <Ionicons name={tab.icon} size={20} color={activeTab === tab.id ? '#fff' : '#000'} />
-//           <Text style={[ styles.tabText, activeTab === tab.id && styles.tabTextActive]}> {tab.label}</Text>
-//         </TouchableOpacity>
-//       ))}
-//     </View>
-//   );
-// };
-
-// export default HomeTabs;
-// import React from 'react';
-// import { View, Text, TouchableOpacity } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import { normalize } from '../../utils/scaling';
-// import { styles } from './styles';
-
-
-// const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
-//   const tabs = [
-//     { id: 'event', icon: 'calendar-outline', label: 'Event' },
-//     { id: 'space', icon: 'home-outline', label: 'Event space' },
-//     { id: 'services', icon: 'construct-outline', label: 'Services' },
-//   ];
-
-//   const handleTabPress = (tabId) => {
-//     onTabPress(tabId);
-//     if (tabId === 'event') {
-//       navigation.navigate('AllEvents'); // Navigate to AllEventsScreen when "Event" is clicked
-//     }
-//   };
-
-//   return (
-//     <View style={styles.tabs}>
-//       {tabs.map((tab) => (
-//         <TouchableOpacity
-//           key={tab.id}
-//           style={[styles.tab, activeTab === tab.id && styles.activeTab]}
-//           onPress={() => handleTabPress(tab.id)}
-//         >
-//           <Ionicons
-//             name={tab.icon}
-//             size={20}
-//             color={activeTab === tab.id ? '#fff' : '#000'}
-//           />
-//           <Text
-//             style={[
-//               styles.tabText,
-//               activeTab === tab.id && styles.tabTextActive,
-//             ]}
-//           >
-//             {tab.label}
-//           </Text>
-//         </TouchableOpacity>
-//       ))}
-//     </View>
-//   );
-// };
-
-// export default HomeTabs;
-
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { styles } from './styles';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { normalize } from '../../utils/scaling';
 
 const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const tabs = [
-    { id: 'event', icon: 'calendar-outline', label: 'Event' },
-    { id: 'space', icon: 'home-outline', label: 'Event space' },
-    { id: 'services', icon: 'construct-outline', label: 'Services' },
+    { id: 'events', label: 'Events', screen: 'AllEvents' },
+    { id: 'spaces', label: 'Event Spaces', screen: 'EventSpaces' },
+    { id: 'services', label: 'Services', screen: 'AllServices' },
   ];
 
-  const handleTabPress = (tabId) => {
-    onTabPress(tabId);
-    if (tabId === 'event') {
-      navigation.navigate('AllEvents');
-    } else if (tabId === 'services') {
-      navigation.navigate('AllServices');
-    }
+  const handleTabPress = (index) => {
+    onTabPress(index);
   };
 
   return (
-    <View style={styles.tabs}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
+    <View style={styles.container}>
+      {tabs.map((tab, index) => (
+        <TouchableOpacity 
           key={tab.id}
-          style={[styles.tab, activeTab === tab.id && styles.activeTab]}
-          onPress={() => handleTabPress(tab.id)}
+          style={[styles.tab, activeTab === index && styles.activeTab]}
+          onPress={() => handleTabPress(index)}
         >
-          <Ionicons
-            name={tab.icon}
-            size={20}
-            color={activeTab === tab.id ? '#fff' : '#000'}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === tab.id && styles.tabTextActive,
-            ]}
-          >
+          <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
             {tab.label}
           </Text>
         </TouchableOpacity>
@@ -121,5 +29,37 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    marginVertical: normalize(16),
+    backgroundColor: '#fff',
+    borderRadius: normalize(8),
+    padding: normalize(4),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: normalize(8),
+    alignItems: 'center',
+    borderRadius: normalize(6),
+  },
+  activeTab: {
+    backgroundColor: '#5D5FEE',
+  },
+  tabText: {
+    fontSize: normalize(14),
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#fff',
+  },
+});
 
 export default HomeTabs;

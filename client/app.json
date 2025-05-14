@@ -1,13 +1,11 @@
 {
   "expo": {
-    "name": "planify",
+    "name": "Planify",
     "slug": "planify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -15,29 +13,22 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.planify.app"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/LOGOLOGO.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.planify.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "STRIPE_PUBLISHABLE_KEY": "pk_test_your_actual_publishable_key_here",
-      "API_URL": "http://YOUR_SERVER_IP:YOUR_PORT"
+      "favicon": "./assets/LOGOLOGO.png"
     },
     "plugins": [
-      [
-        "expo-secure-store",
-        {
-          "configureAndroidBackup": true,
-          "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
-        }
-      ]
-    ]
+      "expo-location"
+    ],
+    "newArchEnabled": true
   }
-}
+} 

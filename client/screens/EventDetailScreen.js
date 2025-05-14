@@ -93,7 +93,7 @@ export default function EventDetailScreen({ route }) {
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>About this event</Text>
           <Text style={styles.description}>
-            Experience an unforgettable {event.title.toLowerCase()} at {event.location}. 
+            Experience an unforgettable {event.title ? event.title.toLowerCase() : 'event'} at {event.location || 'our venue'}. 
             This event promises to deliver an amazing experience with top-notch facilities and services.
             Don't miss out on this opportunity to create lasting memories!
           </Text>
