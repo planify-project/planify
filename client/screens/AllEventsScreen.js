@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { API_BASE } from '../config'; // Adjust the import based on your project structure
+import { API_BASE } from '../configs/url'; // Adjust the import based on your project structure
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;

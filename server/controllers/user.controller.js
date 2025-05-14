@@ -111,3 +111,13 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete user', details: error.message });
   }
 };
+
+// admin
+exports.getTotalUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json({users , usersCount: users.length});
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+  }
+};

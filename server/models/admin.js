@@ -1,9 +1,18 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('admin', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    user_id: { type: DataTypes.STRING, allowNull: false },
-    super_admin: { type: DataTypes.BOOLEAN, defaultValue: false },
-    permissions: DataTypes.JSON
+    id: { type: DataTypes.UUID, primaryKey: true, allowNull: false },
+    name: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false
+    }, password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    }, image: {
+      type: DataTypes.STRING,
+      allowNull: true
+    }
   }, {
     underscored: true,
     timestamps: true

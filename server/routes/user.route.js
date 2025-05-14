@@ -4,6 +4,8 @@ const userController = require('../controllers/user.controller');
 
 // Routes
 router.get('/getAll', userController.getAllUsers); // Get all users
+router.get('/totalusers', userController.getTotalUsers); // Get total users count
+
 router.get('/:id', userController.getUserById); // Get a user by ID
 router.post('/add', userController.createUser); // Create a new user
 router.post('/firebase', userController.createUserFromFirebase);

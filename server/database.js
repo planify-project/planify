@@ -67,8 +67,6 @@ Booking.belongsTo(Service, { foreignKey: 'service_id' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
 
-Admin.belongsTo(User, { foreignKey: 'user_id' });
-User.hasOne(Admin, { foreignKey: 'user_id' });
 
 User.hasMany(Wishlist, { foreignKey: 'user_id' });
 Wishlist.belongsTo(User, { foreignKey: 'user_id' });

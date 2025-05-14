@@ -1,12 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
 require('dotenv').config();
 require('./database');
-const db = require('./database');
-const { Event } = db;
 const path = require('path');
 const morgan = require('morgan');
+const http = require('http');
+const { initSocket } = require('./socket');
 
 
 
@@ -16,13 +15,14 @@ const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const servicesRouter = require('./routes/services.js');
 const authRoutes = require('./routes/auth.routes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://192.168.147.126:3000', 'http://localhost:8081', 'http://192.168.147.126:8081'],
+  origin: ['http://localhost:3000', 'http://localhost:3001',  'http://192.168.147.126:3000', 'http://localhost:8081', 'http://192.168.147.126:8081'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -48,6 +48,7 @@ app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api/authadmin', AdminAuthRoutes);
 
 // Test endpoint
 app.get('/', (req, res) => {
@@ -84,11 +85,14 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const server = app.listen(port, '0.0.0.0', () => {
+const server = http.createServer(app);
+initSocket(server);
+
+// Start server
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Server URLs:`);
   console.log(`- http://localhost:${port}`);
-  console.log(`- http://192.168.147.126:${port}`);
 });
 
 // Handle server errors

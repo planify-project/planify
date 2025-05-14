@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
-import { auth } from '../configs/config';
+import { auth } from '../configs/firebase_config';
 import { signOut } from 'firebase/auth';
 
 export default function ProfileScreen({ navigation }) {

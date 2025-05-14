@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import EventCard from '../components/EventCard';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { API_BASE } from '../config';
+import { API_BASE } from '../configs/url';
 
 // Responsive scaling
 const { width } = Dimensions.get('window');

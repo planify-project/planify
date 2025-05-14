@@ -1,13 +1,15 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { auth } from '../firebase'; 
+import { auth } from '../firebase';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    updateProfile
 } from 'firebase/auth';
-import { API_BASE } from '../config';
+import { uploadToCloudinary } from '../api/cloudinary';
+import { API_BASE } from '../configs/url';
 
 export const AuthContext = createContext({});
 
@@ -27,22 +29,42 @@ export const AuthProvider = ({ children }) => {
     // Register a new user and send data to backend
     const register = async (email, password, name) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const id = userCredential.user.uid;
-
-            // Prepare user data
-            
-
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
+            const user = userCredential.user;
+            // Set the display name
+            await updateProfile(user, { displayName: name });
             // Send user data to backend
             await axios.post(`${API_BASE}/auth/register`, {
-                id,
+                id: user.uid,
                 email,
                 name,
                 password,
+
             });
         } catch (error) {
             console.error('Registration Error:', error.message);
             throw error;
+        }
+    };
+
+    const updateUserProfile = async (name, imageFile) => {
+        let imageUrl = null;
+        if (imageFile) {
+            // Upload image to Cloudinary using the new helper
+            imageUrl = await uploadToCloudinary(imageFile);
+        }
+        if (user) {
+            // Update Firebase displayName and photoURL
+            await updateProfile(user, {
+                displayName: name,
+                photoURL: imageUrl || user.photoURL // fallback to existing photoURL if no new image
+            });
+            // Update backend
+            await axios.put(`${API_BASE}/auth/updatep-rofile`, {
+                id: user.uid,
+                name,
+                image: imageUrl || user.photoURL // send the correct image URL
+            });
         }
     };
 
@@ -51,11 +73,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
-
-
-            // Prepare user data
-         
-
             // Send user data to backend
             await axios.post(`${API_BASE}/auth/login`, {
                 id,
@@ -82,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUserProfile }}>
             {children}
         </AuthContext.Provider>
     );
