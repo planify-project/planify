@@ -23,7 +23,7 @@ export const navbarLinks = [
     title: "Management",
     links: [
       { label: "Manage Users", icon: Users, path: "/manage-users" },
-      { label: "Services", icon: HandHelping, path: "/manage-inneed" },
+      { label: "Services", icon: HandHelping, path: "/services" },
       { label: "Manage Events", icon: CalendarCheck, path: "/manage-events" },
     ],
   },

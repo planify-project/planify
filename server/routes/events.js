@@ -7,4 +7,6 @@ router.get('/getAll', eventsController.getAllEvents);
 router.get('/public', eventsController.getPublicEvents);
 // admin
 router.put('/status/:id',  eventsController.updateStatus);
+router.get('/status-summary', eventsController.getStatusSummary);
+
 module.exports = router; 

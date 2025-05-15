@@ -22,9 +22,9 @@ const AccountDropdown = ({ user }) => {
     ];
 
     const settingsItems = [
-        { icon: <FiUser className="h-5 w-5" />, text: "Profile" },
-        { icon: <FiCreditCard className="h-5 w-5" />, text: "Payments", count: 42 },
-        { icon: <FiLogOut className="h-5 w-5" />, text: "Logout", isRed: true, onClick: handleLogout },
+        { icon: <FiUser className="h-5 w-5" />, text: "Profile", onClick: () => navigate("/profile") },
+        { icon: <FiCreditCard className="h-5 w-5" />, text: "Payments", onClick: () => navigate("/payments") },
+        { icon: <FiLogOut className="h-5 w-5" />, text: "Logout", onClick: handleLogout },
     ];
 
     return (

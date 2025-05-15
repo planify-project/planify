@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const updateUserProfile = async (name, imageFile) => {
+  const updateUserProfile = async (name, imageFile, phone) => {
     let imageUrl = null;
     if (imageFile) {
       imageUrl = await uploadToCloudinary(imageFile);
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         displayName: name,
         photoURL: imageUrl || user.photoURL
       });
-      await axios.put(`${API_BASE}/authadmin/updatep-rofile`, {
+      await axios.put(`${API_BASE}/authadmin/update-profile`, {
         id: user.uid,
         name,
         image: imageUrl || user.photoURL

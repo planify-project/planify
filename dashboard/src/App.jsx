@@ -9,14 +9,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Layout from "@/routes/layout";
 import DashboardPage from "./routes/dashboard/page.jsx";
 import Users from "./routes/users/page";
-import Donations from "./routes/donations/page";
 import Services from "./routes/services/page.jsx";
-import Campaigns from "./routes/campaigns/page";
 import Events from "./routes/events/page";
 import Reports from "./routes/reports/page";
-import Inventory from "./routes/inventory/page";
 import Payments from "./routes/payments/page";
-import DonationItemDetails from "./routes/donations/[id]";
 import Login from "./routes/login/Login.jsx";
 import Register from "./routes/register/Register.jsx";
 import ProfilePage from "./routes/profile/page";
@@ -58,13 +54,10 @@ function App() {
             { path: "dashboard", element: <DashboardPage /> },
             { path: "manage-users", element: <Users /> },
             { path: "payments", element: <Payments /> },
-            { path: "manage-donation-items", element: <Donations /> },
-            { path: "manage-donation-items/:id", element: <DonationItemDetails /> },
-            { path: "manage-inneed", element: <Services /> },
-            { path: "manage-campaigns", element: <Campaigns /> },
+            { path: "services", element: <Services /> },
+            { path: "events", element: <Events /> },
             { path: "manage-events", element: <Events /> },
             { path: "reports", element: <Reports /> },
-            { path: "inventory", element: <Inventory /> },
             { path: "profile", element: <ProfilePage /> },
           ],
         },

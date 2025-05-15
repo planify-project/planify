@@ -149,3 +149,22 @@ exports.updateStatus = async (req, res) => {
   }
 }
 
+// GET /api/events/status-summary
+exports.getStatusSummary = async (req, res) => {
+  try {
+    const { Event } = require('../database');
+
+    const statuses = ['pending', 'approved', 'rejected', 'cancelled', 'completed'];
+
+    const results = await Promise.all(
+      statuses.map(async (status) => {
+        const count = await Event.count({ where: { status } });
+        return { status, count };
+      })
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch event status summary', details: error.message });
+  }
+};

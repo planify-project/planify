@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 const PORT = process.env.PORT || 3000;
-const HOST = '172.20.10.3'; // Updated IP address
+const HOST = 'localhost'; // Changed from specific IP to localhost
 
 // Middleware
 app.use(cors({
@@ -117,7 +117,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Listen on specific network interface
+// Listen on all interfaces for easier development
 server.listen(PORT, HOST, () => {
   console.log('Server running on:');
   console.log(`- http://${HOST}:${PORT}`);

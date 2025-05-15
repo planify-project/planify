@@ -1,126 +1,49 @@
-'use strict';
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcryptjs');
+const { faker } = require('@faker-js/faker');
+const { Sequelize } = require('sequelize');
+const UserModel = require('../models/user'); // <-- Add this line
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    const users = [
-      {
-        id: uuidv4(),
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'user',
-        phone: '+216 22 333 444',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'provider',
-        phone: '+216 55 666 777',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Mike Johnson',
-        email: 'mike@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'user',
-        phone: '+216 33 444 555',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Sarah Wilson',
-        email: 'sarah@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'provider',
-        phone: '+216 44 555 666',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'David Brown',
-        email: 'david@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'user',
-        phone: '+216 66 777 888',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Emma Davis',
-        email: 'emma@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'provider',
-        phone: '+216 77 888 999',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'James Wilson',
-        email: 'james@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'user',
-        phone: '+216 88 999 000',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Lisa Anderson',
-        email: 'lisa@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'provider',
-        phone: '+216 99 000 111',
-        avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Tom Harris',
-        email: 'tom@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'user',
-        phone: '+216 11 222 333',
-        avatar: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3',
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: uuidv4(),
-        name: 'Rachel Green',
-        email: 'rachel@example.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'provider',
-        phone: '+216 12 333 444',
-        avatar: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e',
-        created_at: new Date(),
-        updated_at: new Date()
-      }
-    ];
+// Initialize Sequelize
+const sequelize = new Sequelize('planify', 'root', 'root', {
+  host: 'localhost',
+  dialect: 'mysql', // or 'postgres'
+});
 
-    await queryInterface.bulkInsert('users', users, {});
-  },
+// Define the model
+const Users = UserModel(sequelize, Sequelize.DataTypes);
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('users', null, {});
+// Seed users
+async function seedUsers() {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+
+    const users = [];
+
+    for (let i = 0; i < 100; i++) {
+      users.push({
+        id: faker.string.uuid(),
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        phone: faker.phone.number(),
+        contact_details: {
+          address: faker.location.streetAddress(),
+          city: faker.location.city(),
+        },
+        password: faker.internet.password(),
+        isBanned: faker.datatype.boolean(),
+        isProvider: faker.datatype.boolean(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    await Users.bulkCreate(users);
+    console.log('✅ 100 users seeded successfully.');
+  } catch (error) {
+    console.error('❌ Seeding failed:', error);
+  } finally {
+    await sequelize.close();
   }
-}; 
+}
+
+seedUsers();

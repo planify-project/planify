@@ -11,6 +11,7 @@ router.post('/add', userController.createUser); // Create a new user
 router.post('/firebase', userController.createUserFromFirebase);
 router.put('/:id', userController.updateUser); // Update a user by ID
 router.delete('/delete/:id', userController.deleteUser); // Delete a user by ID
+router.get('/traffic/monthly', userController.getUserTrafficByMonth);
 
 
 module.exports = router;
