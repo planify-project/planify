@@ -134,9 +134,6 @@ EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 // Sync database and seed data
 const syncDatabase = async () => {
   try {
-    // First, sync the ServiceCategory model
-    await ServiceCategory.sync({ alter: true });
-    console.log('Service categories table synchronized successfully.');
 
     // Then sync all other models
     await sequelize.sync({ alter: true });

@@ -12,11 +12,11 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     providerId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false
     },
     date: {

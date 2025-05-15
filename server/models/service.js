@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
     provider_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false,
     },
     category_id: {

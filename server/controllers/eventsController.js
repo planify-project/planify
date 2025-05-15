@@ -1,5 +1,4 @@
-const db = require('../database');
-const { Event } = db;
+const { Event } = require('../database');
 
 // GET /api/events?page=1&limit=10
 exports.getAllEvents = async (req, res) => {
@@ -32,14 +31,14 @@ exports.getPublicEvents = async (req, res) => {
       where: { isPublic: true },
       order: [['startDate', 'ASC']]
     });
-    
+
     console.log(`Found ${publicEvents.length} public events`);
     res.status(200).json(publicEvents);
   } catch (error) {
     console.error('Error fetching public events:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch public events', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Failed to fetch public events',
+      details: error.message
     });
   }
 };
@@ -61,7 +60,7 @@ exports.createEvent = async (req, res) => {
     console.log('Received event data:', req.body);
 
     const {
-      name,      
+      name,
       type,
       date,
       venue,
@@ -130,3 +129,23 @@ exports.deleteEvent = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete event', details: error.message });
   }
 };
+
+// Admin only
+exports.updateStatus = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.update({ status: req.body.status });
+    res.json({
+      success: true,
+      data: event,
+      message: 'Event status updated successfully'    
+    })
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update event status', details: error.message });
+  }
+}
+

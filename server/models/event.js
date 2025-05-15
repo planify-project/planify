@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true, // Optional field for the event's cover image URL
     },
     created_by: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false, // Required for tracking the event creator
     },
     agent_id: {
