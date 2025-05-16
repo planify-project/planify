@@ -6,7 +6,11 @@
   "scripts": {
     "start": "nodemon app.js",
     "seed": "node seeds/publicEvents.js",
-    "seed:users": "node seeds/users.js"
+    "seed:users": "node seeds/users.js",
+    "seed:events": "node seeds/events.js",
+    "seed:services": "node seeds/services.js",
+    "seed:eventSpaces": "node seeds/event__space.seed.js"
+
   },
   "dependencies": {
     "@faker-js/faker": "^9.8.0",

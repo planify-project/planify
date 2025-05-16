@@ -23,22 +23,39 @@ const Events = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
   const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  // Fetch events from backend with pagination and filters
+  const fetchData = async (page = 1) => {
+    setLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/api/events/getAll');
-      console.log(res.data);
-      const sortedData = res.data.events.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-      setData(sortedData);
-      setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
+      const params = {
+        page,
+        limit: itemsPerPage,
+      };
+      if (searchTerm) params.search = searchTerm;
+      if (locationFilter) params.location = locationFilter;
+      if (approvedFilter) params.isApproved = approvedFilter;
+      if (statusFilter) params.status = statusFilter;
+      const res = await axios.get('http://localhost:3000/api/events/getAll', { params });
+      setData(res.data.events || []);
+      setTotalPages(res.data.totalPages || 1);
+      setCurrentPage(res.data.page || 1);
     } catch (err) {
+      setData([]);
+      setTotalPages(1);
+      setCurrentPage(1);
       console.log('Error fetching data:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Fetch on mount and when filters/page/search change
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(currentPage);
+    // eslint-disable-next-line
+  }, [currentPage, searchTerm, locationFilter, approvedFilter, statusFilter]);
 
   const confirmDelete = (id) => {
     setDeleteId(id);
@@ -49,7 +66,7 @@ const Events = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:3000/api/event/${deleteId}`);
-      setData(data.filter(item => item.id !== deleteId));
+      fetchData(currentPage);
       setShowModal(false);
       setDeleteId(null);
       setModalMode('');
@@ -78,7 +95,7 @@ const Events = () => {
   const handleUpdate = async () => {
     try {
       await axios.put(`http://localhost:3000/api/event/${selectedItem.id}`, selectedItem);
-      setData(data.map(item => (item.id === selectedItem.id ? selectedItem : item)));
+      fetchData(currentPage);
       setShowModal(false);
       setSelectedItem(null);
       setModalMode('');
@@ -87,19 +104,9 @@ const Events = () => {
     }
   };
 
+  // Unique filter values from current data
   const uniqueLocations = [...new Set(data.map(item => item.location))];
-  const uniqueStatuses = ['upcoming', 'ongoing', 'completed'];
-
-  const filteredData = data
-    .filter((item) =>
-      (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (locationFilter ? item.location === locationFilter : true) &&
-      (approvedFilter ? item.isApproved === (approvedFilter === 'true') : true) &&
-      (statusFilter ? item.status === statusFilter : true)
-    );
-
-  const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const uniqueStatuses = ['upcoming', 'ongoing', 'completed', 'pending', 'approved', 'rejected', 'cancelled', 'completed'];
 
   return (
     <div className={`min-h-screen p-6 ${theme.startsWith('dark') ? 'bg-gray-900' : 'bg-[#f5f9f6]'}`}>
@@ -112,13 +119,13 @@ const Events = () => {
             type="text"
             placeholder="Search by title or description..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className={`flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none shadow-sm transition ${theme.startsWith('dark') ? 'bg-gray-800 text-white focus:ring-2 focus:ring-blue-400' : 'focus:ring-2 focus:ring-blue-400'}`}
           />
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
+              onChange={(e) => { setLocationFilter(e.target.value); setCurrentPage(1); }}
               className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">All Locations</option>
@@ -128,7 +135,7 @@ const Events = () => {
             </select>
             <select
               value={approvedFilter}
-              onChange={(e) => setApprovedFilter(e.target.value)}
+              onChange={(e) => { setApprovedFilter(e.target.value); setCurrentPage(1); }}
               className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">All Approval</option>
@@ -137,7 +144,7 @@ const Events = () => {
             </select>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
               className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">Status</option>
@@ -151,6 +158,7 @@ const Events = () => {
                 setLocationFilter('');
                 setApprovedFilter('');
                 setStatusFilter('');
+                setCurrentPage(1);
               }}
               className="rounded-xl bg-red-100 px-4 py-2 text-sm text-red-600 transition hover:bg-red-200"
             >
@@ -159,7 +167,11 @@ const Events = () => {
           </div>
         </div>
 
-        <EventTable items={currentItems} theme={theme} onEdit={handleEdit} onDelete={confirmDelete} />
+        {loading ? (
+          <div className="text-center py-10 text-lg text-blue-500">Loading events...</div>
+        ) : (
+          <EventTable items={data} theme={theme} onEdit={handleEdit} onDelete={confirmDelete} />
+        )}
         <EventPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} theme={theme} />
       </div>
 

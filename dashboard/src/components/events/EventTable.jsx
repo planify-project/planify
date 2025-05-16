@@ -7,6 +7,7 @@ const EventTable = ({ items, theme, onEdit, onDelete }) => {
       <table className={`min-w-full divide-y ${theme.startsWith('dark') ? 'divide-gray-700' : 'divide-gray-200'}`}>
         <thead className={theme.startsWith('dark') ? 'bg-gray-700 text-blue-300' : 'bg-blue-100 text-blue-800'}>
           <tr>
+            <th className="px-6 py-4 text-left font-semibold">Image</th>
             <th className="px-6 py-4 text-left font-semibold">Name</th>
             <th className="px-6 py-4 text-left font-semibold">Description</th>
             <th className="px-6 py-4 text-left font-semibold">Start Date</th>
@@ -21,11 +22,11 @@ const EventTable = ({ items, theme, onEdit, onDelete }) => {
         <tbody className={theme.startsWith('dark') ? 'divide-y divide-gray-700' : 'divide-y divide-gray-100'}>
           {items.length > 0 ? (
             items.map((item) => (
-              <EventRow key={item.id} item={item} theme={theme} onEdit={onEdit} onDelete={onDelete} />
+              <EventRow key={item.id} item={item} theme={theme} onEdit={onEdit} onDelete={onDelete} showImage={true} />
             ))
           ) : (
             <tr>
-              <td colSpan="9" className="text-center py-6 text-gray-500">
+              <td colSpan="10" className="text-center py-6 text-gray-500">
                 No events available.
               </td>
             </tr>

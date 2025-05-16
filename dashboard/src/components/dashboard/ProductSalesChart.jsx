@@ -11,19 +11,19 @@ import {
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const ProductSalesChart = ({ labels, grossMargin, revenue }) => {
+const ProductSalesChart = ({ labels, privateEvents, publicEvents }) => {
   const data = {
     labels,
     datasets: [
       {
-        label: "Gross margin",
+        label: "Private Events",
         backgroundColor: "#36A2EB",
-        data: grossMargin,
+        data: privateEvents,
       },
       {
-        label: "Revenue",
+        label: "Public Events",
         backgroundColor: "#FF9F40",
-        data: revenue,
+        data: publicEvents,
       },
     ],
   };
@@ -37,9 +37,6 @@ const ProductSalesChart = ({ labels, grossMargin, revenue }) => {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          stepSize: 10000,
-        },
       },
     },
   };

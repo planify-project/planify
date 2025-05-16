@@ -2,19 +2,27 @@ import React, { useContext } from "react";
 import { FaLock, FaLockOpen, FaTrash } from "react-icons/fa";
 import { ThemeProviderContext } from "../../contexts/theme-context";
 
-const UserRow = ({ item, onEdit, onDelete }) => {
+const UserRow = ({ item, onEdit, onDelete, showImage }) => {
     const { theme } = useContext(ThemeProviderContext);
     return (
         <tr className={`transition-colors ${theme.startsWith("dark") ? "hover:bg-gray-700" : "hover:bg-green-50"}`}>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-3">
-                    {item.profilePic && (
+            {showImage && (
+                <td className="px-6 py-4">
+                    {item.image ? (
                         <img
-                            src={item.profilePic}
+                            src={item.image}
                             alt={item.name}
                             className="h-10 w-10 rounded-full border border-gray-300 object-cover"
                         />
+                    ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-500">
+                            N/A
+                        </div>
                     )}
+                </td>
+            )}
+            <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
                     <span className={theme.startsWith("dark") ? "text-gray-100" : "text-gray-800"}>{item.name}</span>
                 </div>
             </td>
