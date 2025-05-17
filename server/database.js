@@ -133,29 +133,14 @@ Payment.belongsTo(Service, { foreignKey: 'service_id' });
 Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
 EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 
-// Sync database and seed data
-const syncDatabase = async () => {
-  try {
-    // First, sync the ServiceCategory model
-    await ServiceCategory.sync({ alter: true });
-    console.log('Service categories table synchronized successfully.');
-
-    // Then sync all other models
-    await sequelize.sync({ alter: true });
-    console.log('All models were synchronized successfully.');
-
-    // Import and run the event spaces seeder
-    const seedEventSpaces = require('./seeds/eventSpaces');
-    await seedEventSpaces();
-    console.log('Event spaces seeded successfully!');
-  } catch (error) {
-    console.error('Error during database sync:', error);
-    process.exit(1);
-  }
-};
-
-// Run the sync
-// syncDatabase();
+// Sync database
+// sequelize.sync({ force: true })
+//   .then(() => {
+//     console.log('Database synced successfully');
+//   })
+//   .catch(err => {
+//     console.error('Error syncing database:', err);
+//   });
 
 // Export all models and sequelize instance
 module.exports = {

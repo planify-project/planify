@@ -48,14 +48,14 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Create the booking
+    // Map snake_case input to camelCase model fields
     const newBooking = await Booking.create({
-      user_id,
-      service_id,
-      event_id,
+      userId: user_id,
+      serviceId: service_id,
+      providerId: service.provider_id, // Get provider_id from the service
       date: bookingDate,
-      space,
-      phone_number,
+      space: space,
+      phone: phone_number,
       status: 'pending'
     });
 

@@ -27,7 +27,7 @@ export default function ServicesScreen() {
       setError(null);
       
       console.log('Fetching services...');
-      const response = await axios.get(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/services?type=service`);
+      const response = await axios.get(`${process.env.API_BASE || 'http://192.168.149.72:3000/api'}/services?type=service`);
       
       if (!response.data) {
         throw new Error('No data received');
@@ -85,7 +85,7 @@ export default function ServicesScreen() {
         phone_number: phone,
       };
 
-      const response = await axios.post(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/bookings`, bookingData, {
+      const response = await axios.post(`${process.env.API_BASE || 'http://192.168.149.72:3000/api'}/bookings`, bookingData, {
         headers: { 'Content-Type': 'application/json' }
       });
 

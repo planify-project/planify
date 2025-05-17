@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { AuthContext } from '../context/AuthContext'; 
 
+import { useWishlist } from '../context/WishlistContext';
+
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 function normalize(size) {
@@ -12,9 +14,8 @@ function normalize(size) {
 }
 
 export default function EventDetailScreen({ route }) {
-  const { user } = useContext(AuthContext); // Access the user context
-  console.log('User:', user); 
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { user } = useContext(AuthContext);
+  const { isInWishlist, toggleWishlistItem } = useWishlist();
   const navigation = useNavigation();
   
   // Get the event data from the route params
@@ -25,6 +26,14 @@ export default function EventDetailScreen({ route }) {
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
     rating: '0.0',
     per: 'person'
+  };
+
+  const isWishlisted = isInWishlist(event.id);
+
+  const handleWishlistPress = () => {
+    if (event.id) {
+      toggleWishlistItem(event.id, 'event');
+    }
   };
 
   // Generate additional images for preview
@@ -48,6 +57,16 @@ export default function EventDetailScreen({ route }) {
         {/* Main Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: event.image }} style={styles.mainImage} />
+          <TouchableOpacity 
+            style={styles.wishlistButton}
+            onPress={handleWishlistPress}
+          >
+            <Ionicons 
+              name={isWishlisted ? "heart" : "heart-outline"} 
+              size={normalize(24)} 
+              color={isWishlisted ? "red" : "white"} 
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Event Info */}
@@ -74,7 +93,7 @@ export default function EventDetailScreen({ route }) {
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>About this event</Text>
           <Text style={styles.description}>
-            Experience an unforgettable {event.title.toLowerCase()} at {event.location}. 
+            Experience an unforgettable {event.title ? event.title.toLowerCase() : 'event'} at {event.location || 'our venue'}. 
             This event promises to deliver an amazing experience with top-notch facilities and services.
             Don't miss out on this opportunity to create lasting memories!
           </Text>
@@ -106,13 +125,23 @@ export default function EventDetailScreen({ route }) {
         </View>
       </ScrollView>
 
-      {/* Join Event Button */}
-      <TouchableOpacity 
-        style={styles.joinBtn}
-        onPress={() => navigation.navigate('JoinEvent', { event })}
-      >
-        <Text style={styles.joinBtnText}>Join Event</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+          onPress={() => navigation.navigate('JoinEvent', { event })}
+        >
+          <Ionicons name="calendar-outline" size={20} color="#fff" />
+          <Text style={styles.actionButtonText}>Join Event</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+          onPress={() => navigation.navigate('Payment')}
+        >
+          <Ionicons name="card-outline" size={20} color="#fff" />
+          <Text style={styles.actionButtonText}>Pay & Join</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -121,6 +150,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: "auto",
     flex: 1,
+
     backgroundColor: '#F6F7FB',
   },
   header: {
@@ -144,11 +174,20 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     height: normalize(250),
+    position: 'relative',
   },
   mainImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  wishlistButton: {
+    position: 'absolute',
+    top: normalize(16),
+    right: normalize(16),
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: normalize(8),
+    borderRadius: normalize(20),
   },
   infoContainer: {
     padding: normalize(16),
@@ -221,17 +260,31 @@ const styles = StyleSheet.create({
     borderRadius: normalize(8),
     marginRight: normalize(8),
   },
-  joinBtn: {
-    backgroundColor: '#5D5FEE',
-    margin: normalize(16),
-    borderRadius: normalize(12),
-    paddingVertical: normalize(16),
-    alignItems: 'center',
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: normalize(16),
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
-  joinBtnText: {
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: normalize(12),
+    paddingHorizontal: normalize(24),
+    borderRadius: normalize(20),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  actionButtonText: {
     color: '#fff',
-    fontSize: normalize(18),
-    fontWeight: '600',
+    marginLeft: normalize(8),
+    fontSize: normalize(14),
+    fontWeight: 'bold',
   },
   mapContainer: {
     padding: normalize(16),

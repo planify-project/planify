@@ -4,9 +4,15 @@ const eventsController = require('../controllers/eventsController');
 
 // GET /api/events
 router.get('/', eventsController.getAllEvents);
-
+ 
 // GET /api/events/public
 router.get('/public', eventsController.getPublicEvents);
+
+// GET /api/events/nearby
+router.get('/nearby', eventsController.getNearbyEvents);
+
+// GET /api/events/popular
+router.get('/popular', eventsController.getPopularEvents);
 
 // GET /api/events/:id
 router.get('/:id', eventsController.getEventById);

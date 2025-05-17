@@ -1,4 +1,6 @@
-const { Event } = require('../database');
+const db = require('../database');
+const { Event } = db;
+const { Op } = require('sequelize');
 
 // GET /api/events?page=1&limit=10
 exports.getAllEvents = async (req, res) => {
@@ -90,22 +92,120 @@ exports.createEvent = async (req, res) => {
     });
   }
 };
+// Helper function to calculate distance between two points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// GET /api/events/nearby?lat=36.8065&lon=10.1815&radius=50
+exports.getNearbyEvents = async (req, res) => {
+  try {
+    const { lat, lon, radius = 50 } = req.query;
+    
+    if (!lat || !lon) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Latitude and longitude are required' 
+      });
+    }
+
+    const userLat = parseFloat(lat);
+    const userLon = parseFloat(lon);
+    const radiusKm = parseFloat(radius);
+
+    const events = await Event.findAll({
+      where: { 
+        isPublic: true,
+        status: 'approved'
+      }
+    });
+
+    const nearbyEvents = events.filter(event => {
+      if (!event.latitude || !event.longitude) return false;
+      const distance = calculateDistance(
+        userLat, 
+        userLon, 
+        event.latitude, 
+        event.longitude
+      );
+      return distance <= radiusKm;
+    });
+
+    res.json(nearbyEvents);
+  } catch (error) {
+    console.error('Error fetching nearby events:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch nearby events',
+      error: error.message 
+    });
+  }
+};
+
+// GET /api/events/popular
+exports.getPopularEvents = async (req, res) => {
+  try {
+    console.log('Fetching popular events...');
+    const events = await Event.findAll({
+      where: { 
+        isPublic: true,
+        status: 'approved'
+      },
+      order: [
+        ['attendees_count', 'DESC'],
+        ['createdAt', 'DESC']
+      ],
+      limit: 10
+    });
+
+    console.log(`Found ${events.length} popular events`);
+    res.status(200).json(events);
+  } catch (error) {
+    console.error('Error fetching popular events:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch popular events',
+      error: error.message 
+    });
+  }
+};
 
 exports.updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id);
+    const { id } = req.params;
+    console.log('Updating event with ID:', id);
+    console.log('Update data:', req.body);
+
+    const event = await Event.findByPk(id);
     if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
     }
 
     await event.update(req.body);
+
     res.json({
       success: true,
       data: event,
       message: 'Event updated successfully'
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update event', details: error.message });
+    console.error('Error updating event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update event',
+      error: error.message
+    });
   }
 };
 
@@ -135,4 +235,15 @@ exports.deleteEvent = async (req, res) => {
       error: error.message 
     });
   }
+};
+
+module.exports = {
+  getAllEvents: exports.getAllEvents,
+  getPublicEvents: exports.getPublicEvents,
+  getEventById: exports.getEventById,
+  createEvent: exports.createEvent,
+  updateEvent: exports.updateEvent,
+  deleteEvent: exports.deleteEvent,
+  getNearbyEvents: exports.getNearbyEvents,
+  getPopularEvents: exports.getPopularEvents
 };

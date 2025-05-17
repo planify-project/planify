@@ -53,7 +53,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
         return;
       }
 
-      // Format the booking payload
+      // Format the booking payload to match server expectations
       const bookingPayload = {
         user_id: auth.currentUser.uid,
         service_id: service.id,

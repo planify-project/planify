@@ -5,6 +5,9 @@ const ServicesController = require('../controllers/servicesController');
 // GET /api/services
 router.get('/', ServicesController.getAllServices);
 
+// GET /api/services/provider/:providerId
+router.get('/provider/:providerId', ServicesController.getServicesByProvider);
+
 // GET /api/services/:id
 router.get('/:id', ServicesController.getServiceById);
 

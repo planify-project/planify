@@ -1,39 +1,53 @@
 import { io } from 'socket.io-client';
-import { Platform } from 'react-native';
-import { SOCKET_URL } from '../config';
+import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 
-const socket = io(SOCKET_URL, {
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  timeout: 60000,
-  autoConnect: true,
-  transports: ['websocket', 'polling'],
-  path: '/socket.io',
-  extraHeaders: Platform.select({
-    ios: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    android: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = SOCKET_CONFIG.reconnectionAttempts;
+
+const initializeSocket = () => {
+  if (socket) return socket;
+
+  socket = io(SOCKET_URL, {
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionAttempts: SOCKET_CONFIG.reconnectionAttempts,
+    reconnectionDelay: SOCKET_CONFIG.reconnectionDelay,
+    timeout: SOCKET_CONFIG.timeout,
+    pingTimeout: SOCKET_CONFIG.pingTimeout,
+    pingInterval: SOCKET_CONFIG.pingInterval,
+    autoConnect: true,
+    forceNew: true
+  });
+
+  socket.on('connect', () => {
+    console.log('Socket connected:', socket.id);
+    reconnectAttempts = 0;
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket connection error:', error);
+    reconnectAttempts++;
+    
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.error('Max reconnection attempts reached');
+      socket.disconnect();
     }
-  })
-});
+  });
 
-let isConnected = false;
+  socket.on('disconnect', (reason) => {
+    console.log('Socket disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      socket.connect();
+    }
+  });
 
-socket.on('connect', () => {
-  isConnected = true;
-  console.log('Socket connected successfully');
-});
+  return socket;
+};
 
-socket.on('connect_error', (error) => {
-  console.warn('Socket connection error:', error);
-  if (!isConnected) {
-    socket.io.opts.transports = ['polling', 'websocket'];
+export const getSocket = () => {
+  if (!socket) {
+    return initializeSocket();
   }
-});
-
-export default socket;
+  return socket;
+};

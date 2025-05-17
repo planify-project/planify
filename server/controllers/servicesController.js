@@ -316,6 +316,38 @@ class ServicesController {
       });
     }
   }
+
+  static async getServicesByProvider(req, res) {
+    try {
+      const { providerId } = req.params;
+      
+      if (!providerId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Provider ID is required'
+        });
+      }
+
+      const services = await Service.findAll({
+        where: { provider_id: providerId },
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'email']
+        }],
+        order: [['createdAt', 'DESC']]
+      });
+
+      res.status(200).json(services);
+    } catch (error) {
+      console.error('Error fetching provider services:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch provider services',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = {
@@ -324,5 +356,27 @@ module.exports = {
   getServiceById: ServicesController.getServiceById,
   createService: ServicesController.createService,
   updateService: ServicesController.updateService,
-  deleteService: ServicesController.deleteService
+  deleteService: ServicesController.deleteService,
+  getServicesByProvider: ServicesController.getServicesByProvider,
+  getServices: async (req, res) => {
+    try {
+      const { serviceType } = req.query;
+      console.log('Fetching services with type:', serviceType);
+
+      const services = await Service.findAll({
+        where: serviceType ? { serviceType } : {},
+        order: [['createdAt', 'DESC']]
+      });
+
+      console.log(`Found ${services.length} services`);
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch services',
+        error: error.message
+      });
+    }
+  }
 };

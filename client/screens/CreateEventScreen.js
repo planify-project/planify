@@ -7,14 +7,30 @@ import { API_BASE } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import axios from 'axios';
 
-// Update the axios configuration
+// Update the axios configuration at the top of the file
 const api = axios.create({
-  baseURL: process.env.API_BASE || 'http://172.20.10.3:3000/api', // Use environment variable for base URL
+  baseURL: API_BASE,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Add request interceptor for better debugging
+api.interceptors.request.use(
+  config => {
+    console.log('Making request:', {
+      url: `${config.baseURL}${config.url}`,
+      method: config.method,
+      data: config.data
+    });
+    return config;
+  },
+  error => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Add error handling interceptor with better logging
 api.interceptors.response.use(
@@ -51,18 +67,18 @@ api.interceptors.response.use(
 // };
 
 export default function CreateEventScreen({ navigation, route }) {
+  // Remove equipment from state
   const [activeTab, setActiveTab] = useState('space');
   const [venues, setVenues] = useState([]);
   const [services, setServices] = useState([]);
-  const [equipment, setEquipment] = useState([]);
+  // Remove equipment state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [agentModalVisible, setAgentModalVisible] = useState(false);
-  // Add selected items state
   const [selectedItems, setSelectedItems] = useState({
     venue: null,
     services: [],
-    equipment: []
+    // Remove equipment from selectedItems
   });
 
   const fetchData = async (type) => {
@@ -81,18 +97,19 @@ export default function CreateEventScreen({ navigation, route }) {
           endpoint = '/services';
           serviceType = 'service';
           break;
-        case 'equipment':
-          endpoint = '/services';
-          serviceType = 'equipment';
-          break;
+        // Remove equipment case
         default:
           throw new Error('Invalid type');
       }
 
       const url = serviceType ? `${endpoint}?serviceType=${serviceType}` : endpoint;
-      console.log(`Fetching ${type} data from: ${api.defaults.baseURL}${url}`);
+      console.log(`Fetching ${type} data from: ${API_BASE}${url}`);
       
-      const response = await api.get(url);
+      const response = await api.get(url, {
+        timeout: 10000,
+        retries: 3,
+        retryDelay: 1000
+      });
       const responseData = Array.isArray(response.data) ? response.data : response.data.data;
 
       if (responseData) {
@@ -117,16 +134,18 @@ export default function CreateEventScreen({ navigation, route }) {
           case 'services':
             setServices(formattedData);
             break;
-          case 'equipment':
-            setEquipment(formattedData);
-            break;
+          // Remove equipment case
         }
       } else {
         console.error(`No data received for ${type}`);
         setError(`No ${type} available. Please try again later.`);
       }
     } catch (err) {
-      console.error(`Error fetching ${type}:`, err);
+      console.error(`Error fetching ${type}:`, {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data
+      });
       setError(`Failed to fetch ${type}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
@@ -155,8 +174,7 @@ export default function CreateEventScreen({ navigation, route }) {
         return venues;
       case 'services':
         return services;
-      case 'equipment':
-        return equipment;
+      // Remove equipment case
       default:
         return [];
     }
@@ -205,8 +223,7 @@ export default function CreateEventScreen({ navigation, route }) {
         return selectedItems.venue?.id === item.id;
       case 'services':
         return selectedItems.services.some(s => s.id === item.id);
-      case 'equipment':
-        return selectedItems.equipment.some(e => e.id === item.id);
+      // Remove equipment case
       default:
         return false;
     }
@@ -224,13 +241,7 @@ export default function CreateEventScreen({ navigation, route }) {
               ? prev.services.filter(s => s.id !== item.id)
               : [...prev.services, item]
           };
-        case 'equipment':
-          return {
-            ...prev,
-            equipment: prev.equipment.some(e => e.id === item.id)
-              ? prev.equipment.filter(e => e.id !== item.id)
-              : [...prev.equipment, item]
-          };
+        // Remove equipment case
         default:
           return prev;
       }
@@ -290,11 +301,6 @@ export default function CreateEventScreen({ navigation, route }) {
           id: s.id,
           name: s.name,
           price: parseFloat(s.price)
-        })),
-        equipment: selectedItems.equipment.map(e => ({
-          id: e.id,
-          name: e.name,
-          price: parseFloat(e.price)
         }))
       };
 
@@ -361,12 +367,6 @@ export default function CreateEventScreen({ navigation, route }) {
           style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}
         >
           <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>Services</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => setActiveTab('equipment')} 
-          style={[styles.tabButton, activeTab === 'equipment' && styles.activeTab]}
-        >
-          <Text style={activeTab === 'equipment' ? styles.activeTabText : styles.tabText}>Equipment</Text>
         </TouchableOpacity>
       </View>
 
