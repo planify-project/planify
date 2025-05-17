@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { NavigationContainer, useNavigation, useRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,8 @@ import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, ActivityIndicator } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import { STRIPE_PUBLISHABLE_KEY } from './config';
 
 // Enable screens for better performance
 enableScreens();
@@ -45,10 +47,13 @@ import EventSpaceDetails from './screens/EventSpaceDetails';
 import PaymentScreen from './screens/PaymentScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import PaymentSuccessScreen from './screens/PaymentSuccessScreen';
+import PaymentFailureScreen from './screens/PaymentFailureScreen';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import ServicesScreen from './screens/ServicesScreen';
 import { WishlistProvider } from './context/WishlistContext';
+import ChatScreen from './screens/ChatScreen';
 
 // Navigators
 const Stack = createNativeStackNavigator();
@@ -271,6 +276,8 @@ function MainTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Schedule') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Services') {
+            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'Wishlist') {
             iconName = focused ? 'heart' : 'heart-outline';
           } else if (route.name === 'Settings') {
@@ -286,6 +293,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Schedule" component={ScheduleStack} />
+      <Tab.Screen name="Services" component={ServicesStack} />
       <Tab.Screen name="Wishlist" component={WishlistStack} />
       <Tab.Screen name="Settings" component={SettingsStack} />
     </Tab.Navigator>
@@ -306,75 +314,165 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <SocketProvider>
-          <AuthProvider>
-            <WishlistProvider>
-              <NavigationContainer>
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="Root" component={MainTabs} />
-                  <Stack.Screen name="Auth" component={AuthNavigator} />
-                  <Stack.Screen 
-                    name="EventDetail" 
-                    component={EventDetailScreen}
-                    options={{
-                      headerShown: true,
-                      headerTitle: "Event Details",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                      headerTintColor: '#fff',
-                      headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                    }}
-                  />
-                  <Stack.Screen 
-                    name="AllEvents" 
-                    component={AllEventsScreen}
-                    options={{
-                      headerShown: true,
-                      headerTitle: "All Events",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                      headerTintColor: '#fff',
-                      headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                    }}
-                  />
-                  <Stack.Screen 
-                    name="Popular Events" 
-                    component={PopularEventsScreen}
-                    options={{
-                      headerShown: true,
-                      headerTitle: "Popular Events",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                      headerTintColor: '#fff',
-                      headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                    }}
-                  />
-                  <Stack.Screen 
-                    name="JoinEvent" 
-                    component={JoinEventWrapper}
-                    options={{
-                      headerShown: true,
-                      headerTitle: "Join Event",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                      headerTintColor: '#fff',
-                      headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                    }}
-                  />
-                  <Stack.Screen 
-                    name="EditProfile" 
-                    component={EditProfileScreen}
-                    options={{
-                      headerShown: true,
-                      headerTitle: "Edit Profile",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                      headerTintColor: '#fff',
-                      headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                    }}
-                  />
-                </Stack.Navigator>
-              </NavigationContainer>
-            </WishlistProvider>
-          </AuthProvider>
-        </SocketProvider>
-      </ThemeProvider>
+      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+        <ThemeProvider>
+          <SocketProvider>
+            <AuthProvider>
+              <WishlistProvider>
+                <NavigationContainer>
+                  <Stack.Navigator screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="Root" component={MainTabs} />
+                    <Stack.Screen name="Auth" component={AuthNavigator} />
+                    <Stack.Screen 
+                      name="Chat" 
+                      component={ChatScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Chat",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="EventDetail" 
+                      component={EventDetailScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Event Details",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="AllEvents" 
+                      component={AllEventsScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "All Events",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="Popular Events" 
+                      component={PopularEventsScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Popular Events",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="JoinEvent" 
+                      component={JoinEventWrapper}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Join Event",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="EditProfile" 
+                      component={EditProfileScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Edit Profile",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="AllServices" 
+                      component={AllServicesScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "My Services",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="AddService" 
+                      component={AddServiceScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Add Service",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="ServiceDetail" 
+                      component={ServiceDetailScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Service Details",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="EditService" 
+                      component={EditServiceScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Edit Service",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="Payment" 
+                      component={PaymentScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PaymentSuccess" 
+                      component={PaymentSuccessScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment Success",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PaymentFailure" 
+                      component={PaymentFailureScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment Failed",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                  </Stack.Navigator>
+                </NavigationContainer>
+              </WishlistProvider>
+            </AuthProvider>
+          </SocketProvider>
+        </ThemeProvider>
+      </StripeProvider>
     </GestureHandlerRootView>
   );
 }

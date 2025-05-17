@@ -1,16 +1,22 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { normalize } from '../../utils/scaling';
+// import { navigationRef } from '../../navigationRef';
 
 const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const tabs = [
     { id: 'events', label: 'Events', screen: 'AllEvents' },
     { id: 'spaces', label: 'Event Spaces', screen: 'EventSpaces' },
-    { id: 'services', label: 'Services', screen: 'AllServices' },
+    { id: 'services', label: 'Services', screen: 'AllServicesScreen' },
   ];
 
-  const handleTabPress = (index) => {
+  const handleTabPress = (index, screen) => {
     onTabPress(index);
+    if (screen === 'AllServicesScreen') {
+      navigation.navigate('Services');
+    } else {
+      navigation.navigate(screen);
+    }
   };
 
   return (
@@ -19,7 +25,7 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
         <TouchableOpacity 
           key={tab.id}
           style={[styles.tab, activeTab === index && styles.activeTab]}
-          onPress={() => handleTabPress(index)}
+          onPress={() => handleTabPress(index, tab.screen)}
         >
           <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
             {tab.label}

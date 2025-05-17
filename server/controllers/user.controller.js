@@ -33,11 +33,12 @@ exports.createUserFromFirebase = async (req, res) => {
     let user = await User.findOne({ where: { email } });
     
     if (!user) {
-      // Create new user
+      // Create new user with a dummy password
       user = await User.create({
         name: displayName || email.split('@')[0],
         email,
-        firebase_uid: uid
+        firebase_uid: uid,
+        password: 'firebase-auth' // Dummy password for Firebase users
       });
     }
 

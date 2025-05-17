@@ -18,6 +18,7 @@ const authRoutes = require('./routes/auth.routes');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const chatRoutes = require('./routes/chat.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -48,6 +49,24 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', (reason) => {
     console.log(`Client disconnected - ID: ${socket.id}, Reason: ${reason}`);
+  });
+
+  // Chat event handlers
+  socket.on('joinChat', ({ serviceId, userId, serviceProviderId }) => {
+    const roomId = `chat_${serviceId}_${userId}_${serviceProviderId}`;
+    socket.join(roomId);
+    console.log(`User ${userId} joined chat room ${roomId}`);
+  });
+
+  socket.on('sendMessage', (messageData) => {
+    const { serviceId, toUserId } = messageData;
+    const roomId = `chat_${serviceId}_${messageData.fromUserId}_${toUserId}`;
+    io.to(roomId).emit('newMessage', messageData);
+  });
+
+  socket.on('typing', ({ serviceId, userId, serviceProviderId, isTyping }) => {
+    const roomId = `chat_${serviceId}_${userId}_${serviceProviderId}`;
+    socket.to(roomId).emit('userTyping', { userId, isTyping });
   });
 });
 
@@ -86,6 +105,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Test endpoint
 app.get('/', (req, res) => {

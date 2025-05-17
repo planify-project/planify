@@ -86,9 +86,10 @@ WishlistItem.belongsTo(Wishlist, { foreignKey: 'wishlist_id' });
 
 User.hasMany(Message, { foreignKey: 'from_user_id', as: 'SentMessages' });
 User.hasMany(Message, { foreignKey: 'to_user_id', as: 'ReceivedMessages' });
-Message.belongsTo(User, { foreignKey: 'from_user_id', as: 'Sender' });
-Message.belongsTo(User, { foreignKey: 'to_user_id', as: 'Recipient' });
-Message.belongsTo(Event, { foreignKey: 'event_id' });
+Message.belongsTo(User, { foreignKey: 'from_user_id', as: 'sender' });
+Message.belongsTo(User, { foreignKey: 'to_user_id', as: 'recipient' });
+Message.belongsTo(Service, { foreignKey: 'service_id' });
+Service.hasMany(Message, { foreignKey: 'service_id' });
 
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
 Review.belongsTo(User, { foreignKey: 'reviewer_id' });
@@ -112,23 +113,8 @@ Notification.belongsTo(User, { foreignKey: 'user_id' });
 Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
 
-Event.hasMany(Message, { foreignKey: 'event_id' });
-Message.belongsTo(Event, { foreignKey: 'event_id' });
-
-User.hasMany(Message, { foreignKey: 'from_user_id' });
-Message.belongsTo(User, { foreignKey: 'from_user_id' });
-
-User.hasMany(Message, { foreignKey: 'to_user_id' });
-Message.belongsTo(User, { foreignKey: 'to_user_id' });
-
 Event.hasMany(Payment, { foreignKey: 'event_id' });
 Payment.belongsTo(Event, { foreignKey: 'event_id' });
-
-User.hasMany(Payment, { foreignKey: 'user_id' });
-Payment.belongsTo(User, { foreignKey: 'user_id' });
-
-Service.hasMany(Payment, { foreignKey: 'service_id' });
-Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
 Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
 EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });

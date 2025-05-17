@@ -159,6 +159,7 @@ exports.getNearbyEvents = async (req, res) => {
 // GET /api/events/popular
 exports.getPopularEvents = async (req, res) => {
   try {
+    console.log('Fetching popular events...');
     const events = await Event.findAll({
       where: { 
         isPublic: true,
@@ -171,10 +172,14 @@ exports.getPopularEvents = async (req, res) => {
       limit: 10
     });
 
+    console.log(`Found ${events.length} popular events`);
     res.json(events);
   } catch (error) {
     console.error('Error fetching popular events:', error);
     res.status(500).json({ error: 'Failed to fetch popular events', details: error.message });
+  }
+};
+
 exports.updateEvent = async (req, res) => {
   try {
     const event = await Event.findByPk(req.params.id);
@@ -208,4 +213,4 @@ exports.deleteEvent = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete event', details: error.message });
   }
-}}}
+};

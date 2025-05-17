@@ -39,15 +39,11 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
 
-            // Prepare user data
-            
-
-            // Send user data to backend
-            await axios.post(`${API_BASE}/auth/register`, {
-                id,
+            // Send user data to backend (Firebase user creation)
+            await axios.post(`${API_BASE}/users/firebase`, {
+                uid: id,
                 email,
-                name,
-                password,
+                displayName: name,
             });
         } catch (error) {
             console.error('Registration Error:', error.message);
@@ -61,20 +57,14 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
 
-
-            // Prepare user data
-         
-
-            // Send user data to backend
-            await axios.post(`${API_BASE}/auth/login`, {
-                id,
+            // Send user data to backend (Firebase user creation/login)
+            await axios.post(`${API_BASE}/users/firebase`, {
+                uid: id,
                 email,
-                name,
-                password,
+                displayName: name,
             });
         } catch (error) {
             console.error('Login Error:', error.message);
-
             throw error;
         }
     };

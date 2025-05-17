@@ -13,10 +13,9 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-export default function EventDetailScreen({ route }) {
+export default function EventDetailScreen({ route, navigation }) {
   const { user } = useContext(AuthContext);
   const { isInWishlist, toggleWishlistItem } = useWishlist();
-  const navigation = useNavigation();
   
   // Get the event data from the route params
   const event = route.params?.event || {
@@ -136,7 +135,14 @@ export default function EventDetailScreen({ route }) {
 
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-          onPress={() => navigation.navigate('Payment')}
+          onPress={() => {
+            // Extract numeric value from event.price (e.g., '20 DT' -> 20)
+            const price = parseFloat(String(event.price).replace(/[^\d.]/g, ''));
+            navigation.navigate('Payment', { 
+              amount: price,
+              eventId: event.id 
+            });
+          }}
         >
           <Ionicons name="card-outline" size={20} color="#fff" />
           <Text style={styles.actionButtonText}>Pay & Join</Text>

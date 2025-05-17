@@ -83,7 +83,7 @@ export default function AllServicesScreen({ navigation }) {
           <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={1}>
             {item.title}
           </Text>
-          <Text style={[styles.servicePrice, { color: theme.primary }]}>${item.price}</Text>
+          <Text style={[styles.servicePrice, { color: theme.primary }]}>{item.price} DT</Text>
         </View>
       </TouchableOpacity>
     );

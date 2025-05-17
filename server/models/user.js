@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     contact_details: DataTypes.JSON,
     password: {
       type: DataTypes.STRING,
-      allowNull: true, // إذا كنت تستخدم كلمة مرور
+      allowNull: true, // Allow null for Firebase users
     },
   }, {
     underscored: true,

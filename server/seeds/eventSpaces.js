@@ -144,20 +144,21 @@ const eventSpaces = [
   }
 ];
 
-const seedEventSpaces = async () => {
+async function seedEventSpaces() {
   try {
-    // Clear existing data
+    // Clear existing event spaces
     await EventSpace.destroy({ where: {} });
-    
-    // Insert new data
+
+    // Insert new event spaces
     for (const space of eventSpaces) {
       await EventSpace.create(space);
     }
+
     console.log('Event spaces seeded successfully!');
   } catch (error) {
     console.error('Error seeding event spaces:', error);
     throw error;
   }
-};
+}
 
 module.exports = seedEventSpaces;

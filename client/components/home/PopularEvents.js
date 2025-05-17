@@ -8,7 +8,7 @@ const { width } = Dimensions.get('window');
 const scale = width / 375;
 const normalize = (size) => Math.round(scale * size);
 
-const API_BASE_URL = 'http://192.168.149.126:3000/api';
+const API_BASE_URL = 'http://192.168.203.126:3000/api';
 
 const PopularEvents = ({ navigation }) => {
   const [events, setEvents] = useState([]);

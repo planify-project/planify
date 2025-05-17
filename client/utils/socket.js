@@ -1,7 +1,7 @@
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 import { Platform } from 'react-native';
 
-const SOCKET_URL = 'http://192.168.149.126:3000';
+const SOCKET_URL = 'http://192.168.203.126:3000';
 
 const socket = io(SOCKET_URL, {
   reconnection: true,

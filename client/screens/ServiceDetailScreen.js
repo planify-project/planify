@@ -6,6 +6,7 @@ import api from '../configs/api';
 import BookingModal from '../components/BookingModal';
 import { useSocket } from '../context/SocketContext';
 import { getAuth } from 'firebase/auth'; // Replace AWS Amplify with Firebase Auth
+import { CommonActions } from '@react-navigation/native';
 
 export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
@@ -104,7 +105,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>{service.title}</Text>
-          <Text style={[styles.price, { color: theme.primary }]}>${service.price}</Text>
+          <Text style={[styles.price, { color: theme.primary }]}>{service.price} DT</Text>
         </View>
         
         <View style={[styles.section, { backgroundColor: theme.card }]}>
@@ -130,31 +131,52 @@ export default function ServiceDetailScreen({ route, navigation }) {
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('Settings', { 
-              screen: 'EditService',
-              params: { service }
-            })}
+            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+            onPress={() => {
+              console.log('Attempting to navigate to Chat...');
+              navigation.dispatch(
+                CommonActions.navigate({
+                  name: 'Chat',
+                  params: {
+                    serviceId: service.id,
+                    serviceProviderId: service.provider_id,
+                    serviceProviderName: service.provider_name || 'Service Provider'
+                  }
+                })
+              );
+            }}
           >
-            <Ionicons name="create-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Edit</Text>
+            <Ionicons name="chatbubble-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Chat</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.error }]}
-            onPress={handleDelete}
-          >
-            <Ionicons name="trash-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
+          {auth.currentUser?.uid === service.provider_id ? (
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: theme.primary }]}
+                onPress={() => navigation.navigate('EditService', { service })}
+              >
+                <Ionicons name="create-outline" size={20} color="#fff" />
+                <Text style={styles.actionButtonText}>Edit</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.success }]}
-            onPress={() => setShowBookingModal(true)}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Book Now</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: theme.error }]}
+                onPress={handleDelete}
+              >
+                <Ionicons name="trash-outline" size={20} color="#fff" />
+                <Text style={styles.actionButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.success }]}
+              onPress={() => setShowBookingModal(true)}
+            >
+              <Ionicons name="calendar-outline" size={20} color="#fff" />
+              <Text style={styles.actionButtonText}>Book Now</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
