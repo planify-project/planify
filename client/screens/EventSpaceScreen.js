@@ -23,12 +23,22 @@ export default function EventSpaceScreen({ navigation }) {
   const loadEventSpaces = async () => {
     try {
       setError(null);
+      console.log('Starting to load event spaces...');
       const data = await fetchEventSpaces();
-      console.log('Loaded event spaces:', data);
+      
+      if (!data) {
+        throw new Error('No event spaces data received');
+      }
+      
+      console.log('Successfully loaded event spaces:', data);
       setSpaces(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error in loadEventSpaces:', err);
-      setError('Unable to load event spaces. Please try again.');
+      setError(
+        err.response?.status === 404 
+          ? 'Event spaces endpoint not found. Please check server configuration.' 
+          : 'Unable to load event spaces. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

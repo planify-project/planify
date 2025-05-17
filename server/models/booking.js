@@ -12,11 +12,11 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     providerId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(36), // UUID من Firebase ولا UUID v4
       allowNull: false
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(36), // نفس الشي، UUID بدل INT
       allowNull: false
     },
     date: {
@@ -35,6 +35,9 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
       defaultValue: 'pending'
     }
+  }, {
+    tableName: 'Bookings',
+    timestamps: true
   });
 
   return Booking;
