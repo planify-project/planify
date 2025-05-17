@@ -155,7 +155,11 @@ export default function HomeScreen() {
 
       <TouchableOpacity 
         style={styles.allEventsButton} 
-        onPress={() => navigation.navigate('AllEvents')}
+        onPress={() => navigation.navigate('ServicesTab'
+          , {
+          screen: 'AllServicesScreen'
+        }
+      )}
       >
         <Text style={styles.allEventsButtonText}>Explore All Events</Text>
       </TouchableOpacity>

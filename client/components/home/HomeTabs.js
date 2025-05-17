@@ -39,10 +39,11 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    marginVertical: normalize(16),
+    justifyContent: 'space-around',
+    paddingVertical: normalize(16),
     backgroundColor: '#fff',
     borderRadius: normalize(8),
-    padding: normalize(4),
+    marginVertical: normalize(16),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -50,10 +51,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   tab: {
-    flex: 1,
     paddingVertical: normalize(8),
-    alignItems: 'center',
-    borderRadius: normalize(6),
+    paddingHorizontal: normalize(16),
+    borderRadius: normalize(20),
   },
   activeTab: {
     backgroundColor: '#5D5FEE',

@@ -14,6 +14,8 @@ export default function ServicesScreen() {
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [popupSuccess, setPopupSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchServices();
@@ -21,11 +23,23 @@ export default function ServicesScreen() {
 
   const fetchServices = async () => {
     try {
-      const res = await axios.get(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/services?type=service`);
-      setServices(res.data.data);
-    } catch (err) {
-      console.error('Error fetching services:', err);
-      alert('Failed to fetch services. Please check your connection and try again.');
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching services...');
+      const response = await axios.get(`${process.env.API_BASE || 'http://192.168.149.72:3000/api'}/services?type=service`);
+      
+      if (!response.data) {
+        throw new Error('No data received');
+      }
+      
+      console.log('Services fetched:', response.data);
+      setServices(response.data.data);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      setError('Failed to load services. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,7 +85,7 @@ export default function ServicesScreen() {
         phone_number: phone,
       };
 
-      const response = await axios.post(`${process.env.API_BASE || 'http://172.20.10.3:3000/api'}/bookings`, bookingData, {
+      const response = await axios.post(`${process.env.API_BASE || 'http://192.168.149.72:3000/api'}/bookings`, bookingData, {
         headers: { 'Content-Type': 'application/json' }
       });
 

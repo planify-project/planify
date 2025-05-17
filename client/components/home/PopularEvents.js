@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import EventCard from '../EventCard';
 import { styles } from './styles';
 
@@ -15,48 +14,43 @@ const PopularEvents = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchPopularEvents();
-  }, []);
-
   const fetchPopularEvents = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/events/popular`);
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching popular events from:', `${API_BASE}/events/popular`);
+      const response = await api.get('/events/popular');
       
       const formattedEvents = response.data.map(event => ({
         id: event.id || event._id,
         title: event.name,
-        location: event.location,
+        location: event.location || 'Location not specified',
         price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
-        rating: '4.5', // You might want to add a rating system later
+        rating: '4.5',
         per: 'person',
-        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-        description: event.description,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        type: event.type,
-        status: event.status,
-        maxParticipants: event.maxParticipants,
-        available_spots: event.available_spots,
-        budget: event.budget,
-        attendees_count: event.attendees_count
+        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'
       }));
 
+      console.log('Formatted popular events:', formattedEvents);
       setEvents(formattedEvents);
-      setError(null);
     } catch (err) {
       console.error('Error fetching popular events:', err);
-      setError('Failed to load popular events');
+      setError('Unable to load popular events');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchPopularEvents();
+  }, []);
+
   if (loading) {
     return (
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Popular Events</Text>
-        <View style={{ height: normalize(250), justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ height: normalize(250), justifyContent: 'center' }}>
           <ActivityIndicator size="large" color="#5D5FEE" />
         </View>
       </View>
@@ -67,8 +61,11 @@ const PopularEvents = ({ navigation }) => {
     return (
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Popular Events</Text>
-        <View style={{ height: normalize(250), justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ height: normalize(250), justifyContent: 'center' }}>
           <Text style={{ color: 'red' }}>{error}</Text>
+          <TouchableOpacity onPress={fetchPopularEvents}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -82,24 +79,15 @@ const PopularEvents = ({ navigation }) => {
           <Text style={styles.seeAllText}>See all</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={{ height: normalize(250) }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {events.map((event, index) => (
-            <EventCard
-              key={event.id || index}
-              id={event.id}
-              image={event.image}
-              title={event.title}
-              location={event.location}
-              price={event.price}
-              rating={event.rating}
-              per={event.per}
-              onPress={() => navigation.navigate('EventDetail', { event })}
-            />
-          ))}
-        </ScrollView>
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {events.map((event, index) => (
+          <EventCard
+            key={event.id || index}
+            {...event}
+            onPress={() => navigation.navigate('EventDetail', { event })}
+          />
+        ))}
+      </ScrollView>
     </>
   );
 };

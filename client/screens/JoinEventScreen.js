@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function JoinEventScreen({ route, navigation }) {
@@ -8,6 +8,18 @@ export default function JoinEventScreen({ route, navigation }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [scale] = useState(new Animated.Value(0));
+
+  const handleConfirm = () => {
+    // Reset form fields
+    setAttendees(1);
+    setName('');
+    setEmail('');
+    setPhone('');
+    setShowModal(false);
+    navigation.navigate('Home');
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -80,17 +92,60 @@ export default function JoinEventScreen({ route, navigation }) {
         style={styles.confirmButton}
         onPress={() => {
           // Handle registration confirmation
-          navigation.navigate('JoinEventConfirmation', {
-            event,
-            attendees,
-            name,
-            email,
-            phone
-          });
+          setShowModal(true);
+          Animated.spring(scale, {
+            toValue: 1,
+            friction: 3,
+            useNativeDriver: true
+          }).start();
         }}
       >
         <Text style={styles.confirmButtonText}>Confirm Registration</Text>
       </TouchableOpacity>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View style={[styles.modalContent, { transform: [{ scale }] }]}>
+            <View style={styles.modalHeader}>
+              <View style={styles.successIcon}>
+                <Ionicons name="checkmark-circle" size={60} color="#4CAF50" />
+              </View>
+              <Text style={styles.modalTitle}>Booking Confirmed!</Text>
+            </View>
+            
+            <View style={styles.bookingDetails}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Event</Text>
+                <Text style={styles.detailValue}>{event.title}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Attendees</Text>
+                <Text style={styles.detailValue}>{attendees}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Name</Text>
+                <Text style={styles.detailValue}>{name}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Contact</Text>
+                <Text style={styles.detailValue}>{phone}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.doneButton}
+              onPress={handleConfirm}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -190,4 +245,82 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    width: '85%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  successIcon: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2E3033',
+    marginBottom: 5,
+  },
+  bookingDetails: {
+    width: '100%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 15,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
+  },
+  detailLabel: {
+    fontSize: 16,
+    color: '#6C757D',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: '#2E3033',
+    fontWeight: '600',
+    maxWidth: '60%',
+    textAlign: 'right',
+  },
+  doneButton: {
+    backgroundColor: '#5D5FEE',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    marginTop: 10,
+  },
+  doneButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  }
 });
