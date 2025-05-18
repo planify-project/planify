@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     user_id: { 
       type: DataTypes.UUID, 
       primaryKey: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     role: DataTypes.ENUM('organizer', 'co-host')
   }, {

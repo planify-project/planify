@@ -1,4 +1,5 @@
-const { Event } = require('../database');
+const db = require('../database');
+const { Event } = db;
 const { Op } = require('sequelize');
 
 // GET /api/events?page=1&limit=10
@@ -28,14 +29,14 @@ exports.getPublicEvents = async (req, res) => {
       where: { isPublic: true },
       order: [['startDate', 'ASC']]
     });
-
+    
     console.log(`Found ${publicEvents.length} public events`);
     res.status(200).json(publicEvents);
   } catch (error) {
     console.error('Error fetching public events:', error);
-    res.status(500).json({
-      error: 'Failed to fetch public events',
-      details: error.message
+    res.status(500).json({ 
+      error: 'Failed to fetch public events', 
+      details: error.message 
     });
   }
 };
@@ -57,7 +58,7 @@ exports.createEvent = async (req, res) => {
     console.log('Received event data:', req.body);
 
     const {
-      name,
+      name,      
       type,
       date,
       venue,
@@ -118,11 +119,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
 
@@ -142,7 +143,7 @@ exports.getNearbyEvents = async (req, res) => {
     const radiusKm = parseFloat(radius);
 
     const events = await Event.findAll({
-      where: {
+      where: { 
         isPublic: true,
         status: 'approved'
       }
@@ -151,9 +152,9 @@ exports.getNearbyEvents = async (req, res) => {
     const nearbyEvents = events.filter(event => {
       if (!event.latitude || !event.longitude) return false;
       const distance = calculateDistance(
-        userLat,
-        userLon,
-        event.latitude,
+        userLat, 
+        userLon, 
+        event.latitude, 
         event.longitude
       );
       return distance <= radiusKm;
@@ -174,7 +175,7 @@ exports.getPopularEvents = async (req, res) => {
   try {
     console.log('Fetching popular events...');
     const events = await Event.findAll({
-      where: {
+      where: { 
         isPublic: true,
         status: 'approved'
       },

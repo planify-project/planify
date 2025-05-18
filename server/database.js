@@ -167,7 +167,7 @@ const syncDatabase = async () => {
    
 
     // Then sync all other models
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     // console.log('All models were synchronized successfully.');
 
     // Import and run the event spaces seeder

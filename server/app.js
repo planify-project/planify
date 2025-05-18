@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
 require('./database');
+const path = require('path');
 
 const morgan = require('morgan');
 const session = require('express-session');
