@@ -6,10 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
 import { SocketProvider } from './context/SocketContext';
 
-
-import { useState } from 'react';
-import { Auth } from './configs/firebase_config';
-import { onAuthStateChanged } from 'firebase/auth';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, ActivityIndicator, Image } from 'react-native';
@@ -47,9 +43,10 @@ import PaymentScreen from './screens/PaymentScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import FullScreenMap from './screens/FullScreenMap';
+import MyServicesScreen from './screens/MyServicesScreen';
+import ServicesScreen from './screens/ServicesScreen';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
-import ServicesScreen from './screens/ServicesScreen';
 import { WishlistProvider } from './context/WishlistContext';
 
 // Navigators
@@ -62,7 +59,6 @@ const screenHeaderOptions = {
   headerTintColor: '#fff',
   headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
 };
-
 
 function JoinEventWrapper(props) {
   const { user } = useContext(AuthContext);
@@ -287,6 +283,17 @@ function SettingsStack() {
         }} 
       />
       <Stack.Screen 
+        name="MyServices" 
+        component={MyServicesScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "My Services",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
         name="EditService" 
         component={EditServiceScreen} 
         options={{
@@ -350,11 +357,33 @@ function ServicesStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
-        name="AllServices" 
-        component={AllServicesScreen} 
+        name="AllServicesScreen" 
+        component={AllServicesScreen}
         options={{
           headerShown: true,
-          headerTitle: "My Services",
+          headerTitle: "All Services",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="ServiceDetails" 
+        component={ServiceDetailScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Service Details",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="AddService" 
+        component={AddServiceScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Add New Service",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -380,6 +409,8 @@ function MainTabs() {
             iconName = focused ? 'heart' : 'heart-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
+          } else if (route.name === 'Services') {
+            iconName = focused ? 'grid' : 'grid-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -393,6 +424,7 @@ function MainTabs() {
       <Tab.Screen name="Schedule" component={ScheduleStack} />
       <Tab.Screen name="Wishlist" component={WishlistStack} />
       <Tab.Screen name="Settings" component={SettingsStack} />
+      <Tab.Screen name="Services" component={ServicesStack} />
     </Tab.Navigator>
   );
 }

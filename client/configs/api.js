@@ -4,27 +4,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
-  },
+  }
 });
 
-// Add request interceptor for authentication
+// Add request interceptor for debugging
 api.interceptors.request.use(
   async (config) => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    } catch (error) {
-      console.error('Request interceptor error:', error);
-      return config;
-    }
+    console.log('Making request to:', `${config.baseURL}${config.url}`);
+    config.retry = 3; // Add retry configuration
+    return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -33,21 +27,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.code === 'ECONNABORTED') {
-      console.error('Request timeout');
-      throw new Error('Connection timeout. Please check your internet connection.');
+    const { config } = error;
+    
+    if (!config || !config.retry) {
+      return Promise.reject(error);
     }
 
-    if (error.code === 'ECONNREFUSED') {
-      console.error('Connection refused');
-      throw new Error('Server is not running. Please try again later.');
+    config.retry -= 1;
+    if (config.retry === 0) {
+      return Promise.reject(error);
     }
 
-    if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
-    }
-
-    throw error;
+    // Delay before retrying
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return api(config);
   }
 );
 

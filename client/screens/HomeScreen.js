@@ -13,6 +13,7 @@ import { normalize } from '../utils/scaling';
 import AllEventsScreen from './AllEventsScreen';
 import axios from 'axios';
 import { API_BASE } from '../config'; // Make sure this points to your backend
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -25,6 +26,13 @@ export default function HomeScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
   const [publicEvents, setPublicEvents] = useState([]);
+
+  // Reset active tab when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setActiveTab(-1);
+    }, [])
+  );
 
   const getLocation = async () => {
     try {
@@ -108,8 +116,6 @@ export default function HomeScreen({ navigation }) {
 
   const handleTabPress = (index) => {
     setActiveTab(index);
-    const screens = ['AllEvents', 'EventSpaces', 'AllServices'];
-    navigation.navigate(screens[index]);
   };
 
   let locationText = 'Detecting...';
@@ -159,10 +165,10 @@ export default function HomeScreen({ navigation }) {
         activeTab={activeTab}
         onTabPress={(tabId) => {
           setActiveTab(tabId);
-          // Add console.log to debug
-          console.log('Tab pressed:', tabId);
-          if (tabId === 'event') {
-            navigation.navigate('AllEvents'); // Make sure this matches the screen name in App.js
+          if (tabId === 'events') {
+            navigation.navigate('AllEvents');
+          } else if (tabId === 'services') {
+            navigation.navigate('AllServicesScreen');
           }
         }}
         navigation={navigation}
@@ -172,6 +178,16 @@ export default function HomeScreen({ navigation }) {
       
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
 
+      <TouchableOpacity 
+        style={styles.allEventsButton} 
+        onPress={() => navigation.navigate('ServicesTab'
+          , {
+          screen: 'AllServicesScreen'
+        }
+      )}
+      >
+        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }

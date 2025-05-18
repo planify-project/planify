@@ -4,23 +4,15 @@ const createBooking = async (req, res) => {
   const { user_id, service_id, event_id, date, space, phone_number } = req.body;
   console.log('Received booking data:', req.body);
 
-  // Validate required fields
-  if (!user_id || !service_id || !event_id || !date || !space || !phone_number) {
-    return res.status(400).json({ 
-      success: false,
-      message: "All fields are required",
-      missingFields: {
-        user_id: !user_id,
-        service_id: !service_id,
-        event_id: !event_id,
-        date: !date,
-        space: !space,
-        phone_number: !phone_number
-      }
-    });
-  }
-
   try {
+    // Validate required fields
+    if (!user_id || !service_id || !event_id || !date || !space || !phone_number) {
+      return res.status(400).json({ 
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
     // Validate date format
     const bookingDate = new Date(date);
     if (isNaN(bookingDate.getTime())) {
@@ -38,21 +30,12 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Validate phone number format (basic validation)
-    const phoneRegex = /^[0-9]{10}$/;
+    // Validate phone number format (8 digits for Tunisia)
+    const phoneRegex = /^[0-9]{8}$/;
     if (!phoneRegex.test(phone_number)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid phone number format"
-      });
-    }
-
-    // Check if user exists
-    const user = await User.findByPk(user_id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
+        message: "Phone number must be exactly 8 digits"
       });
     }
 
@@ -65,56 +48,25 @@ const createBooking = async (req, res) => {
       });
     }
 
-    // Check if event exists
-    const event = await Event.findByPk(event_id);
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found"
-      });
-    }
-
-    // Check for existing booking at the same time
-    const existingBooking = await Booking.findOne({
-      where: {
-        service_id,
-        date: bookingDate,
-        status: ['requested', 'confirmed']
-      }
-    });
-
-    if (existingBooking) {
-      return res.status(409).json({
-        success: false,
-        message: "Service is already booked for this time"
-      });
-    }
-
+    // Map snake_case input to camelCase model fields
     const newBooking = await Booking.create({
-      user_id,
-      service_id,
-      event_id,
+      userId: user_id,
+      serviceId: service_id,
+      providerId: service.provider_id, // Get provider_id from the service
       date: bookingDate,
-      space,
-      phone_number,
-      status: 'requested',
+      space: space,
+      phone: phone_number,
+      status: 'pending'
     });
 
-    // Create notification for the service provider
+    // Create notification for service provider
     const notification = await Notification.create({
       user_id: service.provider_id,
       title: 'New Booking Request',
-      message: `You have a new booking request for your service "${service.type}"`,
-      is_read: false,
+      message: `You have a new booking request for your service`,
       type: 'booking',
-      booking_id: newBooking.id
-    });
-
-    // Send real-time notification to service provider
-    const io = req.app.get('io');
-    io.to(`user_${service.provider_id}`).emit('newBooking', {
-      notification,
-      booking: newBooking
+      booking_id: newBooking.id,
+      is_read: false
     });
 
     res.status(201).json({
@@ -122,11 +74,12 @@ const createBooking = async (req, res) => {
       data: newBooking,
       message: "Booking created successfully"
     });
+
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Failed to create booking",
       error: error.message
     });
   }

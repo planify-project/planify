@@ -1,58 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import api from '../configs/api';
 import { normalize } from '../utils/scaling';
+import api from '../configs/api'; // Add this import
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
-const tileSize = width / numColumns;
+const tileSize = (width - normalize(48)) / numColumns; // Define tileSize before styles
 
-export default function AllServicesScreen({ navigation }) {
+const fetchServices = async () => {
+  try {
+    console.log('Starting to fetch services...');
+    const response = await api.get('/services'); // Remove duplicate 'api' prefix
+    console.log('Services response:', response.data);
+    
+    if (Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.error('Invalid response format:', response.data);
+      throw new Error('Invalid response format');
+    }
+  } catch (error) {
+    console.error('Error fetching services:', error);
+    throw error;
+  }
+};
+
+const AllServicesScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchServices();
+    loadServices();
   }, []);
 
-  const fetchServices = async () => {
+  const loadServices = async () => {
     try {
-      console.log('Starting to fetch services...');
       setLoading(true);
+      const data = await fetchServices();
+      setServices(data);
       setError(null);
-      
-      const response = await api.get('/services');
-      console.log('Raw API Response:', response);
-      console.log('Response data:', response.data);
-      
-      if (response.data.success) {
-        const formattedServices = response.data.data.map(service => {
-          console.log('Processing service:', service);
-          // Construct the full image URL using the API base URL, removing /api from the path
-          const baseUrl = api.defaults.baseURL.replace('/api', '');
-          const fullImageUrl = service.imageUrl 
-            ? `${baseUrl}${service.imageUrl}`
-            : 'https://via.placeholder.com/150';
-          
-          console.log('Full image URL:', fullImageUrl);
-          return {
-            ...service,
-            imageUrl: fullImageUrl
-          };
-        });
-        console.log('Formatted services:', formattedServices);
-        setServices(formattedServices);
-      } else {
-        console.error('API returned success: false');
-        setError('Failed to fetch services');
-      }
     } catch (error) {
-      console.error('Error fetching services:', error);
-      console.error('Error details:', error.response?.data);
-      setError(error.message || 'Failed to fetch services');
+      setError(error.message || 'Failed to load services');
     } finally {
       setLoading(false);
     }
@@ -65,7 +57,10 @@ export default function AllServicesScreen({ navigation }) {
     return (
       <TouchableOpacity
         style={[styles.serviceCard, { backgroundColor: theme.card }]}
-        onPress={() => navigation.navigate('ServiceDetail', { service: item })}
+        onPress={() => navigation.getParent()?.navigate('Services', {
+          screen: 'ServiceDetails',
+          params: { service: item }
+        })}
       >
         <Image
           source={{ uri: item.imageUrl }}
@@ -113,35 +108,21 @@ export default function AllServicesScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {services.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.text }]}>No services created yet</Text>
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('AddService')}
-          >
-            <Text style={styles.createButtonText}>Create Service</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={services}
-            renderItem={renderServiceItem}
-            keyExtractor={item => item.id.toString()}
-            numColumns={numColumns}
-            contentContainerStyle={styles.listContainer}
-            onRefresh={fetchServices}
-            refreshing={loading}
-          />
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('AddService')}
-          >
-            <Text style={styles.createButtonText}>Create Service</Text>
-          </TouchableOpacity>
-        </>
-      )}
+      <TouchableOpacity
+        style={[styles.createButton, { backgroundColor: theme.primary }]}
+        onPress={() => navigation.navigate('AddService')}
+      >
+        <Ionicons name="add-circle-outline" size={24} color="#fff" style={styles.createButtonIcon} />
+        <Text style={styles.createButtonText}>Create New Service</Text>
+      </TouchableOpacity>
+
+      <FlatList
+        data={services}
+        renderItem={renderServiceItem}
+        keyExtractor={item => item.id.toString()}
+        numColumns={numColumns}
+        contentContainerStyle={styles.listContainer}
+      />
     </View>
   );
 }
@@ -149,37 +130,39 @@ export default function AllServicesScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: normalize(16)
   },
   listContainer: {
-    padding: 8,
+    padding: normalize(8)
   },
   serviceCard: {
-    width: tileSize - 16,
-    margin: 8,
-    borderRadius: 12,
+    flex: 1,
+    margin: normalize(8),
+    width: tileSize - normalize(16),
+    borderRadius: normalize(12),
     overflow: 'hidden',
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 3.84
   },
   serviceImage: {
     width: '100%',
-    height: tileSize - 16,
-    resizeMode: 'cover',
+    height: tileSize - normalize(16),
+    resizeMode: 'cover'
   },
   serviceInfo: {
-    padding: 12,
+    padding: normalize(12)
   },
   serviceTitle: {
-    fontSize: 16,
+    fontSize: normalize(16),
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: normalize(4)
   },
   servicePrice: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: normalize(14),
+    fontWeight: 'bold'
   },
   emptyContainer: {
     flex: 1,
@@ -193,11 +176,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: normalize(12),
     borderRadius: normalize(8),
-    alignItems: 'center',
     marginVertical: normalize(16),
     marginHorizontal: normalize(16),
+  },
+  createButtonIcon: {
+    marginRight: normalize(8),
   },
   createButtonText: {
     color: '#fff',
@@ -225,4 +213,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});
+
+export default AllServicesScreen;

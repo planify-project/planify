@@ -4,7 +4,7 @@ const eventsController = require('../controllers/eventsController');
 
 // GET /api/events
 router.get('/', eventsController.getAllEvents);
-
+ 
 // GET /api/events/public
 router.get('/public', eventsController.getPublicEvents);
 
@@ -16,6 +16,8 @@ router.get('/popular', eventsController.getPopularEvents);
 
 // GET /api/events/search
 router.get('/search', eventsController.searchEvents);
+// GET /api/events/:id
+router.get('/:id', eventsController.getEventById);
 
 // POST /api/events
 router.post('/', eventsController.createEvent);

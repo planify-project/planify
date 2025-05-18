@@ -1,55 +1,53 @@
 import { io } from 'socket.io-client';
-import { Platform } from 'react-native';
+import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 
-const SOCKET_URL = 'http://192.168.149.126:3000';
+let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = SOCKET_CONFIG.reconnectionAttempts;
 
-const socket = io(SOCKET_URL, {
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  timeout: 60000,
-  autoConnect: true,
-  transports: ['websocket', 'polling'],
-  path: '/socket.io',
-  // Add platform-specific settings
-  extraHeaders: Platform.select({
-    ios: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    android: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  })
-});
+const initializeSocket = () => {
+  if (socket) return socket;
 
-// Add connection state monitoring
-let isConnected = false;
-
-socket.on('connect', () => {
-  isConnected = true;
-  console.log('Socket connected successfully');
-});
-
-socket.on('connect_error', (error) => {
-  console.warn('Socket connection error:', {
-    message: error.message,
-    type: error.type,
-    description: error.description,
-    isConnected
+  socket = io(SOCKET_URL, {
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionAttempts: SOCKET_CONFIG.reconnectionAttempts,
+    reconnectionDelay: SOCKET_CONFIG.reconnectionDelay,
+    timeout: SOCKET_CONFIG.timeout,
+    pingTimeout: SOCKET_CONFIG.pingTimeout,
+    pingInterval: SOCKET_CONFIG.pingInterval,
+    autoConnect: true,
+    forceNew: true
   });
-  
-  if (!isConnected) {
-    // Try to reconnect with polling if websocket fails
-    socket.io.opts.transports = ['polling', 'websocket'];
-    socket.connect();
+
+  socket.on('connect', () => {
+    console.log('Socket connected:', socket.id);
+    reconnectAttempts = 0;
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket connection error:', error);
+    reconnectAttempts++;
+    
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.error('Max reconnection attempts reached');
+      socket.disconnect();
+    }
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('Socket disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      socket.connect();
+    }
+  });
+
+  return socket;
+};
+
+export const getSocket = () => {
+  if (!socket) {
+    return initializeSocket();
   }
-});
-
-socket.on('disconnect', (reason) => {
-  isConnected = false;
-  console.log('Socket disconnected:', reason);
-});
-
-export default socket;
+  return socket;
+};
