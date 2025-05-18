@@ -12,8 +12,8 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(
   async (config) => {
+    // Log the full URL being requested
     console.log('Making request to:', `${config.baseURL}${config.url}`);
-    config.retry = 3; // Add retry configuration
     return config;
   },
   (error) => {

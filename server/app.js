@@ -73,7 +73,8 @@ io.on('connection', (socket) => {
   console.log('New client connected:', {
     id: socket.id,
     transport: socket.conn.transport.name,
-    address: socket.handshake.address
+    address: socket.handshake.address,
+    userId: socket.handshake.query.userId
   });
 
   // Send test event to verify connection
@@ -82,20 +83,44 @@ io.on('connection', (socket) => {
     timestamp: new Date().toISOString()
   });
 
+  // Handle both joinRoom and joinUserRoom events
+  const handleRoomJoin = (room) => {
+    if (!room) {
+      console.error('Invalid room name provided');
+      return;
+    }
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room: ${room}`);
+  };
+
+  socket.on('joinRoom', handleRoomJoin);
   socket.on('joinUserRoom', ({ userId }) => {
     if (!userId) {
       console.error('Invalid userId provided for room join');
       return;
     }
-    const roomName = `user_${userId}`;
-    socket.join(roomName);
-    console.log(`Socket ${socket.id} joined room: ${roomName}`);
+    handleRoomJoin(`user_${userId}`);
+  });
+
+  // Handle new booking notifications
+  socket.on('newBooking', (data) => {
+    console.log('New booking notification:', data);
+    const { providerId, bookingId, customerId, customerName, message } = data;
+    io.to(`user_${providerId}`).emit('newBooking', {
+      notification: {
+        bookingId,
+        customerId,
+        customerName,
+        message
+      }
+    });
   });
 
   socket.on('disconnect', (reason) => {
     console.log('Client disconnected:', {
       id: socket.id,
-      reason: reason
+      reason: reason,
+      userId: socket.handshake.query.userId
     });
   });
 
@@ -103,6 +128,7 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error('Socket error:', {
       id: socket.id,
+      userId: socket.handshake.query.userId,
       error: error.message
     });
   });

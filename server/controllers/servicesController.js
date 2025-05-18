@@ -73,7 +73,7 @@ class ServicesController {
         where: query,
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }],
         attributes: ['id', 'title', 'description', 'price', 'serviceType', 'imageUrl', 'provider_id', 'createdAt', 'updatedAt']
@@ -105,7 +105,7 @@ class ServicesController {
       const service = await Service.findByPk(id, {
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }]
       });
@@ -332,7 +332,7 @@ class ServicesController {
         where: { provider_id: providerId },
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }],
         order: [['createdAt', 'DESC']]

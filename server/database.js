@@ -60,8 +60,8 @@ EventGuest.belongsTo(Event, { foreignKey: 'event_id' });
 User.hasMany(EventGuest, { foreignKey: 'user_id' });
 EventGuest.belongsTo(User, { foreignKey: 'user_id' });
 
-User.hasMany(Service, { foreignKey: 'provider_id' });
-Service.belongsTo(User, { foreignKey: 'provider_id' });
+User.hasMany(Service, { foreignKey: 'provider_id', as: 'services' });
+Service.belongsTo(User, { foreignKey: 'provider_id', as: 'provider' });
 
 Service.belongsTo(ServiceCategory, { foreignKey: 'category_id' });
 ServiceCategory.hasMany(Service, { foreignKey: 'category_id' });
@@ -69,10 +69,10 @@ ServiceCategory.hasMany(Service, { foreignKey: 'category_id' });
 Event.belongsToMany(Service, { through: EventService, foreignKey: 'event_id', otherKey: 'service_id' });
 Service.belongsToMany(Event, { through: EventService, foreignKey: 'service_id', otherKey: 'event_id' });
 
-User.hasMany(Booking, { foreignKey: 'user_id' });
-Booking.belongsTo(User, { foreignKey: 'user_id' });
-Service.hasMany(Booking, { foreignKey: 'service_id' });
-Booking.belongsTo(Service, { foreignKey: 'service_id' });
+User.hasMany(Booking, { foreignKey: 'userId' });
+Booking.belongsTo(User, { foreignKey: 'userId' });
+Service.hasMany(Booking, { foreignKey: 'serviceId' });
+Booking.belongsTo(Service, { foreignKey: 'serviceId' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
 
@@ -110,6 +110,9 @@ Offer.belongsTo(User, { foreignKey: 'provider_id' });
 User.hasMany(Notification, { foreignKey: 'user_id' });
 Notification.belongsTo(User, { foreignKey: 'user_id' });
 
+Notification.belongsTo(Booking, { foreignKey: 'booking_id' });
+Booking.hasMany(Notification, { foreignKey: 'booking_id' });
+
 Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
 
@@ -120,7 +123,7 @@ Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
 EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 
 // Sync database
-// sequelize.sync({ force: true })
+// sequelize.sync({ alter: true }) // Changed from force: true to alter: true to preserve data
 //   .then(() => {
 //     console.log('Database synced successfully');
 //   })

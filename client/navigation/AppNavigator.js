@@ -23,6 +23,7 @@ import { CommonActions } from '@react-navigation/native';
 import NotificationBadge from '../components/NotificationBadge';
 import { View } from 'react-native';
 import api from '../configs/api';
+import BookingDetailScreen from '../screens/BookingDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,11 +85,6 @@ function EventSpacesStack() {
 function ServicesStack() {
   return (
     <Stack.Navigator screenOptions={screenHeaderOptions}>
-      <Stack.Screen 
-        name="AllServicesScreen" 
-        component={AllServicesScreen} 
-        options={{ title: 'All Services' }}
-      />
       <Stack.Screen 
         name="ServicesMain" 
         component={ServicesScreen} 
@@ -164,14 +160,12 @@ const MainTabs = () => {
             iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'ProfileTab') {
             iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Messages') {
-            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           }
 
           return (
             <View>
               <Ionicons name={iconName} size={size} color={color} />
-              {route.name === 'Messages' && <NotificationBadge count={unreadCount} />}
+              {route.name === 'ServicesTab' && <NotificationBadge count={unreadCount} />}
             </View>
           );
         },
@@ -211,24 +205,30 @@ const MainTabs = () => {
 // Root Stack Navigator
 function RootStack() {
   return (
-    <Stack.Navigator screenOptions={screenHeaderOptions}>
+    <Stack.Navigator>
       <Stack.Screen
         name="MainTabs"
         component={MainTabs}
         options={{ headerShown: false }}
       />
       <Stack.Screen 
-        name="Chat" 
-        component={ChatScreen}
-        options={{
-          headerShown: true,
-          title: 'Chat'
-        }}
-      />
-      <Stack.Screen 
         name="Payment" 
         component={PaymentScreen} 
         options={{ title: 'Payment' }}
+      />
+      <Stack.Screen 
+        name="BookingDetails" 
+        component={BookingDetailScreen}
+        options={{
+          title: 'Booking Details',
+          headerStyle: {
+            backgroundColor: '#5D5FEE',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
       />
     </Stack.Navigator>
   );

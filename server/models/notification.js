@@ -15,14 +15,25 @@ module.exports = (sequelize, DataTypes) => {
     },
     title: DataTypes.STRING,
     message: DataTypes.TEXT,
+    type: {
+      type: DataTypes.ENUM('booking_request', 'booking_response', 'test'),
+      allowNull: false
+    },
+    booking_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'bookings',
+        key: 'id'
+      }
+    },
     is_read: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
-    },
-    type: DataTypes.STRING
+    }
   }, {
-    underscored: true,
+    tableName: 'notifications',
     timestamps: true,
-    tableName: 'notifications'
+    underscored: true
   });
 };

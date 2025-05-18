@@ -11,19 +11,19 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    providerId: {
-      type: DataTypes.STRING(36), // UUID من Firebase ولا UUID v4
-      allowNull: false
-    },
     userId: {
-      type: DataTypes.STRING(36), // نفس الشي، UUID بدل INT
-      allowNull: false
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     date: {
       type: DataTypes.DATE,
       allowNull: false
     },
-    space: {
+    location: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -36,7 +36,7 @@ module.exports = (sequelize) => {
       defaultValue: 'pending'
     }
   }, {
-    tableName: 'Bookings',
+    tableName: 'bookings',
     timestamps: true
   });
 

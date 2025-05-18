@@ -9,6 +9,9 @@ router.post('/', bookingController.createBooking);
 // GET /api/bookings
 router.get('/', bookingController.getBookings);
 
+// PUT /api/bookings/:bookingId/respond
+router.put('/:bookingId/respond', bookingController.respondToBooking);
+
 // GET /api/bookings/:id
 router.get('/:id', bookingController.getBookingById);
 
@@ -17,8 +20,5 @@ router.put('/:id', bookingController.updateBooking);
 
 // DELETE /api/bookings/:id
 router.delete('/:id', bookingController.deleteBooking);
-
-// PUT /api/bookings/:bookingId/respond
-router.put('/:bookingId/respond', bookingController.respondToBooking);
 
 module.exports = router;

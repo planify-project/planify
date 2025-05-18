@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 import EventCard from '../EventCard';
 import { styles } from './styles';
 
@@ -7,7 +8,7 @@ const { width } = Dimensions.get('window');
 const scale = width / 375;
 const normalize = (size) => Math.round(scale * size);
 
-const API_BASE_URL = 'http://192.168.203.126:3000/api';
+const API_BASE_URL = 'http://192.168.70.126:3000/api';
 
 const PopularEvents = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -19,8 +20,8 @@ const PopularEvents = ({ navigation }) => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching popular events from:', `${API_BASE}/events/popular`);
-      const response = await api.get('/events/popular');
+      console.log('Fetching popular events from:', `${API_BASE_URL}/events/popular`);
+      const response = await axios.get(`${API_BASE_URL}/events/popular`);
       
       const formattedEvents = response.data.map(event => ({
         id: event.id || event._id,

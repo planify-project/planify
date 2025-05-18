@@ -27,11 +27,15 @@ const server = http.createServer(app);
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Configure CORS
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
 }));
 
 // Test endpoint
@@ -58,52 +62,25 @@ const io = new Server(server, {
     origin: '*',
     methods: ['GET', 'POST']
   },
-  transports: ['websocket', 'polling'],
-  path: '/socket.io/',
-  serveClient: false,
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  cookie: false,
-  allowEIO3: true
+  transports: ['websocket']
 });
+
+// Make io accessible to routes
+app.set('io', io);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected:', {
-    id: socket.id,
-    transport: socket.conn.transport.name,
-    address: socket.handshake.address
-  });
-
-  // Send test event to verify connection
-  socket.emit('test', { 
-    message: 'Connected successfully',
-    timestamp: new Date().toISOString()
-  });
+  console.log('New client connected:', socket.id);
 
   socket.on('joinUserRoom', ({ userId }) => {
-    if (!userId) {
-      console.error('Invalid userId provided for room join');
-      return;
-    }
+    if (!userId) return;
     const roomName = `user_${userId}`;
     socket.join(roomName);
     console.log(`Socket ${socket.id} joined room: ${roomName}`);
   });
 
-  socket.on('disconnect', (reason) => {
-    console.log('Client disconnected:', {
-      id: socket.id,
-      reason: reason
-    });
-  });
-
-  // Handle errors
-  socket.on('error', (error) => {
-    console.error('Socket error:', {
-      id: socket.id,
-      error: error.message
-    });
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
   });
 });
 
@@ -116,9 +93,6 @@ io.engine.on("connection_error", (err) => {
     context: err.context
   });
 });
-
-// Make io accessible to routes
-app.set('io', io);
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -161,7 +135,7 @@ server.listen(PORT, HOST, () => {
     console.log(`  - Socket.IO: ${url}/socket.io/`);
   });
   console.log('\nSocket.IO Configuration:');
-  console.log('  - Transports: websocket, polling');
+  console.log('  - Transports: websocket');
   console.log('  - Path: /socket.io/');
   console.log('  - CORS: enabled for all origins');
 }); 

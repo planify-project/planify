@@ -60,7 +60,7 @@ const ChatScreen = () => {
 
     if (!contextSocket) {
       console.log('Initializing new socket connection');
-      const newSocket = io('http://192.168.203.126:3000', {
+      const newSocket = io('http://192.168.70.126:3000', {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,

@@ -114,3 +114,33 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete user', details: error.message });
   }
 };
+
+// Get a user by Firebase UID
+exports.getUserByFirebaseUid = async (req, res) => {
+  try {
+    let user = await User.findByPk(req.params.uid);
+    
+    if (!user) {
+      // If user doesn't exist, create them
+      console.log('User not found, creating new user with Firebase UID:', req.params.uid);
+      user = await User.create({
+        id: req.params.uid,
+        name: 'New User', // This will be updated when they update their profile
+        email: `${req.params.uid}@firebase.user`, // Temporary email
+        password: 'firebase-auth' // Dummy password for Firebase users
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error getting/creating user by Firebase UID:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch/create user', 
+      details: error.message 
+    });
+  }
+};

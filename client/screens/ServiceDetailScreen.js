@@ -5,15 +5,22 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../configs/api';
 import BookingModal from '../components/BookingModal';
 import { useSocket } from '../context/SocketContext';
-import { getAuth } from 'firebase/auth'; // Replace AWS Amplify with Firebase Auth
+import { getAuth } from 'firebase/auth';
 import { CommonActions } from '@react-navigation/native';
+import { getImageUrl } from '../config/index';
 
 export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
   const { service } = route.params;
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const { socket } = useSocket();
-  const auth = getAuth(); // Get Firebase Auth instance
+  const auth = getAuth();
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSpace, setSelectedSpace] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const isProvider = auth.currentUser?.uid === service.provider_id;
 
   const handleDelete = async () => {
     Alert.alert(
@@ -30,6 +37,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
           onPress: async () => {
             try {
               await api.delete(`/services/${service.id}`);
+              Alert.alert('Success', 'Service deleted successfully');
               navigation.goBack();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete service');
@@ -40,58 +48,107 @@ export default function ServiceDetailScreen({ route, navigation }) {
     );
   };
 
-  const handleBooking = async (bookingData) => {
+  const handleEdit = () => {
+    navigation.navigate('EditService', { service });
+  };
+
+  const handleChat = () => {
+    navigation.navigate('Chat', { 
+      recipientId: service.provider_id,
+      serviceId: service.id,
+      serviceTitle: service.title
+    });
+  };
+
+  const handleBooking = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'You must be logged in to book a service');
+      return;
+    }
+
+    // Validate required fields
+    if (!selectedDate || !selectedSpace || !phoneNumber) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
     try {
-      if (!auth.currentUser) {
-        Alert.alert('Error', 'Please login to book a service');
-        navigation.navigate('Login');
-        return;
+      setLoading(true);
+
+      // First get the user's database ID
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      console.log('User response:', userResponse.data);
+      
+      if (!userResponse.data.success) {
+        throw new Error('Failed to get user data');
       }
 
-      // Validate booking data
-      if (!bookingData.date || !bookingData.space || !bookingData.phone_number) {
-        Alert.alert('Error', 'Please fill in all required fields');
-        return;
-      }
+      const dbUserId = userResponse.data.data.id;
+      console.log('Database user ID:', dbUserId);
 
-      // Format the booking payload to match server expectations
+      // Format the booking payload
       const bookingPayload = {
-        user_id: auth.currentUser.uid,
-        service_id: service.id,
-        event_id: "1", // Required field
-        date: new Date(bookingData.date).toISOString(),
-        space: bookingData.space.trim(),
-        phone_number: bookingData.phone_number.replace(/[^0-9]/g, ''),
-        status: 'pending'
+        userId: dbUserId, // Use the database user ID instead of Firebase UID
+        serviceId: service.id,
+        date: selectedDate,
+        location: selectedSpace,
+        phone: phoneNumber
       };
 
-      console.log('Sending booking request:', bookingPayload);
+      console.log('Creating booking with payload:', bookingPayload);
+
+      // Close the modal before making the request
+      setShowBookingModal(false);
+
       const response = await api.post('/bookings', bookingPayload);
 
-      if (response.data.success) {
-        setShowBookingModal(false);
-        Alert.alert('Success', 'Booking request sent! Waiting for provider response.');
+      console.log('Booking response:', response.data);
 
-        // Emit socket event for real-time notification
-        socket?.emit('newBooking', {
-          serviceId: service.id,
-          providerId: service.provider_id
-        });
+      if (response.data.success) {
+        Alert.alert(
+          'Success',
+          'Your booking request has been sent. The service provider will be notified and can accept or reject your request.',
+          [{ text: 'OK' }]
+        );
+
+        // Listen for booking response
+        if (socket) {
+          socket.on('bookingResponse', (data) => {
+            if (data.notification.bookingId === response.data.data.booking.id) {
+              Alert.alert(
+                'Booking Update',
+                data.notification.message,
+                [{ text: 'OK' }]
+              );
+            }
+          });
+        }
+      } else {
+        throw new Error(response.data.message || 'Failed to create booking');
       }
     } catch (error) {
       console.error('Booking error:', error);
       Alert.alert(
-        'Error', 
-        error.response?.data?.message || 'Failed to send booking request'
+        'Error',
+        error.response?.data?.message || error.message || 'Failed to create booking. Please try again.'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <Image
-        source={{ uri: service.imageUrl || 'https://picsum.photos/300/300' }}
+        source={{ uri: getImageUrl(service.imageUrl) || 'https://picsum.photos/300/300' }}
         style={styles.serviceImage}
+        onError={(e) => {
+          console.error('Image loading error:', {
+            serviceId: service.id,
+            imageUrl: service.imageUrl,
+            error: e.nativeEvent
+          });
+        }}
       />
       
       <View style={styles.content}>
@@ -121,62 +178,70 @@ export default function ServiceDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-            onPress={() => {
-              console.log('Attempting to navigate to Chat...');
-              navigation.dispatch(
-                CommonActions.navigate({
-                  name: 'Chat',
-                  params: {
-                    serviceId: service.id,
-                    serviceProviderId: service.provider_id,
-                    serviceProviderName: service.provider_name || 'Service Provider'
-                  }
-                })
-              );
-            }}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Chat</Text>
-          </TouchableOpacity>
-
-          {auth.currentUser?.uid === service.provider_id ? (
+        <View style={[styles.buttonContainer, { backgroundColor: theme.card }]}>
+          {isProvider ? (
+            // Provider's buttons
             <>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: theme.primary }]}
-                onPress={() => navigation.navigate('EditService', { service })}
+                style={[styles.button, { backgroundColor: theme.primary }]}
+                onPress={handleEdit}
               >
-                <Ionicons name="create-outline" size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Edit</Text>
+                <Ionicons name="create-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Edit</Text>
               </TouchableOpacity>
-
+              
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: theme.error }]}
+                style={[styles.button, { backgroundColor: theme.error }]}
                 onPress={handleDelete}
               >
-                <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>Delete</Text>
+                <Ionicons name="trash-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
             </>
           ) : (
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.success }]}
-              onPress={() => setShowBookingModal(true)}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#fff" />
-              <Text style={styles.actionButtonText}>Book Now</Text>
-            </TouchableOpacity>
+            // Customer's buttons
+            <>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.primary }]}
+                onPress={() => setShowBookingModal(true)}
+              >
+                <Ionicons name="calendar-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Book Now</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.secondary }]}
+                onPress={handleChat}
+              >
+                <Ionicons name="chatbubble-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Chat</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
+
+      {!isProvider && (
+        <TouchableOpacity
+          style={[styles.bookButton, { backgroundColor: theme.primary }]}
+          onPress={() => setShowBookingModal(true)}
+        >
+          <Text style={styles.bookButtonText}>Book Now</Text>
+        </TouchableOpacity>
+      )}
 
       <BookingModal
         visible={showBookingModal}
         onClose={() => setShowBookingModal(false)}
         onSubmit={handleBooking}
         service={service}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        selectedSpace={selectedSpace}
+        setSelectedSpace={setSelectedSpace}
+        phoneNumber={phoneNumber}
+        setPhoneNumber={setPhoneNumber}
+        loading={loading}
       />
     </ScrollView>
   );
@@ -232,12 +297,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  actionButtons: {
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 20,
   },
-  actionButton: {
+  button: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
@@ -249,10 +314,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
   },
-  actionButtonText: {
+  buttonText: {
     color: '#fff',
     marginLeft: 8,
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  bookButton: {
+    padding: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
