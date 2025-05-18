@@ -7,6 +7,7 @@ import ServiceUpdateConfirmModal from "../../modals/services/ServiceUpdateConfir
 import ServiceDeleteModal from "../../modals/services/ServiceDeleteModal";
 import { ThemeProviderContext } from "../../contexts/theme-context";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../../configs/url";
 
 const ServicesPage = () => {
     const { theme } = useContext(ThemeProviderContext);
@@ -23,7 +24,7 @@ const ServicesPage = () => {
     }, []);
     const fetchData = async () => {
         try {
-            const res = await axios.get("http://localhost:3000/api/services");
+            const res = await axios.get(`${API_BASE}/services`);
             // If your backend returns { success, data }, use res.data.data
             const services = res.data.data || res.data;
             const sortedData = services.sort((a, b) => a.id - b.id);
@@ -59,7 +60,7 @@ const ServicesPage = () => {
 
     const handleUpdate = async () => {
         try {
-            await axios.put(`http://localhost:3000/api/inNeed/${modalState.selectedItem.id}`, modalState.selectedItem);
+            await axios.put(`${API_BASE}/services/${modalState.selectedItem.id}`, modalState.selectedItem);
             setData((prev) => prev.map((item) => (item.id === modalState.selectedItem.id ? modalState.selectedItem : item)));
             handleCancel();
         } catch (error) {
@@ -69,7 +70,7 @@ const ServicesPage = () => {
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`http://localhost:3000/api/inNeed/${modalState.deleteId}`);
+            await axios.delete(`${API_BASE}/services/${modalState.deleteId}`);
             setData((prev) => prev.filter((item) => item.id !== modalState.deleteId));
             handleCancel();
         } catch (error) {

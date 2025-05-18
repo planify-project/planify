@@ -278,7 +278,7 @@ exports.getStatusSummary = async (req, res) => {
 //Admin only get all events with pagination
 exports.getAllEventsAdmin = async (req, res) => {
   try {
-    // Calculate date ranges for current and previous month
+    // Calculate date ranges for current and previous month (for stats only)
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -315,17 +315,33 @@ exports.getAllEventsAdmin = async (req, res) => {
       positive = true;
     }
 
-    // Get paginated events for current month
+    // Get paginated events (all events, no date filter)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
+
+    // Build filter object
+    const where = {};
+    if (req.query.status) {
+      where.status = req.query.status;
+    }
+    if (req.query.location) {
+      where.location = req.query.location;
+    }
+    if (req.query.isApproved) {
+      // If isApproved is 'true', filter for status 'approved', if 'false', filter for not approved
+      if (req.query.isApproved === 'true') {
+        where.status = 'approved';
+      } else if (req.query.isApproved === 'false') {
+        where.status = { [Op.ne]: 'approved' };
+      }
+    }
+    if (req.query.type) {
+      where.type = req.query.type;
+    }
+
     const { count, rows } = await Event.findAndCountAll({
-      where: {
-        startDate: {
-          [Op.gte]: currentMonthStart,
-          [Op.lt]: nextMonthStart
-        }
-      },
+      where,
       offset,
       limit,
       order: [['startDate', 'ASC']],
@@ -433,3 +449,49 @@ exports.getEventStatusDistribution = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch event status distribution', details: error.message });
   }
 }
+// Admin update event
+exports.adminUpdateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('Updating event with ID:', id);
+    console.log('Update data:', req.body);
+
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    await event.update(req.body);
+
+    res.json({
+      success: true,
+      data: event,
+      message: 'Event updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update event',
+      error: error.message
+    });
+  }
+};
+
+// admin only get all event ypes
+exports.getEventTypes = async (req, res) => {
+  try {
+    const types = await Event.findAll({
+      attributes: [
+        [Event.sequelize.fn('DISTINCT', Event.sequelize.col('type')), 'type']
+      ],
+      raw: true
+    });
+    res.json({ types: types.map(t => t.type).filter(Boolean) });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch event types', details: error.message });
+  }
+};

@@ -86,7 +86,8 @@ const EventEditModal = ({ selectedItem, uniqueStatuses, handleCancel, confirmUpd
           </button>
           <button
             onClick={confirmUpdate}
-            className={`rounded-lg px-4 py-2 transition ${theme.startsWith('dark') ? 'bg-blue-700 text-white hover:bg-blue-800' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            disabled={!selectedItem.isApproved}
+            className={`rounded-lg px-4 py-2 transition ${theme.startsWith('dark') ? 'bg-blue-700 text-white hover:bg-blue-800' : 'bg-blue-600 text-white hover:bg-blue-700'} ${!selectedItem.isApproved ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Save Changes
           </button>

@@ -4,7 +4,7 @@ const eventsController = require('../controllers/eventsController');
 
 // GET /api/events
 router.get('/', eventsController.getAllEvents);
- 
+
 // GET /api/events/public
 router.get('/public', eventsController.getPublicEvents);
 
@@ -14,6 +14,18 @@ router.get('/nearby', eventsController.getNearbyEvents);
 // GET /api/events/popular
 router.get('/popular', eventsController.getPopularEvents);
 
+// GET /api/events/types
+router.get('/types', eventsController.getEventTypes);
+
+// admin
+router.get('/getAll', eventsController.getAllEventsAdmin);
+router.put('/status/:id',  eventsController.updateStatus);
+router.get('/status-summary', eventsController.getStatusSummary);
+router.get('/events-this-month', eventsController.getAllEventsAdmin);
+router.get('/private-events-this-year', eventsController.getPrivateEventsThisYear);
+router.get('/public-events-this-year', eventsController.getPublicEventsThisYear);
+router.get('/event-status-distribution', eventsController.getEventStatusDistribution);
+router.put('/admin-update/:id', eventsController.adminUpdateEvent);
 // GET /api/events/:id
 router.get('/:id', eventsController.getEventById);
 
@@ -25,13 +37,6 @@ router.put('/:id', eventsController.updateEvent);
 
 // DELETE /api/events/:id
 router.delete('/:id', eventsController.deleteEvent);
-// admin
-router.put('/status/:id',  eventsController.updateStatus);
-router.get('/status-summary', eventsController.getStatusSummary);
-router.get('/events-this-month', eventsController.getAllEventsAdmin);
-router.get('/private-events-this-year', eventsController.getPrivateEventsThisYear);
-router.get('/public-events-this-year', eventsController.getPublicEventsThisYear);
-router.get('/event-status-distribution', eventsController.getEventStatusDistribution);
 
 module.exports = router;
 

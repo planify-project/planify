@@ -4,13 +4,14 @@
   "description": "Planify Event Planning App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "nodemon app.js",
     "seed": "node seeders/index.js",
     "seed:publicEvents": "node seeds/publicEvents.js",
     "seed:users": "node seeds/users.js",
     "seed:events": "node seeds/events.js",
     "seed:services": "node seeds/services.js",
-    "seed:eventSpaces": "node seeds/event__space.seed.js"
+    "seed:eventSpaces": "node seeds/event__space.seed.js",
+    "seed:payments": "node seeds/payments.js"
 
   },
   "dependencies": {
