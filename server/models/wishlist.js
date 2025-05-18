@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true 
     },
     user_id: { 
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: true,
       defaultValue: 'default'
     },
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'wishlists',
     underscored: true,
-    timestamps: true
+    timestamps: true,
   });
 
   Wishlist.associate = (models) => {

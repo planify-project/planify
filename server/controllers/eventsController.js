@@ -63,16 +63,37 @@ exports.createEvent = async (req, res) => {
       date,
       venue,
       services = [],
-      equipment = []
+      equipment = [],
+      latitude,
+      longitude,
+      location
     } = req.body;
+
+    // Validate required fields
+    if (!name || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "Event name and date are required"
+      });
+    }
+
+    // Basic validation for latitude and longitude if provided
+    if ((latitude !== undefined && latitude !== null && isNaN(parseFloat(latitude))) || (longitude !== undefined && longitude !== null && isNaN(parseFloat(longitude)))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude or longitude format"
+      });
+    }
 
     const event = await Event.create({
       name,
       type: type || 'social',
       startDate: date,
-      location: venue?.name || '',
+      location: location || venue?.name || '',
+      latitude: latitude !== undefined && latitude !== null ? parseFloat(latitude) : null,
+      longitude: longitude !== undefined && longitude !== null ? parseFloat(longitude) : null,
       status: 'pending',
-      created_by: 1,
+      created_by: req.user?.id || null, // Assuming user ID is available from auth middleware
       budget: venue?.price ? parseFloat(venue.price) : 0
     });
 
@@ -92,6 +113,7 @@ exports.createEvent = async (req, res) => {
     });
   }
 };
+
 // Helper function to calculate distance between two points
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -105,7 +127,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// GET /api/events/nearby?lat=36.8065&lon=10.1815&radius=50
 exports.getNearbyEvents = async (req, res) => {
   try {
     const { lat, lon, radius = 50 } = req.query;
@@ -150,7 +171,6 @@ exports.getNearbyEvents = async (req, res) => {
   }
 };
 
-// GET /api/events/popular
 exports.getPopularEvents = async (req, res) => {
   try {
     console.log('Fetching popular events...');
@@ -170,11 +190,7 @@ exports.getPopularEvents = async (req, res) => {
     res.status(200).json(events);
   } catch (error) {
     console.error('Error fetching popular events:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to fetch popular events',
-      error: error.message 
-    });
+    res.status(500).json({ error: 'Failed to fetch popular events', details: error.message });
   }
 };
 
@@ -192,20 +208,66 @@ exports.updateEvent = async (req, res) => {
       });
     }
 
-    await event.update(req.body);
+    const {
+      name,
+      description,
+      type,
+      startDate,
+      endDate,
+      location,
+      latitude,
+      longitude,
+      category,
+      isPublic,
+      status,
+      maxParticipants,
+      ticketPrice,
+      coverImage,
+      budget,
+      is_free
+    } = req.body;
 
+     // Basic validation for latitude and longitude if provided
+     if ((latitude !== undefined && latitude !== null && isNaN(parseFloat(latitude))) || (longitude !== undefined && longitude !== null && isNaN(parseFloat(longitude)))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude or longitude format for update"
+      });
+    }
+
+    const updateData = {
+      name,
+      description,
+      type,
+      startDate,
+      endDate,
+      location,
+      latitude: latitude !== undefined && latitude !== null ? parseFloat(latitude) : event.latitude, // Only update if provided
+      longitude: longitude !== undefined && longitude !== null ? parseFloat(longitude) : event.longitude, // Only update if provided
+      category,
+      isPublic,
+      status,
+      maxParticipants,
+      ticketPrice,
+      coverImage,
+      budget,
+      is_free
+    };
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => 
+      updateData[key] === undefined && delete updateData[key]
+    );
+
+    await event.update(updateData);
     res.json({
       success: true,
       data: event,
       message: 'Event updated successfully'
     });
   } catch (error) {
-    console.error('Error updating event:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update event',
-      error: error.message
-    });
+    res.error('Error updating event:', error);
+    res.status(500).json({ error: 'Failed to update event', details: error.message });
   }
 };
 
@@ -237,6 +299,102 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
+exports.searchEvents = async (req, res) => {
+  try {
+    const { name, date, location, type } = req.query;
+    
+    // Build the where clause
+    const whereClause = { 
+      isPublic: true,
+      [Op.or]: [
+        { status: 'approved' },
+        { status: 'confirmed' }
+      ]
+    };
+
+    // Add search conditions if provided
+    if (name) {
+      whereClause.name = {
+        [Op.like]: `%${name}%` // Using like instead of iLike for MySQL
+      };
+    }
+
+    if (location) {
+      whereClause.location = {
+        [Op.like]: `%${location}%` // Using like instead of iLike for MySQL
+      };
+    }
+
+    if (date) {
+      try {
+        // Convert date string to Date object
+        const searchDate = new Date(date);
+        const nextDay = new Date(searchDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        whereClause.startDate = {
+          [Op.between]: [searchDate, nextDay]
+        };
+      } catch (error) {
+        console.error('Error parsing date:', error);
+        // If date parsing fails, ignore the date filter
+      }
+    }
+
+    if (type && type !== 'All') {
+      whereClause.type = type;
+    }
+
+    console.log('Search query:', req.query);
+    console.log('Where clause:', JSON.stringify(whereClause, null, 2));
+
+    // Execute the query with error handling
+    const events = await Event.findAll({
+      where: whereClause,
+      order: [['startDate', 'ASC']],
+      attributes: [
+        'id', 'name', 'description', 'type', 'startDate', 'endDate',
+        'location', 'latitude', 'longitude', 'isPublic', 'status',
+        'maxParticipants', 'ticketPrice', 'coverImage', 'created_by',
+        'attendees_count', 'available_spots', 'budget', 'is_free'
+      ]
+    });
+
+    console.log(`Found ${events.length} events matching search criteria`);
+
+    // Format the response
+    const formattedEvents = events.map(event => ({
+      id: event.id,
+      name: event.name,
+      description: event.description,
+      type: event.type,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      latitude: event.latitude,
+      longitude: event.longitude,
+      isPublic: event.isPublic,
+      status: event.status,
+      maxParticipants: event.maxParticipants,
+      ticketPrice: event.ticketPrice,
+      coverImage: event.coverImage,
+      attendees_count: event.attendees_count,
+      available_spots: event.available_spots,
+      budget: event.budget,
+      is_free: event.is_free
+    }));
+
+    res.json(formattedEvents);
+  } catch (error) {
+    console.error('Error searching events:', error);
+    res.status(500).json({ 
+      error: 'Failed to search events', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
 module.exports = {
   getAllEvents: exports.getAllEvents,
   getPublicEvents: exports.getPublicEvents,
@@ -244,6 +402,7 @@ module.exports = {
   createEvent: exports.createEvent,
   updateEvent: exports.updateEvent,
   deleteEvent: exports.deleteEvent,
+  searchEvents: exports.searchEvents,
   getNearbyEvents: exports.getNearbyEvents,
-  getPopularEvents: exports.getPopularEvents
+  getPopularEvents: exports.getPopularEvents,
 };

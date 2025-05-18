@@ -1,7 +1,9 @@
+
+
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
-      type: DataTypes.STRING(36),
+      type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
@@ -15,11 +17,11 @@ module.exports = (sequelize, DataTypes) => {
     contact_details: DataTypes.JSON,
     password: {
       type: DataTypes.STRING,
-      allowNull: true, // إذا كنت تستخدم كلمة مرور
+      allowNull: false, // إذا كنت تستخدم كلمة مرور
     },
   }, {
+    tableName: 'user', 
     underscored: true,
     timestamps: true,
-    tableName: 'users'
   });
 };

@@ -66,12 +66,12 @@ export const AuthProvider = ({ children }) => {
          
 
             // Send user data to backend
-            await axios.post(`${API_BASE}/auth/login`, {
-                id,
-                email,
-                name,
-                password,
-            });
+            // await axios.post(`${API_BASE}/auth/login`, {
+            //     id,
+            //     email,
+            //     name,
+            //     password,
+            // });
         } catch (error) {
             console.error('Login Error:', error.message);
 

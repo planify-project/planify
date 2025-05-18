@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   agentMsgText: { color: '#222', fontSize: normalize(16) },
   userMsgRow: { alignItems: 'flex-end', marginBottom: normalize(16) },
   userMsgBubble: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     borderRadius: normalize(16),
     padding: normalize(12),
     maxWidth: '75%'
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     marginRight: normalize(8)
   },
   sendBtn: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     borderRadius: normalize(20),
     padding: normalize(10),
     alignItems: 'center',
