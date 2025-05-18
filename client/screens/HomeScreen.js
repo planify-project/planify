@@ -10,7 +10,7 @@ import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
 import { normalize } from '../utils/scaling';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const [location, setLocation] = useState(null);
@@ -21,9 +21,16 @@ export default function HomeScreen() {
   const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(-1); // Start with no active tab
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
+
+  // Reset active tab when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setActiveTab(-1);
+    }, [])
+  );
 
   const getLocation = async () => {
     try {
@@ -98,8 +105,6 @@ export default function HomeScreen() {
 
   const handleTabPress = (index) => {
     setActiveTab(index);
-    const screens = ['AllEvents', 'EventSpaces', 'AllServices'];
-    navigation.navigate(screens[index]);
   };
 
   let locationText = 'Detecting...';
@@ -149,8 +154,7 @@ export default function HomeScreen() {
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={setActiveTab}
-        // onTabPress={handleTabPress}
+        onTabPress={handleTabPress}
         navigation={navigation}
       />
 
@@ -163,7 +167,11 @@ export default function HomeScreen() {
 
       <TouchableOpacity 
         style={styles.allEventsButton} 
-        onPress={() => navigation.navigate('AllEvents')}
+        onPress={() => navigation.navigate('ServicesTab'
+          , {
+          screen: 'AllServicesScreen'
+        }
+      )}
       >
         <Text style={styles.allEventsButtonText}>Explore All Events</Text>
       </TouchableOpacity>

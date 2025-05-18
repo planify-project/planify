@@ -47,32 +47,24 @@ export default function ServiceDetailScreen({ route, navigation }) {
         return;
       }
 
-      // Format the booking payload to match server requirements
+      // Validate booking data
+      if (!bookingData.date || !bookingData.space || !bookingData.phone_number) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
+
+      // Format the booking payload to match server expectations
       const bookingPayload = {
         user_id: auth.currentUser.uid,
         service_id: service.id,
         event_id: "1", // Required field
         date: new Date(bookingData.date).toISOString(),
         space: bookingData.space.trim(),
-        phone_number: bookingData.phone.replace(/\D/g, ''), // Clean phone number
+        phone_number: bookingData.phone_number.replace(/[^0-9]/g, ''),
         status: 'pending'
       };
 
-      // Validate required fields before sending
-      const requiredFields = ['user_id', 'service_id', 'event_id', 'date', 'space', 'phone_number'];
-      const missingFields = requiredFields.filter(field => !bookingPayload[field]);
-      
-      if (missingFields.length > 0) {
-        Alert.alert('Error', `Missing required fields: ${missingFields.join(', ')}`);
-        return;
-      }
-
-      // Validate date is in the future
-      if (new Date(bookingPayload.date) <= new Date()) {
-        Alert.alert('Error', 'Booking date must be in the future');
-        return;
-      }
-
+      console.log('Sending booking request:', bookingPayload);
       const response = await api.post('/bookings', bookingPayload);
 
       if (response.data.success) {
@@ -80,7 +72,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
         Alert.alert('Success', 'Booking request sent! Waiting for provider response.');
 
         // Emit socket event for real-time notification
-        socket.emit('newBooking', {
+        socket?.emit('newBooking', {
           serviceId: service.id,
           providerId: service.provider_id
         });

@@ -6,11 +6,16 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const tabs = [
     { id: 'events', label: 'Events', screen: 'AllEvents' },
     { id: 'spaces', label: 'Event Spaces', screen: 'EventSpaces' },
-    { id: 'services', label: 'Services', screen: 'AllServices' },
+    { id: 'services', label: 'Services', screen: 'AllServicesScreen' },
   ];
 
-  const handleTabPress = (index) => {
+  const handleTabPress = (index, screen) => {
     onTabPress(index);
+    if (screen === 'AllServicesScreen') {
+      navigation.getParent()?.navigate('Services');
+    } else {
+      navigation.navigate(screen);
+    }
   };
 
   return (
@@ -19,7 +24,7 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
         <TouchableOpacity 
           key={tab.id}
           style={[styles.tab, activeTab === index && styles.activeTab]}
-          onPress={() => handleTabPress(index)}
+          onPress={() => handleTabPress(index, tab.screen)}
         >
           <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
             {tab.label}
@@ -33,10 +38,11 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    marginVertical: normalize(16),
+    justifyContent: 'space-around',
+    paddingVertical: normalize(16),
     backgroundColor: '#fff',
     borderRadius: normalize(8),
-    padding: normalize(4),
+    marginVertical: normalize(16),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -44,10 +50,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   tab: {
-    flex: 1,
     paddingVertical: normalize(8),
-    alignItems: 'center',
-    borderRadius: normalize(6),
+    paddingHorizontal: normalize(16),
+    borderRadius: normalize(20),
   },
   activeTab: {
     backgroundColor: '#5D5FEE',

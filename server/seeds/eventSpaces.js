@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const eventSpaces = [
   {
-    id: '1',
+    id: uuidv4(),
     name: 'Golden Palace',
     description: 'Luxurious venue perfect for weddings and galas',
     price: 2000,
@@ -27,10 +27,11 @@ const eventSpaces = [
       friday: '09:00-00:00',
       saturday: '09:00-00:00',
       sunday: '09:00-23:00'
-    }
+    },
+    isActive: true
   },
   {
-    id: '2',
+    id: uuidv4(),
     name: 'Royal Beach Club',
     description: 'Elegant beachfront venue with stunning sea views',
     price: 1500,
@@ -55,10 +56,11 @@ const eventSpaces = [
       friday: '10:00-23:00',
       saturday: '10:00-23:00',
       sunday: '10:00-22:00'
-    }
+    },
+    isActive: true
   },
   {
-    id: '3',
+    id: uuidv4(),
     name: 'Garden Oasis',
     description: 'Beautiful garden venue perfect for outdoor events',
     price: 1200,
@@ -83,10 +85,11 @@ const eventSpaces = [
       friday: '08:00-22:00',
       saturday: '08:00-22:00',
       sunday: '08:00-20:00'
-    }
+    },
+    isActive: true
   },
   {
-    id: '4',
+    id: uuidv4(),
     name: 'Modern Loft',
     description: 'Contemporary urban space for corporate events',
     price: 1800,
@@ -112,10 +115,11 @@ const eventSpaces = [
       friday: '08:00-23:00',
       saturday: '10:00-23:00',
       sunday: '10:00-20:00'
-    }
+    },
+    isActive: true
   },
   {
-    id: '5',
+    id: uuidv4(),
     name: 'Historic Villa',
     description: 'Charming historic villa for intimate gatherings',
     price: 2500,
@@ -140,24 +144,28 @@ const eventSpaces = [
       friday: '10:00-23:00',
       saturday: '10:00-23:00',
       sunday: '10:00-22:00'
-    }
+    },
+    isActive: true
   }
 ];
 
-const seedEventSpaces = async () => {
+async function seedEventSpaces() {
   try {
+    console.log('Starting to seed event spaces...');
+    
     // Clear existing data
     await EventSpace.destroy({ where: {} });
+    console.log('Cleared existing event spaces');
     
     // Insert new data
-    for (const space of eventSpaces) {
-      await EventSpace.create(space);
-    }
-    console.log('Event spaces seeded successfully!');
+    const createdSpaces = await EventSpace.bulkCreate(eventSpaces);
+    console.log(`Successfully seeded ${createdSpaces.length} event spaces`);
+    
+    return createdSpaces;
   } catch (error) {
     console.error('Error seeding event spaces:', error);
     throw error;
   }
-};
+}
 
 module.exports = seedEventSpaces;

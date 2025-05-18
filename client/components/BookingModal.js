@@ -20,27 +20,36 @@ export default function BookingModal({ visible, onClose, onSubmit, service }) {
   const [phone, setPhone] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
 
+  const handleDateSelect = (day) => {
+    setSelectedDate(day.dateString);
+    setShowCalendar(false);
+  };
+
+  const handlePhoneChange = (text) => {
+    // Only allow numbers and limit to 8 digits
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 8);
+    setPhone(cleaned);
+  };
+
   const handleConfirm = () => {
-    // First check if all fields are filled
-    if (!selectedDate || !space.trim() || !phone.trim()) {
+    // Validate phone number
+    if (phone.length !== 8) {
+      Alert.alert('Error', 'Phone number must be exactly 8 digits');
+      return;
+    }
+
+    // Validate all fields
+    if (!selectedDate || !space.trim()) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
 
-    // Just clean the phone number of any spaces
-    const cleanPhone = phone.trim();
-
-    // Submit with cleaned phone number
+    // Submit with proper field names
     onSubmit({
       date: selectedDate,
       space: space.trim(),
-      phone_number: cleanPhone
+      phone_number: phone // Changed from 'phone' to 'phone_number' to match server expectations
     });
-  };
-
-  const handleDateSelect = (day) => {
-    setSelectedDate(day.dateString);
-    setShowCalendar(false);
   };
 
   return (
@@ -103,11 +112,12 @@ export default function BookingModal({ visible, onClose, onSubmit, service }) {
             <Text style={[styles.label, { color: theme.text }]}>Phone Number</Text>
             <TextInput
               style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
-              placeholder="Enter your phone number"
+              placeholder="Enter your phone number (8 digits)"
               placeholderTextColor={theme.textSecondary}
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={handlePhoneChange}
               keyboardType="phone-pad"
+              maxLength={8}
             />
           </ScrollView>
 

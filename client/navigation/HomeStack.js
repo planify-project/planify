@@ -11,7 +11,7 @@ function HomeStack() {
     <Stack.Navigator>
       <Stack.Screen
         name="Services"
-        component={ServicesScreen}
+        component={AllServicesScreen}
         options={({ navigation }) => ({
           headerRight: () => (
             <TouchableOpacity
