@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, 
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../configs/api';
+import { normalize } from '../utils/scaling';
 
 export default function ScheduleScreen({ navigation, route }) {
   const [events, setEvents] = useState([]);
@@ -143,7 +144,7 @@ export default function ScheduleScreen({ navigation, route }) {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#5D5FEE" style={styles.loader} />
+        <ActivityIndicator size="large" color="#4f78f1" style={styles.loader} />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -204,10 +205,10 @@ const styles = StyleSheet.create({
   myEventsText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#4f78f1',
   },
   seeAllText: {
-    color: '#5D5FEE',
+    color: '#4f78f1',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -218,6 +219,10 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#4f78f1',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: normalize(2) },
+    shadowRadius: normalize(4),
     justifyContent: 'space-between',
     elevation: 2,
     shadowColor: '#000',
@@ -242,6 +247,16 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
+  eventPrice: {
+    color: '#4f78f1',
+    marginTop: normalize(2),
+    fontWeight: 'bold',
+    fontSize: normalize(13),
+  },
+  arrow: {
+    fontSize: normalize(22),
+    color: '#b3b3c6',
+  },
   eventLocation: {
     fontSize: 14,
     color: '#666',
@@ -260,4 +275,9 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 20
   },
+  eventStatus: {
+    fontSize: normalize(12),
+    color: '#4f78f1',
+    marginTop: normalize(2)
+  }
 });

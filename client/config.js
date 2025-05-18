@@ -1,5 +1,5 @@
 // API and Socket configuration
-const LOCAL_IP = '192.168.1.237'; // Your machine's actual IP address from ipconfig
+const LOCAL_IP = '192.168.0.89';
 const PORT = 3000;
 
 // Base URLs

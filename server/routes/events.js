@@ -14,16 +14,12 @@ router.get('/nearby', eventsController.getNearbyEvents);
 // GET /api/events/popular
 router.get('/popular', eventsController.getPopularEvents);
 
+// GET /api/events/search
+router.get('/search', eventsController.searchEvents);
 // GET /api/events/:id
 router.get('/:id', eventsController.getEventById);
 
 // POST /api/events
 router.post('/', eventsController.createEvent);
 
-// PUT /api/events/:id
-router.put('/:id', eventsController.updateEvent);
-
-// DELETE /api/events/:id
-router.delete('/:id', eventsController.deleteEvent);
-
-module.exports = router;
+module.exports = router; 

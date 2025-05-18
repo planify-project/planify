@@ -12,11 +12,11 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     providerId: {
-      type: DataTypes.STRING(36), // UUID من Firebase ولا UUID v4
+      type: DataTypes.UUID,
       allowNull: false
     },
     userId: {
-      type: DataTypes.STRING(36), // نفس الشي، UUID بدل INT
+      type: DataTypes.UUID,
       allowNull: false
     },
     date: {

@@ -1,7 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('offer', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    provider_id: DataTypes.STRING, // Change to STRING to match the User model's id
+    id: { 
+      type: DataTypes.INTEGER, 
+      primaryKey: true, 
+      autoIncrement: true 
+    },
+    provider_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     description: DataTypes.TEXT,
     discount_percent: DataTypes.DECIMAL,
     expires_at: DataTypes.DATE
