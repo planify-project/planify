@@ -5,6 +5,9 @@ const eventsController = require('../controllers/eventsController');
 // GET /api/events
 router.get('/', eventsController.getAllEvents);
 
+// GET /api/events/search
+router.get('/search', eventsController.searchEvents);
+
 // GET /api/events/public
 router.get('/public', eventsController.getPublicEvents);
 
@@ -31,12 +34,6 @@ router.get('/:id', eventsController.getEventById);
 
 // POST /api/events
 router.post('/', eventsController.createEvent);
-
-// PUT /api/events/:id
-router.put('/:id', eventsController.updateEvent);
-
-// DELETE /api/events/:id
-router.delete('/:id', eventsController.deleteEvent);
 
 module.exports = router;
 

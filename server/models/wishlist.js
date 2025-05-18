@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'wishlists',
     underscored: true,
-    timestamps: true
+    timestamps: true,
   });
 
   Wishlist.associate = (models) => {

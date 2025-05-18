@@ -67,7 +67,7 @@ export default function SettingsScreen() {
             navigation.navigate('Profile');
           }}
         >
-          <Ionicons name="person-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="person-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>My Account</Text>
             <Text style={styles.rowSubtitle}>View your profile information</Text>
@@ -76,7 +76,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row}>
-          <Ionicons name="people-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="people-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Saved Beneficiary</Text>
             <Text style={styles.rowSubtitle}>Manage your saved beneficiary</Text>
@@ -85,7 +85,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row}>
-          <Ionicons name="shield-checkmark-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="shield-checkmark-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Two-Factor Authentication</Text>
             <Text style={styles.rowSubtitle}>Further secure your account for safety</Text>
@@ -94,7 +94,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="log-out-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Log out</Text>
             <Text style={styles.rowSubtitle}>Log out of your account</Text>
@@ -105,7 +105,7 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Help')}>
-          <Ionicons name="help-circle-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="help-circle-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Help & Support</Text>
           </View>
@@ -113,7 +113,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('About')}>
-          <Ionicons name="information-circle-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="information-circle-outline" size={normalize(22)} color="#4f78f1" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>About App</Text>
           </View>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     padding: normalize(16),
   },
   profileCard: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: normalize(16),

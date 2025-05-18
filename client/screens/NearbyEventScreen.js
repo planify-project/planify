@@ -62,7 +62,7 @@ export default function AllEventsScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#5D5FEE" />
+        <ActivityIndicator size="large" color="#4f78f1" />
       </View>
     );
   }

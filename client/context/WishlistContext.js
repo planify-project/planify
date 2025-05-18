@@ -35,15 +35,17 @@ export const WishlistProvider = ({ children }) => {
         return;
       }
 
-      const isInWishlist = wishlistItems.some(item => item.item_id === itemId);
-      console.log('Toggling wishlist item:', { itemId, itemType, isInWishlist });
+      // Convert itemId to number for comparison
+      const numericItemId = Number(itemId);
+      const isInWishlist = wishlistItems.some(item => Number(item.item_id) === numericItemId);
+      console.log('Toggling wishlist item:', { itemId: numericItemId, itemType, isInWishlist });
 
       if (isInWishlist) {
-        await api.delete(`/wishlist/${itemId}`);
-        setWishlistItems(prev => prev.filter(item => item.item_id !== itemId));
+        await api.delete(`/wishlist/${numericItemId}`);
+        setWishlistItems(prev => prev.filter(item => Number(item.item_id) !== numericItemId));
       } else {
         const data = {
-          item_id: itemId,
+          item_id: numericItemId,
           item_type: itemType || 'event'
         };
         console.log('Adding to wishlist with data:', data);
@@ -51,6 +53,9 @@ export const WishlistProvider = ({ children }) => {
         console.log('Add to wishlist response:', response.data);
         setWishlistItems(prev => [...prev, response.data]);
       }
+
+      // Refresh the wishlist after any change
+      await fetchWishlist();
     } catch (error) {
       console.error('Error toggling wishlist item:', error);
       if (error.response) {
@@ -63,7 +68,7 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const isInWishlist = (itemId) => {
-    return wishlistItems.some(item => item.item_id === itemId);
+    return wishlistItems.some(item => Number(item.item_id) === Number(itemId));
   };
 
   useEffect(() => {
@@ -84,4 +89,4 @@ export const WishlistProvider = ({ children }) => {
       {children}
     </WishlistContext.Provider>
   );
-}; 
+};

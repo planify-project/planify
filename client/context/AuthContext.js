@@ -87,12 +87,12 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
             // Send user data to backend
-            await axios.post(`${API_BASE}/auth/login`, {
-                id,
-                email,
-                name,
-                password,
-            });
+            // await axios.post(`${API_BASE}/auth/login`, {
+            //     id,
+            //     email,
+            //     name,
+            //     password,
+            // });
         } catch (error) {
             console.error('Login Error:', error.message);
 

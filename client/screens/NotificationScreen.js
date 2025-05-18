@@ -154,48 +154,26 @@ export default function NotificationScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F6FC', padding: normalize(16) },
-  title: { fontSize: normalize(24), fontWeight: 'bold', marginBottom: normalize(8), color: '#5D5FEE', alignSelf: 'center' },
-  message: { fontSize: normalize(16), color: '#888', alignSelf: 'center', marginTop: normalize(24) },
-  card: {
-    backgroundColor: '#e0e7ff',
-    padding: normalize(12),
-    marginBottom: normalize(12),
-    borderRadius: normalize(8),
+  container: {
+    flex: 1,
   },
-  readCard: {
-    backgroundColor: '#cbd5e1',
+  content: {
+    padding: 20,
   },
-  notificationTitle: {
-    fontSize: normalize(16),
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 20,
   },
-  notificationMessage: {
-    marginTop: normalize(4),
-    color: '#555',
+  section: {
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: normalize(12),
-  },
-  filterButton: {
-    paddingHorizontal: normalize(12),
-    paddingVertical: normalize(6),
-    marginHorizontal: normalize(4),
-    borderRadius: normalize(20),
-    backgroundColor: '#E0E7FF',
-  },
-  activeFilterButton: {
-    backgroundColor: '#5D5FEE',
-  },
-  filterText: {
-    color: '#333',
-    fontWeight: '600',
-  },
-  activeFilterText: {
-    color: 'white',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   bookingActions: {
     flexDirection: 'row',
@@ -208,16 +186,20 @@ const styles = StyleSheet.create({
     borderRadius: normalize(6),
     marginHorizontal: normalize(4),
     alignItems: 'center',
+    paddingVertical: 10,
   },
-  acceptButton: {
-    backgroundColor: '#00B894',
+  settingText: {
+    fontSize: 16,
   },
-  rejectButton: {
-    backgroundColor: '#FF3B30',
+  saveButton: {
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  actionButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: normalize(14),
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

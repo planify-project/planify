@@ -1,3 +1,5 @@
+
+
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
@@ -26,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: false,
     },
   }, {
+    tableName: 'user', 
     underscored: true,
     timestamps: true, 
   });

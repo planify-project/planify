@@ -9,10 +9,14 @@ import LocationPickerModal from '../components/home/LocationPickerModal';
 import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
+// import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import AllEventsScreen from './AllEventsScreen';
+import axios from 'axios';
+import { API_BASE } from '../config'; // Make sure this points to your backend
+import { useFocusEffect } from '@react-navigation/native';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -21,7 +25,8 @@ export default function HomeScreen() {
   const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [activeTab, setActiveTab] = useState(-1); // Start with no active tab
+  const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
+  const [publicEvents, setPublicEvents] = useState([]);
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
 
@@ -72,6 +77,23 @@ export default function HomeScreen() {
     getLocation();
   }, []);
 
+  useEffect(() => {
+
+
+    fetchPublicEvents();
+  }, []);
+  const fetchPublicEvents = async () => {
+    try {
+      console.log('Fetching public events...');
+      const response = await axios.get(`${API_BASE}/events/public`);
+      setPublicEvents(response.data);
+    } catch (err) {
+      console.error('Error fetching public events:', err);
+      // handle error
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSelectCity = (selectedCity) => {
     setCity(selectedCity);
     setLoading(false);
@@ -85,9 +107,9 @@ export default function HomeScreen() {
   const handleCreateEvent = () => {
     if (eventName && selectedDate) {
       setCreateEventModalVisible(false);
-      navigation.navigate('CreateEvent', { 
-        eventName: eventName, 
-        date: selectedDate 
+      navigation.navigate('CreateEvent', {
+        eventName: eventName,
+        date: selectedDate
       });
       // Reset form
       setEventName('');
@@ -118,7 +140,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
-      <HomeHeader 
+      <HomeHeader
         loading={loading}
         city={city}
         errorMsg={errorMsg}
@@ -134,7 +156,7 @@ export default function HomeScreen() {
         onUseCurrentLocation={getLocation}
       />
 
-      <CreateEventModal 
+      <CreateEventModal
         visible={createEventModalVisible}
         eventName={eventName}
         selectedDate={selectedDate}
@@ -148,30 +170,34 @@ export default function HomeScreen() {
         onCreateEvent={handleCreateEvent}
       />
 
-      <CreateEventButton 
-        onPress={handleCreateEventPress} 
+      <CreateEventButton
+        onPress={handleCreateEventPress}
       />
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={handleTabPress}
+        onTabPress={(tabId) => {
+          setActiveTab(tabId);
+          if (tabId === 'events') {
+            navigation.navigate('AllEvents');
+          } else if (tabId === 'services') {
+            navigation.navigate('AllServicesScreen');
+          }
+        }}
         navigation={navigation}
       />
 
-      <NearbyEvents navigation={navigation} />
-      
-      <PopularEvents 
-        navigation={navigation} 
-        events={PopularEvents}
-      />
+      <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
 
-      <TouchableOpacity 
-        style={styles.allEventsButton} 
+      <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
+
+      <TouchableOpacity
+        style={styles.allEventsButton}
         onPress={() => navigation.navigate('ServicesTab'
           , {
-          screen: 'AllServicesScreen'
-        }
-      )}
+            screen: 'AllServicesScreen'
+          }
+        )}
       >
         <Text style={styles.allEventsButtonText}>Explore All Events</Text>
       </TouchableOpacity>
@@ -186,7 +212,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9'
   },
   allEventsButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     padding: normalize(12),
     borderRadius: normalize(8),
     alignItems: 'center',

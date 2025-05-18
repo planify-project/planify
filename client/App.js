@@ -8,6 +8,7 @@ import { SocketProvider } from './context/SocketContext';
 
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View, ActivityIndicator, Image } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
 // Enable screens for better performance
@@ -23,7 +24,7 @@ import AuthNavigator from './navigation/AuthNavigator';
 import NotificationScreen from './screens/NotificationScreen';
 import AddServiceScreen from './screens/AddServiceScreen';
 import EditServiceScreen from './screens/EditServiceScreen';
-import AllEventsScreen from './screens/NearbyEventScreen';
+import AllEventsScreen from './screens/AllEventsScreen';
 import AllServicesScreen from './screens/AllServicesScreen';
 import EventDetailScreen from './screens/EventDetailScreen';
 import CreateEventScreen from './screens/CreateEventScreen';
@@ -35,12 +36,15 @@ import AboutScreen from './screens/AboutScreen';
 import HelpScreen from './screens/HelpScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import ServiceDetailScreen from './screens/ServiceDetailScreen';
+import ReviewScreen from './screens/ReviewScreen';
 import EventSpaceScreen from './screens/EventSpaceScreen';
 import EventSpaceDetails from './screens/EventSpaceDetails';
 import PaymentScreen from './screens/PaymentScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import FullScreenMap from './screens/FullScreenMap';
 import MyServicesScreen from './screens/MyServicesScreen';
+import ServicesScreen from './screens/ServicesScreen';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -77,7 +81,16 @@ function HomeStack() {
       <Stack.Screen
         name="HomeMain"
         component={HomeScreen}
-        options={screenHeaderOptions}
+        options={{
+          headerTitle: () => (
+            <Image
+              source={require('./assets/homelogo3.png')}
+              style={{ width: 130, height: 80, resizeMode: 'contain' , marginLeft: -5 }}
+            />
+          ),
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTintColor: '#22223B',
+        }}
       />
       <Stack.Screen
         name="EventSpaces"
@@ -116,6 +129,100 @@ function HomeStack() {
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
+      />
+      <Stack.Screen
+        name="Popular Events"
+        component={PopularEventsScreen}
+        options={{ headerShown: true,
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
+      />
+      <Stack.Screen
+        name="AllEvents"
+        component={AllEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "All Events",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="JoinEvent"
+        component={JoinEventWrapper}
+        options={{ ...screenHeaderOptions, title: 'Join Event' }}
+      />
+      <Stack.Screen
+        name="Agent Chat"
+        component={AgentChatScreen}
+        options={screenHeaderOptions}
+      />
+      <Stack.Screen
+        name="Agent List"
+        component={AgentListScreen}
+        options={screenHeaderOptions}
+      />
+      <Stack.Screen
+        name="AgentProfile"
+        component={AgentProfileScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Agent Profile",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen
+        name="AllServices"
+        component={AllServicesScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "All Services",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+      />
+      <Stack.Screen 
+        name="AddService" 
+        component={AddServiceScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Add New Service",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="ServiceDetail" 
+        component={ServiceDetailScreen} 
+        options={{
+          headerShown: true,
+          headerTitle: "Service Details",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen
+        name="Review"
+        component={ReviewScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Write a Review",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
+        />
+        <Stack.Screen
+        name="ServicesScreen"
+        component={ServicesScreen}
+        options={{ ...screenHeaderOptions, title: 'Services' }}
       />
     </Stack.Navigator>
   );
@@ -357,6 +464,14 @@ export default function App() {
                     }}
                   />
                   <Stack.Screen 
+                    name="FullScreenMap" 
+                    component={FullScreenMap}
+                    options={{
+                      headerShown: false,
+                      presentation: 'fullScreenModal'
+                    }}
+                  />
+                  <Stack.Screen 
                     name="AllEvents" 
                     component={AllEventsScreen}
                     options={{
@@ -368,22 +483,22 @@ export default function App() {
                     }}
                   />
                   <Stack.Screen 
-                    name="Popular Events" 
-                    component={PopularEventsScreen}
+                    name="JoinEvent" 
+                    component={JoinEventWrapper}
                     options={{
                       headerShown: true,
-                      headerTitle: "Popular Events",
+                      headerTitle: "Join Event",
                       headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
                   />
                   <Stack.Screen 
-                    name="JoinEvent" 
-                    component={JoinEventWrapper}
+                    name="Review"
+                    component={ReviewScreen}
                     options={{
                       headerShown: true,
-                      headerTitle: "Join Event",
+                      headerTitle: "Write a Review",
                       headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }

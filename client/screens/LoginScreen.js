@@ -100,7 +100,7 @@ const LoginScreen = () => {
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <TouchableOpacity 
-          style={[styles.signInButton, { backgroundColor: '#5D5FEE' }]} 
+          style={[styles.signInButton, { backgroundColor: '#4f78f1' }]} 
           onPress={handleLogin}
           disabled={loading}
         >
@@ -109,7 +109,7 @@ const LoginScreen = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={[styles.linkText, { color: '#5D5FEE' }]}>
+          <Text style={[styles.linkText, { color: '#4f78f1' }]}>
             Don't have an account? Sign Up
           </Text>
         </TouchableOpacity>

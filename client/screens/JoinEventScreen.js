@@ -182,13 +182,13 @@ const styles = StyleSheet.create({
   },
   availableSeats: {
     fontSize: 14,
-    color: '#5D5FEE',
+    color: '#4f78f1',
     marginTop: 2,
   },
   price: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#4f78f1',
     marginTop: 2,
   },
   form: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   counterBtn: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   confirmButton: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#4f78f1',
     margin: 16,
     padding: 16,
     borderRadius: 8,
