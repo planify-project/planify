@@ -142,7 +142,7 @@ export default function AddServiceScreen({ navigation }) {
       Alert.alert('Success', 'Service created successfully', [
         {
           text: 'OK',
-            onPress: () => navigation.navigate('AllServices')
+          onPress: () => navigation.navigate('AllServices')
         }
       ]);
       } else {

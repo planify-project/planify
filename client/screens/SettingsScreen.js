@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../context/AuthContext'; // Ensure the path is correct
+import { AuthContext } from '../context/AuthContext';
+import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -15,13 +16,27 @@ function normalize(size) {
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { logout } = useContext(AuthContext);
+  const [user, setUser] = useState(null);
+  const auth = getAuth();
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser({
+        displayName: currentUser.displayName || 'User',
+        email: currentUser.email,
+        photoURL: currentUser.photoURL,
+        uid: currentUser.uid
+      });
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
       await logout();
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Root' }],
+        routes: [{ name: 'Auth' }],
       });
     } catch (err) {
       console.error('Logout failed:', err.message);
@@ -32,26 +47,31 @@ export default function SettingsScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: normalize(40) }}>
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
+          source={{ uri: user?.photoURL || 'https://via.placeholder.com/150' }}
           style={styles.avatar}
         />
         <View style={{ flex: 1 }}>
-          <Text style={styles.profileName}>Yonnefer Doe</Text>
-          <Text style={styles.profileHandle}>@yonneferdoe</Text>
+          <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
+          <Text style={styles.profileHandle}>{user?.email}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
           <Ionicons name="pencil" size={normalize(22)} color="#fff" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <TouchableOpacity style={styles.row}>
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => {
+            console.log('Navigating to Profile...');
+            navigation.navigate('Profile');
+          }}
+        >
           <Ionicons name="person-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>My Account</Text>
-            <Text style={styles.rowSubtitle}>Make changes to your account</Text>
+            <Text style={styles.rowSubtitle}>View your profile information</Text>
           </View>
-          <MaterialIcons name="error-outline" size={normalize(18)} color="#FF5A5F" style={{ marginRight: normalize(8) }} />
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
@@ -84,7 +104,7 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <TouchableOpacity style={styles.row}>
+        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Help')}>
           <Ionicons name="help-circle-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Help & Support</Text>
@@ -92,7 +112,7 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-forward" size={normalize(20)} color="#ccc" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.row}>
+        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('About')}>
           <Ionicons name="information-circle-outline" size={normalize(22)} color="#5D5FEE" />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>About App</Text>

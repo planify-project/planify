@@ -9,7 +9,6 @@ import LocationPickerModal from '../components/home/LocationPickerModal';
 import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
-import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
 import { useNavigation } from '@react-navigation/native';
 
@@ -150,7 +149,8 @@ export default function HomeScreen() {
 
       <HomeTabs
         activeTab={activeTab}
-        onTabPress={handleTabPress}
+        onTabPress={setActiveTab}
+        // onTabPress={handleTabPress}
         navigation={navigation}
       />
 
@@ -158,8 +158,7 @@ export default function HomeScreen() {
       
       <PopularEvents 
         navigation={navigation} 
-        events={popularEvents}
-      
+        events={PopularEvents}
       />
 
       <TouchableOpacity 
