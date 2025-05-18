@@ -67,17 +67,22 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/events/public`)
-      .then(res => {
-        setPublicEvents(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setLoading(false);
-        // handle error
-      });
-  }, []);
+    
 
+    fetchPublicEvents();
+  }, []);
+  const fetchPublicEvents = async () => {
+    try {
+      console.log('Fetching public events...');
+      const response = await axios.get(`${API_BASE}/events/public`);
+      setPublicEvents(response.data);
+    } catch (err) {
+      console.error('Error fetching public events:', err);
+      // handle error
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSelectCity = (selectedCity) => {
     setCity(selectedCity);
     setLoading(false);

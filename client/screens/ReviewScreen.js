@@ -64,7 +64,7 @@ export default function ReviewScreen({ route, navigation }) {
     }
 
     try {
-      const response = await axios.post(`http://192.168.0.89:3000/api/reviews`, {
+      const response = await axios.post(`${API_BASE}/reviews/event`, {
         event_id: event.id, // Use the numeric ID
         rating,
         title,

@@ -1,20 +1,30 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('wishlist', {
+  const Wishlist = sequelize.define('wishlist', {
     id: { 
       type: DataTypes.INTEGER, 
       primaryKey: true, 
-      autoIncrement: true,
+      autoIncrement: true 
     },
     user_id: { 
-      type: DataTypes.UUID, // Match the type of `users.id`
-      allowNull: false,
-    },
-    name: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: true,
+      defaultValue: 'default'
     },
+    name: { 
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'My Wishlist'
+    }
   }, {
+    tableName: 'wishlists',
     underscored: true,
     timestamps: true,
   });
+
+  Wishlist.associate = (models) => {
+    Wishlist.belongsTo(models.User, { foreignKey: 'user_id', constraints: false });
+    Wishlist.hasMany(models.WishlistItem, { foreignKey: 'wishlist_id' });
+  };
+
+  return Wishlist;
 };

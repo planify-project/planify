@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { AuthContext } from '../context/AuthContext'; 
 
+import { useWishlist } from '../context/WishlistContext';
+
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 function normalize(size) {
@@ -17,23 +19,32 @@ export default function EventDetailScreen({ route }) {
   const { user } = useContext(AuthContext); // Access the user context
   console.log('User:', user); 
   const [isFavorite, setIsFavorite] = useState(false);
+  const { isInWishlist, toggleWishlistItem } = useWishlist();
   const navigation = useNavigation();
   console.log("🛖🛖🛖");
   console.log("🛖🛖🛖",event);    
   
   // Get the event data from the route params
 
+  const isWishlisted = isInWishlist(event.id);
+
+  const handleWishlistPress = () => {
+    if (event.id) {
+      toggleWishlistItem(event.id, 'event');
+    }
+  };
+
   // Generate additional images for preview
   const images = [
-    event.image,
+    event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
     'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
     'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
   ];
 
-  // Example coordinates for demonstration (replace with real event coordinates)
+  // Use actual event coordinates if available, otherwise use default
   const eventCoords = {
-    latitude: 37.2746, // Replace with actual latitude
-    longitude: 9.8642, // Replace with actual longitude
+    latitude: event.latitude || 37.2746,
+    longitude: event.longitude || 9.8642,
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   };
@@ -43,12 +54,28 @@ export default function EventDetailScreen({ route }) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: normalize(100) }}>
         {/* Main Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: event.image }} style={styles.mainImage} />
+          <Image 
+            source={{ uri: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c' }} 
+            style={styles.mainImage}
+            onError={(e) => {
+              console.error('Image loading error:', e.nativeEvent.error);
+            }}
+          />
+          <TouchableOpacity 
+            style={styles.wishlistButton}
+            onPress={handleWishlistPress}
+          >
+            <Ionicons 
+              name={isWishlisted ? "heart" : "heart-outline"} 
+              size={normalize(24)} 
+              color={isWishlisted ? "red" : "white"} 
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Event Info */}
         <View style={styles.infoContainer}>
-          <Text style={styles.eventTitle}>{event.title}</Text>
+          <Text style={styles.eventTitle}>{event.name}</Text>
           
           <View style={styles.locationContainer}>
             <Ionicons name="location-outline" size={normalize(16)} color="#4f78f1" />
@@ -56,13 +83,15 @@ export default function EventDetailScreen({ route }) {
           </View>
 
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>{event.price}</Text>
-            <Text style={styles.perText}>/{event.per}</Text>
+            <Text style={styles.price}>
+              {event.is_free ? 'Free' : `${event.ticketPrice || 'N/A'} DT`}
+            </Text>
+            <Text style={styles.perText}>/person</Text>
           </View>
 
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={normalize(16)} color="#FFD700" />
-            <Text style={styles.ratingText}>{event.rating}</Text>
+            <Text style={styles.ratingText}>N/A</Text>
           </View>
         </View>
 
@@ -70,21 +99,34 @@ export default function EventDetailScreen({ route }) {
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>About this event</Text>
           <Text style={styles.description}>
-            Experience an unforgettable {event.title.toLowerCase()} at {event.location}. 
+            {event.description || `Experience an unforgettable ${event.name ? event.name.toLowerCase() : 'event'} at ${event.location || 'our venue'}. 
             This event promises to deliver an amazing experience with top-notch facilities and services.
-            Don't miss out on this opportunity to create lasting memories!
+            Don't miss out on this opportunity to create lasting memories!`}
           </Text>
         </View>
 
         {/* Map Section */}
         <View style={styles.mapContainer}>
           <Text style={styles.sectionTitle}>Event Location</Text>
-          <MapView
-            style={styles.map}
-            initialRegion={eventCoords}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('FullScreenMap', {
+              latitude: event.latitude || 37.2746,
+              longitude: event.longitude || 9.8642,
+              title: event.name,
+              location: event.location,
+            })}
           >
-            <Marker coordinate={eventCoords} title={event.title} description={event.location} />
-          </MapView>
+            <MapView
+              style={styles.map}
+              initialRegion={eventCoords}
+            >
+              <Marker 
+                coordinate={eventCoords} 
+                title={event.name} 
+                description={event.location} 
+              />
+            </MapView>
+          </TouchableOpacity>
         </View>
 
         {/* Preview Images */}
@@ -96,30 +138,58 @@ export default function EventDetailScreen({ route }) {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(_, idx) => idx.toString()}
             renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.previewImage} />
+              <Image 
+                source={{ uri: item }} 
+                style={styles.previewImage}
+                onError={(e) => {
+                  console.error('Preview image loading error:', e.nativeEvent.error);
+                }}
+              />
             )}
           />
         </View>
       </ScrollView>
 
-      {/* Join Event Button */}
-      <TouchableOpacity 
+
+
+            {/* Join Event Button */}
+      {/* <TouchableOpacity 
         style={styles.joinBtn}
         onPress={() => navigation.navigate('JoinEvent', { event })}
       >
         <Text style={styles.joinBtnText}>Join Event</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       {/* Write Review Button */}
 <TouchableOpacity 
   style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#4f78f1' }]}
   onPress={() => {
     console.log("😍😍😍😍😍",event);
-    
-    navigation.navigate('Review', { event})}}
+    navigation.navigate('Review', { event })}}
 >
   <Text style={[styles.joinBtnText, { color: '#4f78f1' }]}>Write a Review</Text>
 </TouchableOpacity>
 
+
+
+
+
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+          onPress={() => navigation.navigate('JoinEvent', { event })}
+        >
+          <Ionicons name="calendar-outline" size={20} color="#fff" />
+          <Text style={styles.actionButtonText}>Join Event</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
+          onPress={() => navigation.navigate('Payment')}
+        >
+          <Ionicons name="card-outline" size={20} color="#fff" />
+          <Text style={styles.actionButtonText}>Pay & Join</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -135,11 +205,44 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: normalize(24),
     borderBottomRightRadius: normalize(24),
     backgroundColor: '#ccc',
+
+    backgroundColor: '#F6F7FB',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: normalize(16),
+    paddingVertical: normalize(12),
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerBtn: {
+    padding: normalize(8),
+  },
+  headerTitle: {
+    fontSize: normalize(18),
+    fontWeight: '600',
+    color: '#222',
+  },
+  imageContainer: {
+    width: '100%',
+    height: normalize(250),
+    position: 'relative',
   },
   mainImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  wishlistButton: {
+    position: 'absolute',
+    top: normalize(16),
+    right: normalize(16),
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: normalize(8),
+    borderRadius: normalize(20),
   },
   infoContainer: {
     padding: normalize(20),
@@ -204,9 +307,46 @@ const styles = StyleSheet.create({
     marginBottom: normalize(12),
   },
   description: {
-    fontSize: normalize(15),
-    color: '#555',
-    lineHeight: normalize(22),
+    fontSize: normalize(16),
+    color: '#666',
+    lineHeight: normalize(24),
+  },
+  previewContainer: {
+    padding: normalize(16),
+    backgroundColor: '#fff',
+    marginTop: normalize(8),
+  },
+  previewImage: {
+    width: normalize(120),
+    height: normalize(80),
+    borderRadius: normalize(8),
+    marginRight: normalize(8),
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: normalize(16),
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: normalize(12),
+    paddingHorizontal: normalize(24),
+    borderRadius: normalize(20),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  actionButtonText: {
+    color: '#fff',
+    marginLeft: normalize(8),
+    fontSize: normalize(14),
+    fontWeight: 'bold',
   },
   mapContainer: {
     marginTop: normalize(20),
