@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
       },
       seeAllText: {
-        color: '#5D5FEE',
+        color: '#4f78f1',
         fontSize: normalize(14),
       }
     ,
@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
         borderRadius: normalize(8)
     },
     currentLocationText: {
-        color: '#5D5FEE',
+        color: '#4f78f1',
         textAlign: 'center',
         fontSize: normalize(14)
     },
@@ -115,7 +115,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     button: {
-        backgroundColor: '#5D5FEE',
+        backgroundColor: '#4f78f1',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -151,7 +151,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     activeTab: {
-        backgroundColor: '#5D5FEE',
+        backgroundColor: '#4f78f1',
     },
     tabText: {
         marginTop: normalize(4),

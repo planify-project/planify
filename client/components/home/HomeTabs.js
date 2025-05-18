@@ -24,8 +24,10 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
       {tabs.map((tab, index) => (
         <TouchableOpacity 
           key={tab.id}
-          style={[styles.tab, activeTab === index && styles.activeTab]}
-          onPress={() => handleTabPress(index, tab.screen)}
+          style={[styles.tab, activeTab === tab.id && styles.activeTab]}
+          // onPress={() => handleTabPress(index, tab.screen)}
+          onPress={() => handleTabPress(tab.id, tab.screen)}
+
         >
           <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
             {tab.label}

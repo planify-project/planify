@@ -6,7 +6,23 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true,
     },
-    title: {
+    provider_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
+    },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'service_categories',
+        key: 'id'
+      },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
+    },
+    type: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -18,38 +34,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    },
-    serviceType: {
+    service_type: {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: 'general',
+      field: 'service_type'
     },
-    imageUrl: {
+    image_url: {
       type: DataTypes.STRING,
       allowNull: true,
-    },
-    provider_id: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    category_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'service_categories',
-        key: 'id'
-      },
-      onDelete: 'SET NULL',
-      onUpdate: 'CASCADE'
+      field: 'image_url'
     }
   }, {
     timestamps: true,

@@ -16,59 +16,56 @@ export default function WishlistScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [allEvents, setAllEvents] = useState([]);
 
+  // Fetch all events once when component mounts
   useEffect(() => {
-    fetchWishlistEvents();
-  }, [wishlistItems]);
-
-  const fetchWishlistEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!wishlistItems || wishlistItems.length === 0) {
-        setEvents([]);
-        setLoading(false);
-        return;
+    const fetchAllEvents = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/events/public`);
+        setAllEvents(response.data);
+      } catch (err) {
+        console.error('Error fetching all events:', err);
       }
+    };
+    fetchAllEvents();
+  }, []);
 
-      // Get all events first
-      const response = await axios.get(`${API_BASE}/events/public`);
-      const allEvents = response.data;
-
-      // Filter events that are in the wishlist
-      const wishlistedEvents = allEvents.filter(event => 
-        wishlistItems.some(item => item.item_id === event.id)
-      );
-
-      // Format the events
-      const formattedEvents = wishlistedEvents.map(event => ({
-        id: event.id,
-        name: event.name,
-        title: event.name,
-        location: event.location || 'Location not specified',
-        price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
-        rating: '4.5',
-        per: 'person',
-        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-        description: event.description,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        type: event.type,
-        status: event.status,
-        maxParticipants: event.maxParticipants,
-        available_spots: event.available_spots,
-        budget: event.budget
-      }));
-
-      setEvents(formattedEvents);
-    } catch (err) {
-      console.error('Error fetching wishlist events:', err);
-      setError('Failed to load wishlist events');
-    } finally {
-      setLoading(false);
+  // Update events whenever wishlistItems changes
+  useEffect(() => {
+    if (!wishlistItems || wishlistItems.length === 0) {
+      setEvents([]);
+      return;
     }
-  };
+
+    // Filter events that are in the wishlist
+    const wishlistedEvents = allEvents.filter(event => 
+      wishlistItems.some(item => Number(item.item_id) === Number(event.id))
+    );
+
+    // Format the events
+    const formattedEvents = wishlistedEvents.map(event => ({
+      id: event.id,
+      name: event.name,
+      title: event.name,
+      location: event.location || 'Location not specified',
+      price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
+      rating: '4.5',
+      per: 'person',
+      image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+      description: event.description,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      type: event.type,
+      status: event.status,
+      maxParticipants: event.maxParticipants,
+      available_spots: event.available_spots,
+      budget: event.budget
+    }));
+
+    setEvents(formattedEvents);
+    setLoading(false);
+  }, [wishlistItems, allEvents]);
 
   if (wishlistLoading || loading) {
     return (

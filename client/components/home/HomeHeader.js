@@ -26,7 +26,7 @@ const HomeHeader = ({
             <Text style={styles.locationText}>{city || errorMsg || 'Detecting...'}</Text>
           )}
           <TouchableOpacity onPress={onLocationPress} style={{ marginLeft: 8 }}>
-            <Ionicons name="pencil-outline" size={16} color="#5D5FEE" />
+            <Ionicons name="pencil-outline" size={16} color="#4f78f1" />
           </TouchableOpacity>
         </View>
       </View>

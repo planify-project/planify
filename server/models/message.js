@@ -17,39 +17,31 @@ module.exports = (sequelize, DataTypes) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
     },
     from_user_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
     },
     to_user_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'users',
-        key: 'id'
-      }
+         model: 'user',
+        key: 'id',
+      },
     },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    service_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'services',
+     service_id: {   
+      type: DataTypes.INTEGER, 
+      allowNull: false, 
+       references: {
+        model: 'services',  
         key: 'id'
       }
     },
     is_read: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false 
     },
     created_at: {
       type: DataTypes.DATE,

@@ -6,6 +6,7 @@ require('dotenv').config();
 const db = require('./database');
 const path = require('path');
 const morgan = require('morgan');
+const session = require('express-session');
 
 // Import routes
 const eventsRouter = require('./routes/events');
@@ -15,6 +16,7 @@ const servicesRouter = require('./routes/services.js');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
 const authRoutes = require('./routes/auth.routes');
+const reviewRoutes = require('./routes/review.route.js');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
@@ -165,12 +167,46 @@ io.engine.on("connection_error", (err) => {
 // Make io accessible to routes
 app.set('io', io);
 
-// API Routes
+// Middleware
+app.use(cors({
+  origin: '*', // Allow all origins in development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Increase payload limit for image uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Add this after session middleware
+app.use((req, res, next) => {
+  // For testing purposes only - you should handle actual user authentication
+  req.session.userId = req.session.userId || 1; 
+  next();
+});
+
+// Request logging middleware
+app.use(morgan('dev'));
+
+// Routes
 app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api', stripeRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);

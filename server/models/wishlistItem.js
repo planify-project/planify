@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     item_id: { 
-      type: DataTypes.STRING(36),
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     item_type: { 

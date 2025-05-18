@@ -30,7 +30,18 @@ const PopularEvents = ({ navigation }) => {
         price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
         rating: '4.5',
         per: 'person',
-        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'
+        image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+        description: event.description,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        type: event.type,
+        status: event.status,
+        maxParticipants: event.maxParticipants,
+        available_spots: event.available_spots,
+        budget: event.budget,
+        attendees_count: event.attendees_count,
+        latitude: event.latitude,
+        longitude: event.longitude,
       }));
 
       console.log('Formatted popular events:', formattedEvents);

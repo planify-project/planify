@@ -1,7 +1,9 @@
+
+
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
-      type: DataTypes.STRING(36),
+      type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
@@ -18,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true, // Allow null for Firebase users
     },
   }, {
+    tableName: 'user', 
     underscored: true,
     timestamps: true,
-    tableName: 'users'
   });
 };
