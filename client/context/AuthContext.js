@@ -5,11 +5,16 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged,updateProfile, updateEmail, updatePassword,
-    
+    onAuthStateChanged, 
+    updateProfile,
+    updateEmail,
+    updatePassword,
+    GoogleAuthProvider,
+    FacebookAuthProvider
+
 } from 'firebase/auth';
 import { uploadToCloudinary } from '../api/cloudinary';
-import { API_BASE } from '../configs/url';
+import { API_BASE } from '../config';
 
 export const AuthContext = createContext({});
 

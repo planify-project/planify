@@ -4,12 +4,12 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import EventCard from '../EventCard';
 import { styles } from './styles';
+import { API_BASE } from '../../config';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 const normalize = (size) => Math.round(scale * size);
 
-const API_BASE_URL = 'http://192.168.149.126:3000/api';
 
 const NearbyEvents = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -35,7 +35,7 @@ const NearbyEvents = ({ navigation }) => {
       });
 
       // Fetch nearby events
-      const response = await axios.get(`${API_BASE_URL}/events/nearby`, {
+      const response = await axios.get(`${API_BASE}/events/nearby`, {
         params: {
           lat: location.coords.latitude,
           lon: location.coords.longitude,
