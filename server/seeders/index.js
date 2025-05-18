@@ -1,19 +1,27 @@
+const { sequelize } = require('../database');
 const seedEventSpaces = require('./eventSpaces');
 
-const runSeeds = async () => {
+
+async function runAllSeeds() {
   try {
-    console.log('Starting database seeding...');
+    // Sync database tables
+    await sequelize.sync({ force: true });
+    console.log('Database tables synced');
+
     
-    // Run event spaces seeder
+
     await seedEventSpaces();
+    console.log('Event spaces seeded successfully');
+
+
+
     
-    console.log('Database seeding completed successfully!');
+    console.log('All seeds completed successfully');
     process.exit(0);
   } catch (error) {
     console.error('Error running seeds:', error);
     process.exit(1);
   }
-};
+}
 
-// Run the seeds
-runSeeds(); 
+runAllSeeds();

@@ -1,12 +1,19 @@
 import { io } from 'socket.io-client';
 import { SOCKET_URL, SOCKET_CONFIG } from '../config';
+import NetInfo from '@react-native-community/netinfo';
 
 let socket = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = SOCKET_CONFIG.reconnectionAttempts;
 
-const initializeSocket = () => {
+const initializeSocket = async () => {
   if (socket) return socket;
+
+  // Check network connectivity first
+  const netInfo = await NetInfo.fetch();
+  if (!netInfo.isConnected) {
+    throw new Error('No network connection available');
+  }
 
   socket = io(SOCKET_URL, {
     transports: ['polling', 'websocket'],
@@ -38,16 +45,22 @@ const initializeSocket = () => {
   socket.on('disconnect', (reason) => {
     console.log('Socket disconnected:', reason);
     if (reason === 'io server disconnect') {
+      // Server initiated disconnect, try to reconnect
       socket.connect();
     }
+  });
+
+  // Add error handler
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
 
   return socket;
 };
 
-export const getSocket = () => {
+export const getSocket = async () => {
   if (!socket) {
-    return initializeSocket();
+    return await initializeSocket();
   }
   return socket;
 };

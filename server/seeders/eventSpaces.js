@@ -1,87 +1,146 @@
 const { EventSpace } = require('../database');
+const { v4: uuidv4 } = require('uuid');
 
-const eventSpaces = [
-  {
-    name: 'Grand Ballroom',
-    description: 'Experience luxury at its finest in our Grand Ballroom. This magnificent venue features soaring ceilings, crystal chandeliers, and elegant marble floors. Perfect for weddings, galas, and corporate events. Our professional staff ensures every detail is perfect, from setup to cleanup. The space includes a built-in stage, professional sound system, and dedicated catering kitchen.',
-    capacity: 500,
-    price: 5000,
-    location: 'Downtown',
-    amenities: ['Stage', 'Dance Floor', 'Catering Kitchen', 'Parking', 'Crystal Chandelier', 'Marble Floors', 'Professional Sound System'],
-    images: [
-      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600&fit=crop'
-    ],
-    availability: true
-  },
-  {
-    name: 'Garden Pavilion',
-    description: 'Discover our enchanting Garden Pavilion, a perfect blend of natural beauty and elegant architecture. Surrounded by meticulously maintained gardens and blooming flowers, this venue offers a magical setting for outdoor weddings and summer events. The covered pavilion ensures your event can proceed rain or shine, while the romantic lighting creates an unforgettable atmosphere.',
-    capacity: 200,
-    price: 3000,
-    location: 'City Park',
-    amenities: ['Garden Area', 'Covered Pavilion', 'Restrooms', 'Lighting', 'Landscaping', 'Outdoor Kitchen', 'Bridal Suite'],
-    images: [
-      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop'
-    ],
-    availability: true
-  },
-  {
-    name: 'Modern Conference Center',
-    description: 'Host your next corporate event in our state-of-the-art Conference Center. Designed for productivity and comfort, this venue features cutting-edge technology, flexible seating arrangements, and professional AV equipment. Perfect for conferences, seminars, and business meetings. Our dedicated team ensures seamless event execution.',
-    capacity: 300,
-    price: 4000,
-    location: 'Business District',
-    amenities: ['Projector', 'Sound System', 'WiFi', 'Catering Services', 'Breakout Rooms', 'Business Center', 'Video Conferencing'],
-    images: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=600&fit=crop'
-    ],
-    availability: true
-  },
-  {
-    name: 'Rooftop Terrace',
-    description: 'Elevate your event at our stunning Rooftop Terrace. Enjoy breathtaking panoramic city views while hosting your special occasion. This modern venue features a stylish bar, comfortable seating areas, and ambient lighting. Perfect for cocktail parties, intimate gatherings, and sunset celebrations. Our professional staff ensures a memorable experience.',
-    capacity: 150,
-    price: 3500,
-    location: 'City Center',
-    amenities: ['Bar Area', 'Outdoor Seating', 'Heating', 'Lighting', 'City Views', 'DJ Booth', 'Catering Kitchen'],
-    images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop'
-    ],
-    availability: true
-  },
-  {
-    name: 'Historic Mansion',
-    description: 'Step back in time at our beautifully restored Historic Mansion. This architectural gem features original details, grand staircases, and period furnishings. Perfect for elegant weddings, formal dinners, and cultural events. The venue includes a library, garden, and multiple event spaces. Create unforgettable memories in this timeless setting.',
-    capacity: 250,
-    price: 4500,
-    location: 'Historic District',
-    amenities: ['Grand Staircase', 'Garden', 'Parking', 'Catering Kitchen', 'Period Furnishings', 'Library', 'Bridal Suite'],
-    images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop'
-    ],
-    availability: true
-  }
-];
-
-const seedEventSpaces = async () => {
+async function seedEventSpaces() {
   try {
-    console.log('Seeding event spaces...');
-    
-    // Clear existing event spaces
+    const spaces = [
+      {
+        id: uuidv4(),
+        name: 'La Marsa Beach Resort',
+        description: 'Luxurious beachfront venue with panoramic Mediterranean views',
+        price: 3500.00,
+        capacity: 400,
+        images: [
+          'https://images.unsplash.com/photo-1519167758481-83f550bb49b3',
+          'https://images.unsplash.com/photo-1601907478250-a039d5e14330',
+          'https://images.unsplash.com/photo-1519225421980-715cb0215aed'
+        ],
+        location: 'La Marsa, Tunis',
+        latitude: 36.8892,
+        longitude: 10.3229,
+        amenities: {
+          wifi: true,
+          parking: true,
+          catering: true,
+          beach_access: true,
+          sound_system: true,
+          outdoor_seating: true
+        },
+        rating: 4.8,
+        status: 'available'
+      },
+      {
+        id: uuidv4(),
+        name: 'Carthage Gardens',
+        description: 'Historic venue surrounded by ancient ruins and lush gardens',
+        price: 2800.00,
+        capacity: 300,
+        images: [
+          'https://images.unsplash.com/photo-1464808322410-1a934aab61e5',
+          'https://images.unsplash.com/photo-1517167685284-96a27681ad75',
+          'https://images.unsplash.com/photo-1606744888344-493238951221'
+        ],
+        location: 'Carthage, Tunis',
+        latitude: 36.8526,
+        longitude: 10.3284,
+        amenities: {
+          wifi: true,
+          parking: true,
+          catering: true,
+          garden: true,
+          lighting: true,
+          security: true
+        },
+        rating: 4.7,
+        status: 'available'
+      },
+      {
+        id: uuidv4(),
+        name: 'Sidi Bou Said Palace',
+        description: 'Traditional Tunisian palace with stunning blue and white architecture',
+        price: 4200.00,
+        capacity: 250,
+        images: [
+          'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa',
+          'https://images.unsplash.com/photo-1519167758481-83f550bb49b3',
+          'https://images.unsplash.com/photo-1515195641055-8b39b2ea2580'
+        ],
+        location: 'Sidi Bou Said, Tunis',
+        latitude: 36.8711,
+        longitude: 10.3414,
+        amenities: {
+          wifi: true,
+          parking: true,
+          catering: true,
+          terrace: true,
+          air_conditioning: true,
+          historic_tours: true
+        },
+        rating: 4.9,
+        status: 'available'
+      },
+      {
+        id: uuidv4(),
+        name: 'Hammamet Conference Center',
+        description: 'Modern venue perfect for corporate events and conferences',
+        price: 3200.00,
+        capacity: 600,
+        images: [
+          'https://images.unsplash.com/photo-1587825140708-dfcdd712d627',
+          'https://images.unsplash.com/photo-1517164850305-99a3e65bb47e',
+          'https://images.unsplash.com/photo-1526772662000-3f88f10405ff'
+        ],
+        location: 'Hammamet, Tunisia',
+        latitude: 36.4000,
+        longitude: 10.6167,
+        amenities: {
+          wifi: true,
+          parking: true,
+          catering: true,
+          projector: true,
+          stage: true,
+          translation_booths: true,
+          conference_rooms: true
+        },
+        rating: 4.6,
+        status: 'available'
+      },
+      {
+        id: uuidv4(),
+        name: 'Djerba Luxury Resort',
+        description: 'Island paradise venue with private beach access',
+        price: 5000.00,
+        capacity: 500,
+        images: [
+          'https://images.unsplash.com/photo-1573843981267-be1999ff37cd',
+          'https://images.unsplash.com/photo-1578683010236-d716f9a3f461',
+          'https://images.unsplash.com/photo-1540541338287-41700207dee6'
+        ],
+        location: 'Djerba, Tunisia',
+        latitude: 33.8075,
+        longitude: 10.8451,
+        amenities: {
+          wifi: true,
+          parking: true,
+          catering: true,
+          spa: true,
+          beach_access: true,
+          pool: true,
+          helipad: true
+        },
+        rating: 4.9,
+        status: 'available'
+      }
+    ];
+
     await EventSpace.destroy({ where: {} });
-    
-    // Insert new event spaces
-    await EventSpace.bulkCreate(eventSpaces);
-    
-    console.log('Successfully seeded event spaces!');
+    const createdSpaces = await EventSpace.bulkCreate(spaces);
+    console.log(`Created ${createdSpaces.length} event spaces`);
+    return createdSpaces;
   } catch (error) {
     console.error('Error seeding event spaces:', error);
+    throw error;
   }
-};
+}
 
-module.exports = seedEventSpaces; 
+module.exports = seedEventSpaces;

@@ -11,6 +11,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
   const { service } = route.params;
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { socket } = useSocket();
   const auth = getAuth(); // Get Firebase Auth instance
 
@@ -40,49 +41,72 @@ export default function ServiceDetailScreen({ route, navigation }) {
   };
 
   const handleBooking = async (bookingData) => {
+    console.log('Starting booking submission...');
+    setIsSubmitting(true);
+    
     try {
+      // Check if user is logged in using Firebase Auth
       if (!auth.currentUser) {
+        console.log('User not logged in');
         Alert.alert('Error', 'Please login to book a service');
-        navigation.navigate('Login');
+        navigation.navigate('Auth');
         return;
       }
 
-      // Validate booking data
-      if (!bookingData.date || !bookingData.space || !bookingData.phone_number) {
-        Alert.alert('Error', 'Please fill in all required fields');
-        return;
-      }
-
-      // Format the booking payload to match server expectations
+      console.log('Creating booking payload...');
+      // Create booking payload with required fields
       const bookingPayload = {
         user_id: auth.currentUser.uid,
         service_id: service.id,
-        event_id: "1", // Required field
+        event_id: "1",
         date: new Date(bookingData.date).toISOString(),
         space: bookingData.space.trim(),
         phone_number: bookingData.phone_number.replace(/[^0-9]/g, ''),
         status: 'pending'
       };
 
-      console.log('Sending booking request:', bookingPayload);
-      const response = await api.post('/bookings', bookingPayload);
+      console.log('Sending booking request...');
+      // Send booking request
+      const response = await api.post('/api/bookings', bookingPayload);
 
+      console.log('Booking response received:', response.data);
       if (response.data.success) {
+        // Close modal and show success message
         setShowBookingModal(false);
-        Alert.alert('Success', 'Booking request sent! Waiting for provider response.');
+        Alert.alert(
+          'Success', 
+          'Booking request sent! You will be notified when the provider responds.',
+          [{ 
+            text: 'OK',
+            onPress: () => {
+              // Join user's notification room if not already joined
+              if (socket) {
+                console.log('Joining user notification room...');
+                socket.emit('joinUserRoom', { userId: auth.currentUser.uid });
+              }
 
-        // Emit socket event for real-time notification
-        socket?.emit('newBooking', {
-          serviceId: service.id,
-          providerId: service.provider_id
-        });
+              // Navigate to the notifications tab
+              navigation.navigate('MainTabs', {
+                screen: 'Settings',
+                params: {
+                  screen: 'Notifications'
+                }
+              });
+            }
+          }]
+        );
+      } else {
+        throw new Error(response.data.message || 'Booking failed');
       }
     } catch (error) {
       console.error('Booking error:', error);
       Alert.alert(
         'Error', 
-        error.response?.data?.message || 'Failed to send booking request'
+        error.response?.data?.message || 'Failed to send booking request. Please check your internet connection and try again.'
       );
+    } finally {
+      console.log('Finishing booking submission...');
+      setIsSubmitting(false);
     }
   };
 
@@ -155,6 +179,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
         onClose={() => setShowBookingModal(false)}
         onSubmit={handleBooking}
         service={service}
+        isSubmitting={isSubmitting}
       />
     </ScrollView>
   );

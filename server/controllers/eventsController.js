@@ -70,26 +70,18 @@ exports.createEvent = async (req, res) => {
       name,
       type: type || 'social',
       startDate: date,
-      location: venue?.name || '',
+      location: venue?.location || '',
       status: 'pending',
-      created_by: 1,
+      created_by: req.user?.id || "1",
       budget: venue?.price ? parseFloat(venue.price) : 0
     });
 
     console.log('Event created:', event);
 
-    res.status(201).json({
-      success: true,
-      data: event,
-      message: 'Event created successfully'
-    });
-
+    res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
-    console.error('Error creating event:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error('❌ Error creating event:', error.stack || error); // 👈 خليها تبين stack trace
+    res.status(500).json({ message: 'Failed to create event', error: error.message });
   }
 };
 // Helper function to calculate distance between two points

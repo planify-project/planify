@@ -1,12 +1,13 @@
 const { Booking, Service, User, Event, Notification } = require('../database');
 
 const createBooking = async (req, res) => {
-  const { user_id, service_id, event_id, date, space, phone_number } = req.body;
+  const { user_id, service_id, date, space, phone_number } = req.body;
   console.log('Received booking data:', req.body);
 
   try {
     // Validate required fields
-    if (!user_id || !service_id || !event_id || !date || !space || !phone_number) {
+    if (!user_id || !service_id || !date || !space || !phone_number) {
+      console.log('Missing required fields:', { user_id, service_id, date, space, phone_number });
       return res.status(400).json({ 
         success: false,
         message: "All fields are required"
@@ -42,17 +43,31 @@ const createBooking = async (req, res) => {
     // Check if service exists
     const service = await Service.findByPk(service_id);
     if (!service) {
+      console.log('Service not found:', service_id);
       return res.status(404).json({
         success: false,
         message: "Service not found"
       });
     }
 
-    // Map snake_case input to camelCase model fields
+    // Get user details for notification
+    console.log('Looking up user with Firebase UID:', user_id);
+    const user = await User.findOne({ where: { firebase_uid: user_id } });
+    if (!user) {
+      console.log('User not found with Firebase UID:', user_id);
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please try logging out and logging back in."
+      });
+    }
+
+    console.log('Found user:', user.id);
+
+    // Create booking
     const newBooking = await Booking.create({
-      userId: user_id,
+      userId: user.id,
       serviceId: service_id,
-      providerId: service.provider_id, // Get provider_id from the service
+      providerId: service.provider_id,
       date: bookingDate,
       space: space,
       phone: phone_number,
@@ -63,11 +78,43 @@ const createBooking = async (req, res) => {
     const notification = await Notification.create({
       user_id: service.provider_id,
       title: 'New Booking Request',
-      message: `You have a new booking request for your service`,
+      message: `${user.name} has requested to book your service for ${bookingDate.toLocaleDateString()}`,
       type: 'booking',
       booking_id: newBooking.id,
-      is_read: false
+      is_read: false,
+      metadata: {
+        bookingId: newBooking.id,
+        serviceId: service_id,
+        userId: user.id,
+        userName: user.name,
+        date: bookingDate,
+        space: space
+      }
     });
+
+    // Get socket instance
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to provider's room
+      io.to(`user_${service.provider_id}`).emit('notification', {
+        type: 'booking',
+        notification,
+        booking: newBooking
+      });
+
+      // Also emit to user's room for confirmation
+      io.to(`user_${user.id}`).emit('notification', {
+        type: 'booking_confirmation',
+        notification: {
+          title: 'Booking Request Sent',
+          message: `Your booking request for ${service.title} has been sent to the provider.`,
+          type: 'booking_confirmation',
+          booking_id: newBooking.id,
+          is_read: false
+        },
+        booking: newBooking
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -138,33 +185,73 @@ const respondToBooking = async (req, res) => {
     const { bookingId } = req.params;
     const { response } = req.body; // 'confirmed' or 'canceled'
 
-    const existingBooking = await Booking.findByPk(bookingId);
-    if (!existingBooking) return res.status(404).json({ message: "Booking not found" });
+    const existingBooking = await Booking.findByPk(bookingId, {
+      include: [
+        { model: User, as: 'user' },
+        { model: Service, as: 'service' }
+      ]
+    });
 
+    if (!existingBooking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Update booking status
     existingBooking.status = response;
     await existingBooking.save();
 
     // Create notification for the customer
     const notification = await Notification.create({
-      user_id: existingBooking.user_id,
+      user_id: existingBooking.userId,
       title: `Booking ${response}`,
-      message: `Your booking has been ${response} by the provider.`,
+      message: `Your booking for ${existingBooking.service.title} has been ${response} by the provider.`,
       is_read: false,
-      type: 'response',
-      booking_id: existingBooking.id
+      type: 'booking_response',
+      booking_id: existingBooking.id,
+      metadata: {
+        bookingId: existingBooking.id,
+        serviceId: existingBooking.serviceId,
+        status: response,
+        date: existingBooking.date
+      }
     });
 
-    // Send real-time notification to customer
+    // Get socket instance
     const io = req.app.get('io');
-    io.to(`user_${existingBooking.user_id}`).emit('bookingResponse', {
-      notification,
-      booking: existingBooking
-    });
+    if (io) {
+      // Emit to customer's room
+      io.to(`user_${existingBooking.userId}`).emit('notification', {
+        type: 'booking_response',
+        notification,
+        booking: existingBooking
+      });
 
-    res.status(200).json(existingBooking);
+      // Also emit to provider's room for confirmation
+      io.to(`user_${existingBooking.providerId}`).emit('notification', {
+        type: 'booking_response_confirmation',
+        notification: {
+          title: 'Booking Response Sent',
+          message: `You have ${response} the booking request.`,
+          type: 'booking_response_confirmation',
+          booking_id: existingBooking.id,
+          is_read: false
+        },
+        booking: existingBooking
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: existingBooking,
+      message: `Booking ${response} successfully`
+    });
   } catch (error) {
     console.error("Error responding to booking:", error);
-    res.status(500).json({ message: "Failed to respond to booking." });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to respond to booking",
+      error: error.message 
+    });
   }
 };
 

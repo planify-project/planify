@@ -12,12 +12,12 @@ const eventsRouter = require('./routes/events');
 const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const servicesRouter = require('./routes/services.js');
-const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
 const authRoutes = require('./routes/auth.routes');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const bookingRoutes = require('./routes/booking.routes.js');
 
 // Create Express app and HTTP server
 const app = express();
@@ -121,16 +121,16 @@ io.engine.on("connection_error", (err) => {
 app.set('io', io);
 
 // API Routes
-app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
+app.use('/api/users', userRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
-app.use('/api/auth', authRoutes);
-app.use('/api', stripeRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
