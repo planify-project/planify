@@ -169,6 +169,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/authadmin',AdminAuthRoutes)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

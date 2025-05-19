@@ -155,7 +155,7 @@ const Dashboard = () => {
                     />
                 </div>
 
-                <SalesByCountry countries={countries} />
+                {/* <SalesByCountry countries={countries} /> */}
             </div>
         </div>
     );

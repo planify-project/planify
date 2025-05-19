@@ -168,12 +168,12 @@ const syncDatabase = async () => {
 
     // Then sync all other models
     await sequelize.sync({ alter: true });
-    // console.log('All models were synchronized successfully.');
+    console.log('All models were synchronized successfully.');
 
     // Import and run the event spaces seeder
     const seedEventSpaces = require('./seeds/eventSpaces');
-    await seedEventSpaces();
-    console.log('Event spaces seeded successfully!');
+    // await seedEventSpaces();
+    // console.log('Event spaces seeded successfully!');
   } catch (error) {
     console.error('Error during database sync:', error);
     process.exit(1);

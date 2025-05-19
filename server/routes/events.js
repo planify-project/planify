@@ -11,6 +11,7 @@ router.get('/private-events-this-year', eventsController.getPrivateEventsThisYea
 router.get('/public-events-this-year', eventsController.getPublicEventsThisYear);
 router.get('/event-status-distribution', eventsController.getEventStatusDistribution);
 router.put('/admin-update/:id', eventsController.adminUpdateEvent);
+router.get('/types', eventsController.getEventTypes);
 
 
 // GET /api/events

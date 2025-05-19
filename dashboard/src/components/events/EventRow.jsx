@@ -10,24 +10,22 @@ const EventRow = ({ item, theme, onEdit, onDelete, showImage }) => {
   const shortDesc = isLongDesc ? item.description.slice(0, MAX_DESC_LENGTH) + '...' : item.description;
 
   return (
-    <tr key={item.id} className={theme.startsWith('dark') ? 'hover:bg-gray-700 transition-colors' : 'hover:bg-blue-50 transition-colors'}>
+    <tr key={item.id} className={theme.startsWith('dark') ? 'hover:bg-gray-700 transition-colors' : 'hover:bg-green-50 transition-colors'}>
       {showImage && (
-        <td className="px-2 py-2 w-16 min-w-[4rem] max-w-[4rem] align-middle">
+        <td className="px-6 py-4">
           {item.coverImage ? (
             <img
               src={item.coverImage}
               alt={item.name}
-              className="h-10 w-10 rounded-lg object-cover border border-gray-300"
+              className="w-12 h-12 object-cover rounded-md border border-gray-300"
             />
           ) : (
-            <div className="h-10 w-10 rounded-lg bg-gray-300 flex items-center justify-center text-gray-500 text-xs">
-              N/A
-            </div>
+            <span className="text-gray-400">No Image</span>
           )}
         </td>
       )}
-      <td className="px-2 py-2 text-xs text-gray-800 dark:text-gray-100 w-28 min-w-[7rem] max-w-[8rem] align-middle">{item.name}</td>
-      <td className={theme.startsWith('dark') ? 'px-2 py-2 text-xs text-gray-300 w-80 min-w-[18rem] max-w-[28rem] align-top' : 'px-2 py-2 text-xs text-gray-700 w-80 min-w-[18rem] max-w-[28rem] align-top'}>
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-100' : 'px-6 py-4 text-gray-800'}>{item.name}</td>
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-300' : 'px-6 py-4 text-gray-700'}>
         <div>
           {showFullDesc ? (
             <>
@@ -54,11 +52,11 @@ const EventRow = ({ item, theme, onEdit, onDelete, showImage }) => {
           )}
         </div>
       </td>
-      <td className={theme.startsWith('dark') ? 'px-2 py-2 text-xs text-gray-300 w-28 min-w-[7rem] max-w-[8rem] align-middle' : 'px-2 py-2 text-xs text-gray-700 w-28 min-w-[7rem] max-w-[8rem] align-middle'}>{item.startDate ? new Date(item.startDate).toLocaleString() : ''}</td>
-      <td className={theme.startsWith('dark') ? 'px-2 py-2 text-xs text-gray-300 w-28 min-w-[7rem] max-w-[8rem] align-middle' : 'px-2 py-2 text-xs text-gray-700 w-28 min-w-[7rem] max-w-[8rem] align-middle'}>{item.endDate ? new Date(item.endDate).toLocaleString() : ''}</td>
-      <td className={theme.startsWith('dark') ? 'px-2 py-2 text-xs text-gray-300 w-24 min-w-[5rem] max-w-[7rem] align-middle' : 'px-2 py-2 text-xs text-gray-700 w-24 min-w-[5rem] max-w-[7rem] align-middle'}>{item.location}</td>
-      <td className={theme.startsWith('dark') ? 'px-2 py-2 text-xs text-gray-300 w-20 min-w-[4rem] max-w-[6rem] align-middle' : 'px-2 py-2 text-xs text-gray-700 w-20 min-w-[4rem] max-w-[6rem] align-middle'}>{item.type}</td>
-      <td className="px-2 py-2 align-middle w-24 min-w-[5rem] max-w-[7rem]">
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-300' : 'px-6 py-4 text-gray-700'}>{item.startDate ? new Date(item.startDate).toLocaleString() : ''}</td>
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-300' : 'px-6 py-4 text-gray-700'}>{item.endDate ? new Date(item.endDate).toLocaleString() : ''}</td>
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-300' : 'px-6 py-4 text-gray-700'}>{item.location}</td>
+      <td className={theme.startsWith('dark') ? 'px-6 py-4 text-gray-300' : 'px-6 py-4 text-gray-700'}>{item.type}</td>
+      <td className="px-6 py-4">
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
           item.status === 'upcoming' ? (theme.startsWith('dark') ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700') :
           item.status === 'ongoing' ? (theme.startsWith('dark') ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-100 text-yellow-700') :
@@ -72,26 +70,24 @@ const EventRow = ({ item, theme, onEdit, onDelete, showImage }) => {
           {item.status?.charAt(0).toUpperCase() + item.status?.slice(1)}
         </span>
       </td>
-      <td className="px-2 py-2 align-middle w-20 min-w-[4rem] max-w-[6rem]">
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${item.isPublic ? (theme.startsWith('dark') ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700') : (theme.startsWith('dark') ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700')}`}>
-          {item.isPublic ? 'Yes' : 'No'}
-        </span>
+      <td className="px-6 py-4">
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${item.isPublic ? (theme.startsWith('dark') ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700') : (theme.startsWith('dark') ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700')}`}>{item.isPublic ? 'Yes' : 'No'}</span>
       </td>
-      <td className="px-2 py-2 align-middle w-20 min-w-[4rem] max-w-[6rem]">
-        <div className="flex gap-2 items-center">
+      <td className="px-6 py-4">
+        <div className="inline-flex gap-3">
           <button
             onClick={() => onEdit(item)}
-            className={theme.startsWith('dark') ? 'p-1 rounded-full hover:bg-blue-900 text-blue-300 transition' : 'p-1 rounded-full hover:bg-blue-100 text-blue-600 transition'}
+            className={theme.startsWith('dark') ? 'p-2 rounded-full hover:bg-blue-900 text-blue-300 transition' : 'p-2 rounded-full hover:bg-blue-100 text-blue-600 transition'}
             aria-label="Edit"
           >
-            <MdEdit size={14} />
+            <MdEdit size={16} />
           </button>
           <button
             onClick={() => onDelete(item.id)}
-            className={theme.startsWith('dark') ? 'p-1 rounded-full hover:bg-red-900 text-red-300 transition' : 'p-1 rounded-full hover:bg-red-100 text-red-600 transition'}
+            className={theme.startsWith('dark') ? 'p-2 rounded-full hover:bg-red-900 text-red-300 transition' : 'p-2 rounded-full hover:bg-red-100 text-red-600 transition'}
             aria-label="Delete"
           >
-            <FaTrash size={12} />
+            <FaTrash size={16} />
           </button>
         </div>
       </td>

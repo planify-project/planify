@@ -8,10 +8,12 @@ module.exports = {
     // Admin Login
     Login: async (req, res) => {
         try {
+            console.log("Received body:", req.body);
+
             const { id, email, password } = req.body;
 
             // Find admin by id
-            const admin = await Admin.findOne({ where: { id } });
+            const admin = await Admin.findOne({ where: { email } });
             if (!admin) {
                 return res.status(404).json({ message: 'Admin not found' });
             }
@@ -28,7 +30,9 @@ module.exports = {
 
     // Admin Registration
     register: async (req, res) => {
+
         try {
+            
             const { id, name, email, password } = req.body;
 
             // Check if admin already exists
@@ -57,14 +61,14 @@ module.exports = {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-             await Admin.update({ name, image }
+            await Admin.update({ name, image }
                 , {
-                where: { id },
+                    where: { id },
                 }
             )
 
-            res.status(200).json({ message: 'User updated successfully', user });           
-        }catch (error) {
+            res.status(200).json({ message: 'User updated successfully', user });
+        } catch (error) {
             res.status(500).json({ message: 'Internal server error', error: error.message });
         }
     },
@@ -82,5 +86,33 @@ module.exports = {
 
     //     }
     // }
+    socialLogin: async (req, res) => {
+        const { id, email, name, image } = req.body;
+
+        if (!id || !email || !name) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        try {
+            // Check if user exists
+            let user = await Admin.findOne({ where: { id } });
+
+            if (!user) {
+                // Create a new user
+                user = await Admin.create({
+                    id,
+                    email,
+                    name,
+                    image,
+                    provider: "google",
+                });
+            }
+
+            return res.status(200).json({ message: "Login successful", user });
+        } catch (error) {
+            console.error("Social login error:", error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+    }
 };
 

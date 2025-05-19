@@ -79,7 +79,7 @@ const Events = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/event/${deleteId}`);
+      await axios.delete(`http://localhost:3000/api/events/${deleteId}`);
       fetchData(currentPage);
       setShowModal(false);
       setDeleteId(null);

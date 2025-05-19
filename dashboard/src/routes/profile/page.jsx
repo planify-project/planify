@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import { ThemeProviderContext } from "@/contexts/theme-context";
 import { AuthContext } from "../../contexts/AuthContext.jsx";
 
@@ -6,37 +6,52 @@ const ProfilePage = () => {
     const { theme } = useContext(ThemeProviderContext);
     const { user, updateUserProfile } = useContext(AuthContext);
 
-    // Fallbacks for missing user data
     const displayName = user?.displayName || "User Name";
     const email = user?.email || "user@email.com";
     const photoURL = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=5D5FEE&color=fff&size=80`;
+
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(displayName);
-    const [image, setImage] = useState(photoURL);
+    const [previewImage, setPreviewImage] = useState(photoURL);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef();
 
+    useEffect(() => {
+        // Sync with latest user data when exiting edit mode
+        if (!editing) {
+            setName(user?.displayName || "User Name");
+            setPreviewImage(user?.photoURL || photoURL);
+        }
+    }, [editing, user]);
+
     const handleEdit = () => setEditing(true);
+
     const handleCancel = () => {
         setEditing(false);
-        setName(displayName);
-        setImage(photoURL);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setImage(URL.createObjectURL(file));
+            const objectUrl = URL.createObjectURL(file);
+            setPreviewImage(objectUrl);
+
+            // Cleanup old image URL when component unmounts or new image is selected
+            return () => URL.revokeObjectURL(objectUrl);
         }
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
         setLoading(true);
-        let imageFile = fileInputRef.current?.files[0] || null;
+        const imageFile = fileInputRef.current?.files[0] || null;
+
         try {
             await updateUserProfile(name, imageFile);
-            setEditing(false);
+            setEditing(false); // Show "Edit Profile" button again
         } finally {
             setLoading(false);
         }
@@ -48,7 +63,7 @@ const ProfilePage = () => {
                 <div className="mb-4 flex flex-col items-center">
                     <div className="relative">
                         <img
-                            src={editing ? image : photoURL}
+                            src={editing ? previewImage : photoURL}
                             alt="User Avatar"
                             className="mb-2 h-20 w-20 rounded-full border-2 border-blue-500 object-cover"
                         />
@@ -91,11 +106,9 @@ const ProfilePage = () => {
                         </span>
                     </div>
                 </div>
+
                 {editing ? (
-                    <form
-                        onSubmit={handleSave}
-                        className="mt-6 flex gap-2"
-                    >
+                    <form onSubmit={handleSave} className="mt-6 flex gap-2">
                         <button
                             type="submit"
                             disabled={loading}
@@ -123,5 +136,6 @@ const ProfilePage = () => {
             </div>
         </div>
     );
-}
- export default ProfilePage;
+};
+
+export default ProfilePage;
