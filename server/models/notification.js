@@ -8,7 +8,10 @@ module.exports = (sequelize, DataTypes) => {
     user_id: {
       type: DataTypes.UUID,
       allowNull: false,
-     
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     title: DataTypes.STRING,
     message: DataTypes.TEXT,

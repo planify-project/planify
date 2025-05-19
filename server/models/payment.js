@@ -10,23 +10,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     event_id: {
-      type: DataTypes.INTEGER, // Changed from UUID to INTEGER to match events table
+      type: DataTypes.UUID, // Force CHAR(36) to match events.id
       allowNull: true,
-      references: {
-        model: 'events',
-        key: 'id'
-      }
     },
     service_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: {
-        model: 'services', // Changed from Services to services (lowercase)
-        key: 'id'
-      }
     },
     amount: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL,
       allowNull: false,
     },
     method: {
@@ -36,10 +28,19 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.STRING,
       allowNull: false,
-    }
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: sequelize.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: sequelize.NOW,
+    },
   }, {
-    tableName: 'payments',
     underscored: true,
-    timestamps: true
+    timestamps: true,
   });
 };
