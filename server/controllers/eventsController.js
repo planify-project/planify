@@ -1,5 +1,5 @@
 const db = require('../database');
-const { Event } = db;
+const { Event, User } = db;
 const { Op } = require('sequelize');
 
 // GET /api/events?page=1&limit=10
@@ -66,14 +66,24 @@ exports.createEvent = async (req, res) => {
       equipment = [],
       latitude,
       longitude,
-      location
+      location,
+      created_by
     } = req.body;
 
     // Validate required fields
-    if (!name || !date) {
+    if (!name || !date || !created_by) {
       return res.status(400).json({
         success: false,
-        message: "Event name and date are required"
+        message: "Event name, date, and creator ID are required"
+      });
+    }
+
+    // Verify user exists
+    const user = await User.findByPk(created_by);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
       });
     }
 
@@ -93,7 +103,7 @@ exports.createEvent = async (req, res) => {
       latitude: latitude !== undefined && latitude !== null ? parseFloat(latitude) : null,
       longitude: longitude !== undefined && longitude !== null ? parseFloat(longitude) : null,
       status: 'pending',
-      created_by: req.user?.id || null, // Assuming user ID is available from auth middleware
+      created_by,
       budget: venue?.price ? parseFloat(venue.price) : 0
     });
 

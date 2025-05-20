@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     userId: {
-      type: DataTypes.STRING(36),
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
@@ -37,7 +37,8 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'bookings',
-    timestamps: true
+    timestamps: true,
+    underscored: true
   });
 
   return Booking;

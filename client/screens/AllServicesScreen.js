@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
-import api from '../configs/api'; // Add this import
+import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
+import { getImageUrl } from '../config/index';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
-const tileSize = (width - normalize(48)) / numColumns; // Define tileSize before styles
+const tileSize = (width - normalize(48)) / numColumns;
 
 const fetchServices = async () => {
   try {
     console.log('Starting to fetch services...');
-    const response = await api.get('/services'); // Remove duplicate 'api' prefix
+    const response = await api.get('/services');
     console.log('Services response:', response.data);
     
     if (Array.isArray(response.data)) {
@@ -52,24 +53,22 @@ const AllServicesScreen = ({ navigation }) => {
 
   const renderServiceItem = ({ item }) => {
     console.log('Rendering service item:', item);
-    console.log('Service card image URL:', item.imageUrl);
+    const imageUrl = getImageUrl(item.image_url);
+    console.log('Service card image URL:', imageUrl);
     
     return (
       <TouchableOpacity
         style={[styles.serviceCard, { backgroundColor: theme.card }]}
-        onPress={() => navigation.getParent()?.navigate('Services', {
-          screen: 'ServiceDetails',
-          params: { service: item }
-        })}
+        onPress={() => navigation.navigate('ServiceDetails', { service: item })}
       >
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{ uri: imageUrl || 'https://picsum.photos/300/300' }}
           style={styles.serviceImage}
           onError={(e) => {
             console.error('Image loading error for service:', {
               id: item.id,
               title: item.title,
-              imageUrl: item.imageUrl,
+              imageUrl: imageUrl,
               error: e.nativeEvent.error
             });
           }}
@@ -98,7 +97,7 @@ const AllServicesScreen = ({ navigation }) => {
         <Text style={[styles.errorText, { color: theme.error }]}>{error}</Text>
         <TouchableOpacity
           style={[styles.retryButton, { backgroundColor: theme.primary }]}
-          onPress={fetchServices}
+          onPress={loadServices}
         >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
@@ -125,7 +124,7 @@ const AllServicesScreen = ({ navigation }) => {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

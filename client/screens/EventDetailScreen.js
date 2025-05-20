@@ -1,11 +1,12 @@
-import React, { useState , useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { AuthContext } from '../context/AuthContext'; 
-
 import { useWishlist } from '../context/WishlistContext';
+import axios from 'axios';
+import { API_BASE } from '../config';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -34,12 +35,32 @@ export default function EventDetailScreen({ route }) {
     }
   };
 
-  // Generate additional images for preview
+  const [relatedEvents, setRelatedEvents] = useState([]);
+
+  useEffect(() => {
+    fetchRelatedEvents();
+  }, [event.type]);
+
+  const fetchRelatedEvents = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/events/public?type=${event.type}`);
+      if (response.data) {
+        // Filter out the current event and get up to 3 other events
+        const otherEvents = response.data
+          .filter(e => e.id !== event.id && e.coverImage)
+          .slice(0, 3);
+        setRelatedEvents(otherEvents);
+      }
+    } catch (error) {
+      console.error('Error fetching related events:', error);
+    }
+  };
+
+  // Generate gallery images from event's own image and related events
   const images = [
-    event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-    'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
-    'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
-  ];
+    event.coverImage,
+    ...relatedEvents.map(e => e.coverImage)
+  ].filter(Boolean); // Remove any null/undefined values
 
   // Use actual event coordinates if available, otherwise use default
   const eventCoords = {
@@ -55,7 +76,7 @@ export default function EventDetailScreen({ route }) {
         {/* Main Image */}
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c' }} 
+            source={{ uri: event.coverImage }} 
             style={styles.mainImage}
             onError={(e) => {
               console.error('Image loading error:', e.nativeEvent.error);
@@ -186,8 +207,8 @@ export default function EventDetailScreen({ route }) {
           style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
           onPress={() => {
             // Extract numeric value from event.price (e.g., '20 DT' -> 20)
-            const price = parseFloat(String(event.price).replace(/[^\d.]/g, ''));
-            navigation.navigate('Payment', { 
+            const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+            navigation.push('Payment', { 
               amount: price,
               eventId: event.id 
             });

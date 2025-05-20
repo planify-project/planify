@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "planify_db",
+    "host": "192.168.43.189",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "planify_db_test",
+    "host": "192.168.43.189",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "planify_db_prod",
+    "host": "192.168.43.189",
+    "dialect": "mysql"
+  }
+}

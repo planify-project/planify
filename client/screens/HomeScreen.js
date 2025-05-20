@@ -168,7 +168,7 @@ export default function HomeScreen({ navigation }) {
           if (tabId === 'events') {
             navigation.navigate('AllEvents');
           } else if (tabId === 'services') {
-            navigation.navigate('AllServicesScreen');
+            navigation.navigate('AllServices');
           }
         }}
         navigation={navigation}
@@ -177,17 +177,6 @@ export default function HomeScreen({ navigation }) {
       <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
       
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
-
-      <TouchableOpacity 
-        style={styles.allEventsButton} 
-        onPress={() => navigation.navigate('ServicesTab'
-          , {
-          screen: 'AllServicesScreen'
-        }
-      )}
-      >
-        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

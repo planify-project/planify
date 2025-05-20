@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
-const db = require('./database');
+const { sequelize } = require('./database');
 const path = require('path');
 const morgan = require('morgan');
 
@@ -25,6 +25,7 @@ const server = http.createServer(app);
 
 // Basic middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Serve static files from uploads directory
@@ -72,11 +73,80 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  socket.on('joinUserRoom', ({ userId }) => {
-    if (!userId) return;
+  // Get user ID from query parameters
+  const userId = socket.handshake.query.userId;
+  if (userId) {
     const roomName = `user_${userId}`;
     socket.join(roomName);
     console.log(`Socket ${socket.id} joined room: ${roomName}`);
+  }
+
+  // Handle new booking notifications
+  socket.on('newBooking', (data) => {
+    console.log('New booking notification:', data);
+    const { providerId, bookingId, customerId, customerName, message } = data;
+    
+    // Emit to provider's room
+    io.to(`user_${providerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'New Booking Request',
+        message: message || `New booking request from ${customerName}`,
+        bookingId,
+        customerId,
+        customerName,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
+    });
+
+    // Also emit to customer's room for confirmation
+    io.to(`user_${customerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'Booking Request Sent',
+        message: 'Your booking request has been sent to the service provider.',
+        bookingId,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
+    });
+  });
+
+  // Handle booking responses
+  socket.on('bookingResponse', (data) => {
+    console.log('Booking response:', data);
+    const { customerId, bookingId, status, message } = data;
+    
+    // Emit to customer's room
+    io.to(`user_${customerId}`).emit('bookingResponse', {
+      notification: {
+        id: bookingId,
+        type: 'booking_response',
+        title: 'Booking Update',
+        message: message || `Your booking request has been ${status}`,
+        bookingId,
+        status,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
+    });
+  });
+
+  // Handle notification deletion
+  socket.on('deleteNotification', (data) => {
+    console.log('Deleting notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDeleted', { notificationId });
+  });
+
+  // Handle notification dismissal
+  socket.on('dismissNotification', (data) => {
+    console.log('Dismissing notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDismissed', { notificationId });
   });
 
   socket.on('disconnect', () => {
@@ -116,26 +186,40 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Sync database and start server
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
-server.listen(PORT, HOST, () => {
-  const urls = [
-    `http://localhost:${PORT}`,
-    `http://${HOST}:${PORT}`,
-    `http://172.20.10.3:${PORT}`
-  ];
-  
-  console.log('\nServer running on:');
-  urls.forEach(url => {
-    console.log(`\n${url}:`);
-    console.log(`  - Test endpoint: ${url}/test`);
-    console.log(`  - Health check: ${url}/health`);
-    console.log(`  - Socket.IO: ${url}/socket.io/`);
-  });
-  console.log('\nSocket.IO Configuration:');
-  console.log('  - Transports: websocket');
-  console.log('  - Path: /socket.io/');
-  console.log('  - CORS: enabled for all origins');
-}); 
+const startServer = async () => {
+  try {
+    // Sync database
+    await sequelize.sync({ alter: true });
+    console.log('Database synced successfully');
+
+    // Start server
+    server.listen(PORT, HOST, () => {
+      const urls = [
+        `http://localhost:${PORT}`,
+        `http://${HOST}:${PORT}`,
+        `http://192.168.1.166:${PORT}`
+      ];
+      
+      console.log('\nServer running on:');
+      urls.forEach(url => {
+        console.log(`\n${url}:`);
+        console.log(`  - Test endpoint: ${url}/test`);
+        console.log(`  - Health check: ${url}/health`);
+        console.log(`  - Socket.IO: ${url}/socket.io/`);
+      });
+      console.log('\nSocket.IO Configuration:');
+      console.log('  - Transports: websocket');
+      console.log('  - Path: /socket.io/');
+      console.log('  - CORS: enabled for all origins');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer(); 

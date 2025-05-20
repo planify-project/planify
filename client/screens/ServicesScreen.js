@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Modal, TextInput, TouchableOpacity, StyleSheet, Platform, Image, ActivityIndicator } from 'react-native';
-import { auth } from '../config/firebase';
-import api from '../config/api';
-import DateTimePicker from '@react-native-community/datetimepicker';
-// import DateTimePicker from '@react-native-community/datetimepicker';
+import { getAuth } from 'firebase/auth';
+import api from '../configs/api';
+import { Calendar } from 'react-native-calendars';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ServicesScreen() {
+  const { theme } = useTheme();
   const [services, setServices] = useState([]);
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -18,10 +21,27 @@ export default function ServicesScreen() {
   const [popupSuccess, setPopupSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [unreadBookings, setUnreadBookings] = useState(0);
+  const auth = getAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchServices();
+    fetchUnreadBookings();
   }, []);
+
+  const fetchUnreadBookings = async () => {
+    try {
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      if (userResponse.data.success) {
+        const dbUserId = userResponse.data.data.id;
+        const response = await api.get(`/bookings/provider/${dbUserId}/unread`);
+        setUnreadBookings(response.data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching unread bookings:', error);
+    }
+  };
 
   const fetchServices = async () => {
     try {
@@ -45,13 +65,11 @@ export default function ServicesScreen() {
     }
   };
 
-  const handleDateChange = (event, selectedDate) => {
+  const handleDateSelect = (day) => {
+    const selectedDate = new Date(day.timestamp);
+    selectedDate.setHours(0, 0, 0, 0);
+    setDate(selectedDate);
     setShowDatePicker(false);
-    if (selectedDate) {
-      const newDate = new Date(selectedDate);
-      newDate.setHours(0, 0, 0, 0);
-      setDate(newDate);
-    }
   };
 
   const handleBook = async () => {
@@ -95,7 +113,7 @@ export default function ServicesScreen() {
       const bookingData = {
         userId: dbUserId, // Use database user ID instead of Firebase UID
         serviceId: selectedService.id,
-        date: date.toISOString(),
+        date: date.toISOString(), // Ensure date is in ISO string format
         location: space,
         phone: phone,
       };
@@ -132,8 +150,22 @@ export default function ServicesScreen() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={styles.title}>Available Services</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>Services</Text>
+        <TouchableOpacity
+          style={[styles.bookingRequestsButton, { backgroundColor: theme.primary }]}
+          onPress={() => navigation.navigate('BookingRequests')}
+        >
+          <Ionicons name="calendar-outline" size={24} color="#fff" />
+          <Text style={styles.bookingRequestsText}>Booking Requests</Text>
+          {unreadBookings > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadBookings}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={services}
         keyExtractor={(item) => item.id.toString()}
@@ -177,13 +209,36 @@ export default function ServicesScreen() {
             </View>
 
             {showDatePicker && (
-              <DateTimePicker
-                value={date || new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showDatePicker}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.datePickerContainer}>
+                      <Calendar
+                        onDayPress={handleDateSelect}
+                        minDate={new Date().toISOString().split('T')[0]}
+                        markedDates={{
+                          [date?.toISOString().split('T')[0]]: { selected: true, selectedColor: '#6C63FF' }
+                        }}
+                        theme={{
+                          todayTextColor: '#6C63FF',
+                          selectedDayBackgroundColor: '#6C63FF',
+                          arrowColor: '#6C63FF',
+                        }}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={styles.confirmButton}
+                      onPress={() => setShowDatePicker(false)}
+                    >
+                      <Text style={styles.confirmButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
             )}
 
             <View style={styles.formGroup}>
@@ -399,5 +454,60 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  datePickerContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  confirmButton: {
+    backgroundColor: '#6C63FF',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bookingRequestsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 20,
+  },
+  bookingRequestsText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontWeight: 'bold',
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

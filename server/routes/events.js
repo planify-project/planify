@@ -16,10 +16,14 @@ router.get('/popular', eventsController.getPopularEvents);
 
 // GET /api/events/search
 router.get('/search', eventsController.searchEvents);
+
 // GET /api/events/:id
 router.get('/:id', eventsController.getEventById);
 
 // POST /api/events
 router.post('/', eventsController.createEvent);
+
+// DELETE /api/events/:id
+router.delete('/:id', eventsController.deleteEvent);
 
 module.exports = router; 

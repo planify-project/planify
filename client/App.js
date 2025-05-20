@@ -363,7 +363,7 @@ function ServicesStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
-        name="AllServicesScreen" 
+        name="AllServices" 
         component={AllServicesScreen}
         options={{
           headerShown: true,
@@ -390,6 +390,17 @@ function ServicesStack() {
         options={{
           headerShown: true,
           headerTitle: "Add New Service",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }} 
+      />
+      <Stack.Screen 
+        name="EditService" 
+        component={EditServiceScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Edit Service",
           headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -456,11 +467,33 @@ const AppContent = () => {
         <Stack.Screen name="Root" component={MainTabs} />
         <Stack.Screen name="Auth" component={AuthNavigator} />
         <Stack.Screen 
-          name="Chat" 
-          component={ChatScreen}
+          name="Payment" 
+          component={PaymentScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Payment",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="PaymentSuccess" 
+          component={PaymentSuccessScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Payment Success",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="PaymentFailure" 
+          component={PaymentFailureScreen}
           options={{ 
             headerShown: true,
-            headerTitle: "Chat",
+            headerTitle: "Payment Failed",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -478,22 +511,22 @@ const AppContent = () => {
           }}
         />
         <Stack.Screen 
-          name="AllEvents" 
-          component={AllEventsScreen}
-          options={{
+          name="Chat" 
+          component={ChatScreen}
+          options={{ 
             headerShown: true,
-            headerTitle: "All Events",
+            headerTitle: "Chat",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
         />
         <Stack.Screen 
-          name="Popular Events" 
-          component={PopularEventsScreen}
+          name="AllEvents" 
+          component={AllEventsScreen}
           options={{
             headerShown: true,
-            headerTitle: "Popular Events",
+            headerTitle: "All Events",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -566,39 +599,6 @@ const AppContent = () => {
           }}
         />
         <Stack.Screen 
-          name="Payment" 
-          component={PaymentScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Payment",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="PaymentSuccess" 
-          component={PaymentSuccessScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Payment Success",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="PaymentFailure" 
-          component={PaymentFailureScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Payment Failed",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
           name="Notifications" 
           component={NotificationScreen}
           options={{
@@ -640,6 +640,39 @@ export default function App() {
                 <Stack.Navigator screenOptions={{ headerShown: false }}>
                   <Stack.Screen name="Root" component={MainTabs} />
                   <Stack.Screen name="Auth" component={AuthNavigator} />
+                    <Stack.Screen 
+                      name="Payment" 
+                      component={PaymentScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PaymentSuccess" 
+                      component={PaymentSuccessScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment Success",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen 
+                      name="PaymentFailure" 
+                      component={PaymentFailureScreen}
+                      options={{
+                        headerShown: true,
+                        headerTitle: "Payment Failed",
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                        headerTintColor: '#fff',
+                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
                   <Stack.Screen 
                     name="EventDetail" 
                     component={EventDetailScreen}

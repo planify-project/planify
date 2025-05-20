@@ -21,6 +21,7 @@ import api from '../configs/api';
 import { useTheme } from '../context/ThemeContext';
 import { getAuth } from 'firebase/auth';
 import io from 'socket.io-client';
+import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 
 const ChatScreen = () => {
   const navigation = useNavigation();
@@ -60,11 +61,9 @@ const ChatScreen = () => {
 
     if (!contextSocket) {
       console.log('Initializing new socket connection');
-      const newSocket = io('http://192.168.70.126:3000', {
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+      const newSocket = io(SOCKET_URL, {
+        ...SOCKET_CONFIG,
+        query: { userId: currentUserId }
       });
 
       newSocket.on('connect', () => {

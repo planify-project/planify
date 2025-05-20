@@ -32,9 +32,9 @@ const getNotificationsByUser = async (req, res) => {
     // Get notifications with more detailed query and force fresh data
     const notifications = await Notification.findAll({
       where: { 
-        user_id: userId 
+        userId: userId 
       },
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
       include: [{
         model: Booking,
         include: [{
@@ -161,13 +161,13 @@ const deleteNotification = async (req, res) => {
     const notification = await Notification.findOne({
       where: { 
         id: notificationId,
-        user_id: userId 
+        userId: userId 
       }
     });
 
     if (!notification) {
       console.log('2. Notification not found or unauthorized');
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
         message: "Notification not found or unauthorized"
       });
@@ -175,7 +175,7 @@ const deleteNotification = async (req, res) => {
 
     console.log('2. Found notification:', {
       id: notification.id,
-      user_id: notification.user_id,
+      userId: notification.userId,
       type: notification.type
     });
 
@@ -195,7 +195,7 @@ const deleteNotification = async (req, res) => {
 
   } catch (error) {
     console.error("Error deleting notification:", error);
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
       message: "Failed to delete notification",
       error: error.message
@@ -241,7 +241,7 @@ const createTestNotification = async (req, res) => {
     console.log('Creating test notification for user:', userId);
 
     const notification = await Notification.create({
-      user_id: userId,
+      userId: userId,
       title: 'Test Notification',
       message: 'This is a test notification',
       type: 'test',
@@ -274,7 +274,7 @@ const dismissNotification = async (req, res) => {
     const notification = await Notification.findOne({
       where: { 
         id: notificationId,
-        user_id: userId 
+        userId: userId 
       }
     });
     
@@ -288,7 +288,7 @@ const dismissNotification = async (req, res) => {
 
     console.log('2. Found notification:', {
       id: notification.id,
-      user_id: notification.user_id,
+      userId: notification.userId,
       type: notification.type
     });
 

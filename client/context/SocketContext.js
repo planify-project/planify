@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { getAuth } from 'firebase/auth';
 import api from '../configs/api';
 import { useAuth } from './AuthContext';
+import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 
 export const SocketContext = createContext();
 
@@ -49,23 +50,19 @@ export const SocketProvider = ({ children }) => {
       // Disconnect existing socket if any
       disconnectSocket();
 
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
+          const userResponse = await api.get(`/users/firebase/${user.uid}`);
       if (!userResponse.data.success || !userResponse.data.data?.id) {
         throw new Error('Failed to get user data');
       }
 
-      const dbUserId = userResponse.data.data.id;
+            const dbUserId = userResponse.data.data.id;
       console.log('Got database user ID:', dbUserId);
-      
-      // Initialize socket connection
-      const newSocket = io('http://192.168.70.126:3000', {
-        query: { userId: dbUserId },
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 10000
-      });
+            
+      // Initialize socket connection with centralized config
+      const newSocket = io(SOCKET_URL, {
+        ...SOCKET_CONFIG,
+              query: { userId: dbUserId }
+            });
 
       newSocket.on('connect', () => {
         console.log('Socket connected successfully');
@@ -74,7 +71,7 @@ export const SocketProvider = ({ children }) => {
         setRetryCount(0);
 
         // Join user's room after connection
-        newSocket.emit('joinRoom', `user_${dbUserId}`);
+            newSocket.emit('joinRoom', `user_${dbUserId}`);
       });
 
       newSocket.on('disconnect', (reason) => {
@@ -96,39 +93,55 @@ export const SocketProvider = ({ children }) => {
         setError(err.message);
       });
 
-      // Handle new booking notifications
-      newSocket.on('newBooking', (data) => {
-        console.log('Received new booking notification:', data);
-        setNotifications(prev => [data.notification, ...prev]);
-      });
+            // Handle new booking notifications
+            newSocket.on('newBooking', (data) => {
+              console.log('Received new booking notification:', data);
+              if (data.notification) {
+                setNotifications(prev => [data.notification, ...prev]);
+              }
+            });
 
-      // Handle booking response notifications
-      newSocket.on('bookingResponse', (data) => {
-        console.log('Received booking response notification:', data);
-        setNotifications(prev => [data.notification, ...prev]);
-      });
+            // Handle booking response notifications
+            newSocket.on('bookingResponse', (data) => {
+              console.log('Received booking response notification:', data);
+              if (data.notification) {
+                setNotifications(prev => [data.notification, ...prev]);
+              }
+            });
 
       // Handle notification deletion
       newSocket.on('notificationDeleted', (data) => {
         console.log('Notification deleted:', data);
         setNotifications(prev => prev.filter(n => n.id !== data.notificationId));
+            });
+
+      // Handle notification dismissal
+      newSocket.on('notificationDismissed', (data) => {
+        console.log('Notification dismissed:', data);
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === data.notificationId 
+              ? { ...n, is_read: true }
+              : n
+          )
+        );
       });
 
-      setSocket(newSocket);
+            setSocket(newSocket);
 
     } catch (err) {
       console.error('Socket initialization error:', err);
-      setError('Failed to initialize connection. Please try again.');
-      setIsConnected(false);
-      
-      if (retryCount < 3) {
-        setTimeout(() => {
-          console.log('Retrying socket connection...');
-          setRetryCount(prev => prev + 1);
-          connectSocket();
-        }, 2000);
-      }
-    }
+          setError('Failed to initialize connection. Please try again.');
+          setIsConnected(false);
+          
+          if (retryCount < 3) {
+            setTimeout(() => {
+              console.log('Retrying socket connection...');
+              setRetryCount(prev => prev + 1);
+              connectSocket();
+            }, 2000);
+          }
+        }
   }, [user?.uid, authLoading, retryCount, disconnectSocket]);
 
   // Initialize socket connection when user changes
@@ -138,7 +151,8 @@ export const SocketProvider = ({ children }) => {
   }, [user?.uid, connectSocket, disconnectSocket]);
 
   const joinUserRoom = (userId) => {
-    const socket = io('http://192.168.70.126:3000', {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
       query: { userId }
     });
     if (!socket || !userId) {
@@ -161,7 +175,8 @@ export const SocketProvider = ({ children }) => {
 
   // Function to send a booking notification to a service provider
   const sendBookingNotification = (providerId, bookingData) => {
-    const socket = io('http://192.168.70.126:3000', {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
       query: { userId: user?.uid }
     });
     if (!socket?.connected) {
@@ -181,7 +196,8 @@ export const SocketProvider = ({ children }) => {
 
   // Test function to send a test notification
   const sendTestNotification = () => {
-    const socket = io('http://192.168.70.126:3000', {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
       query: { userId: user?.uid }
     });
     if (!socket?.connected) {

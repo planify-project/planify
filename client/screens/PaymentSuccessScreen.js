@@ -5,12 +5,16 @@ import { useNavigation } from '@react-navigation/native';
 const PaymentSuccessScreen = () => {
   const navigation = useNavigation();
 
+  const handleReturnHome = () => {
+    navigation.goBack();
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Payment Successful!</Text>
       <Text style={styles.message}>Your payment has been processed successfully.</Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Root')}>
-        <Text style={styles.buttonText}>Return to Home Screen</Text>
+      <TouchableOpacity style={styles.button} onPress={handleReturnHome}>
+        <Text style={styles.buttonText}>Go Back</Text>
       </TouchableOpacity>
     </View>
   );

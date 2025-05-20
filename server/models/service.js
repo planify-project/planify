@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'SET NULL',
       onUpdate: 'CASCADE'
     },
-    type: {
+    title: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -37,13 +37,19 @@ module.exports = (sequelize, DataTypes) => {
     service_type: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: 'general',
-      field: 'service_type'
+      defaultValue: 'general'
     },
     image_url: {
       type: DataTypes.STRING,
-      allowNull: true,
-      field: 'image_url'
+      allowNull: true
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
     }
   }, {
     timestamps: true,

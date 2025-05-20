@@ -24,6 +24,7 @@ import NotificationBadge from '../components/NotificationBadge';
 import { View } from 'react-native';
 import api from '../configs/api';
 import BookingDetailScreen from '../screens/BookingDetailScreen';
+import BookingRequestsScreen from '../screens/BookingRequestsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,15 +92,26 @@ function ServicesStack() {
         options={{ title: 'Services' }}
       />
       <Stack.Screen 
+        name="AllServices" 
+        component={AllServicesScreen} 
+        options={{ title: 'All Services' }}
+      />
+      <Stack.Screen 
         name="ServiceDetails" 
         component={ServiceDetailScreen} 
         options={{ title: 'Service Details' }}
       />
       <Stack.Screen 
+        name="BookingRequests" 
+        component={BookingRequestsScreen} 
+        options={{ title: 'Booking Requests' }}
+      />
+      <Stack.Screen 
         name="Chat" 
-        component={ChatScreen}
-        options={{
-          headerShown: false
+        component={ChatScreen} 
+        options={{ 
+          title: 'Chat',
+          headerBackTitle: 'Back'
         }}
       />
     </Stack.Navigator>
@@ -221,6 +233,20 @@ function RootStack() {
         component={BookingDetailScreen}
         options={{
           title: 'Booking Details',
+          headerStyle: {
+            backgroundColor: '#5D5FEE',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{
+          title: 'Chat',
           headerStyle: {
             backgroundColor: '#5D5FEE',
           },

@@ -53,7 +53,7 @@ const createBooking = async (req, res) => {
 
     // Create notification for the service owner
     const ownerNotification = await Notification.create({
-      user_id: service.provider_id,
+      userId: service.provider_id,
       title: 'New Booking Request',
       message: `${user.name} wants to book your service "${service.title}" on ${new Date(date).toLocaleDateString()} at ${location}. Phone: ${phone}`,
       type: 'booking_request',
@@ -62,14 +62,14 @@ const createBooking = async (req, res) => {
     });
     console.log('5. Created owner notification:', { 
       id: ownerNotification.id, 
-      user_id: ownerNotification.user_id,
+      userId: ownerNotification.userId,
       type: ownerNotification.type,
       message: ownerNotification.message
     });
 
     // Create notification for the booking user
     const userNotification = await Notification.create({
-      user_id: userId,
+      userId: userId,
       title: 'Booking Request Sent',
       message: `Your booking request for "${service.title}" has been sent to ${service.provider.name}.`,
       type: 'booking_request',
@@ -78,7 +78,7 @@ const createBooking = async (req, res) => {
     });
     console.log('6. Created user notification:', { 
       id: userNotification.id, 
-      user_id: userNotification.user_id,
+      userId: userNotification.userId,
       type: userNotification.type,
       message: userNotification.message
     });
@@ -231,7 +231,7 @@ const deleteBooking = async (req, res) => {
     const notifications = await Promise.all([
       // Notification for service provider
       Notification.create({
-        user_id: booking.Service.provider_id,
+        userId: booking.Service.provider_id,
         title: 'Booking Cancelled',
         message: `${booking.User.name} has cancelled their booking for "${booking.Service.title}".`,
         type: 'booking_cancelled',
@@ -240,7 +240,7 @@ const deleteBooking = async (req, res) => {
       }),
       // Notification for booking user
       Notification.create({
-        user_id: booking.userId,
+        userId: booking.userId,
         title: 'Booking Cancelled',
         message: `You have cancelled your booking for "${booking.Service.title}".`,
         type: 'booking_cancelled',
@@ -332,7 +332,7 @@ const respondToBooking = async (req, res) => {
 
     // Create notification for the user who made the booking
     const notification = await Notification.create({
-      user_id: booking.userId,
+      userId: booking.userId,
       title: `Booking ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
       message: `Your booking request for "${booking.Service.title}" has been ${response === 'accepted' ? 'accepted' : 'rejected'} by ${booking.Service.provider.name}.`,
       type: 'booking_response',
@@ -342,7 +342,7 @@ const respondToBooking = async (req, res) => {
 
     console.log('4. Created notification:', {
       id: notification.id,
-      user_id: notification.user_id,
+      userId: notification.userId,
       type: notification.type
     });
 

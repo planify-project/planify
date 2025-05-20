@@ -3,12 +3,13 @@ import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator
 import axios from 'axios';
 import EventCard from '../EventCard';
 import { styles } from './styles';
+import { API_BASE } from '../../config';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
 const normalize = (size) => Math.round(scale * size);
 
-const API_BASE_URL = 'http://192.168.70.126:3000/api';
+const API_BASE_URL = API_BASE;
 
 const PopularEvents = ({ navigation }) => {
   const [events, setEvents] = useState([]);

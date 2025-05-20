@@ -1,5 +1,3 @@
-
-
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
@@ -20,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true, // Allow null for Firebase users
     },
   }, {
-    tableName: 'user', 
+    tableName: 'users',
     underscored: true,
     timestamps: true,
   });

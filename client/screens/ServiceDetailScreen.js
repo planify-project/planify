@@ -6,7 +6,7 @@ import api from '../configs/api';
 import BookingModal from '../components/BookingModal';
 import { useSocket } from '../context/SocketContext';
 import { getAuth } from 'firebase/auth';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { getImageUrl } from '../config/index';
 
 export default function ServiceDetailScreen({ route, navigation }) {
@@ -19,8 +19,30 @@ export default function ServiceDetailScreen({ route, navigation }) {
   const [selectedSpace, setSelectedSpace] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
 
-  const isProvider = auth.currentUser?.uid === service.provider_id;
+  useEffect(() => {
+    const checkProvider = async () => {
+      if (auth.currentUser) {
+        try {
+          const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+          if (userResponse.data.success) {
+            // Use the provider information directly from the service object
+            const isUserProvider = service.provider.email === auth.currentUser.email;
+            console.log('Current user email:', auth.currentUser.email);
+            console.log('Service provider email:', service.provider.email);
+            console.log('Is provider:', isUserProvider);
+            setIsProvider(isUserProvider);
+          }
+        } catch (error) {
+          console.error('Error checking provider:', error);
+        }
+      }
+    };
+    checkProvider();
+  }, [auth.currentUser, service.provider]);
+
+  const imageUrl = getImageUrl(service.image_url);
 
   const handleDelete = async () => {
     Alert.alert(
@@ -37,8 +59,15 @@ export default function ServiceDetailScreen({ route, navigation }) {
           onPress: async () => {
             try {
               await api.delete(`/services/${service.id}`);
-              Alert.alert('Success', 'Service deleted successfully');
-              navigation.goBack();
+              Alert.alert('Success', 'Service deleted successfully', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    // Navigate back and refresh the services list
+                    navigation.navigate('AllServices', { refresh: true });
+                  }
+                }
+              ]);
             } catch (error) {
               Alert.alert('Error', 'Failed to delete service');
             }
@@ -49,15 +78,63 @@ export default function ServiceDetailScreen({ route, navigation }) {
   };
 
   const handleEdit = () => {
-    navigation.navigate('EditService', { service });
+    navigation.navigate('EditService', { 
+      service,
+      onUpdate: () => {
+        // Refresh the service details when returning from edit
+        navigation.setParams({ refresh: true });
+      }
+    });
   };
 
-  const handleChat = () => {
-    navigation.navigate('Chat', { 
-      recipientId: service.provider_id,
-      serviceId: service.id,
-      serviceTitle: service.title
+  // Add refresh effect
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (route.params?.refresh) {
+        // Reset the refresh param
+        navigation.setParams({ refresh: false });
+        // Re-fetch the service data
+        const fetchService = async () => {
+          try {
+            const response = await api.get(`/services/${service.id}`);
+            if (response.data.success) {
+              // Update the service data
+              navigation.setParams({ service: response.data.data });
+            }
+          } catch (error) {
+            console.error('Error refreshing service:', error);
+          }
+        };
+        fetchService();
+      }
     });
+
+    return unsubscribe;
+  }, [navigation, route.params?.refresh]);
+
+  const handleChat = () => {
+    console.log('Chat button pressed');
+    // navigation.dispatch(
+    //   CommonActions.navigate({
+    //     name: 'Root',
+    //     params: {
+    //       screen: 'AllEvents',
+    //       params: {
+    //         serviceId: service.id,
+    //         serviceProviderId: service.provider.id,
+    //         serviceProviderName: service.provider.name,
+    //         serviceProviderImage: service.provider.image_url
+    //       }
+    //     }
+    //   })
+    // );
+    navigation.navigate('Chat', { 
+      serviceId: service.id,
+      serviceProviderId: service.provider.id,
+      serviceProviderName: service.provider.name,
+      serviceProviderImage: service.provider.image_url
+    });
+
   };
 
   const handleBooking = async () => {
@@ -88,11 +165,12 @@ export default function ServiceDetailScreen({ route, navigation }) {
 
       // Format the booking payload
       const bookingPayload = {
-        userId: dbUserId, // Use the database user ID instead of Firebase UID
+        userId: dbUserId,
         serviceId: service.id,
-        date: selectedDate,
+        date: new Date(selectedDate).toISOString(),
         location: selectedSpace,
-        phone: phoneNumber
+        phone: phoneNumber,
+        status: 'pending' // Add status field
       };
 
       console.log('Creating booking with payload:', bookingPayload);
@@ -105,6 +183,28 @@ export default function ServiceDetailScreen({ route, navigation }) {
       console.log('Booking response:', response.data);
 
       if (response.data.success) {
+        // Notify the service provider through socket
+        if (socket) {
+          console.log('Socket connected, emitting newBooking notification');
+          console.log('Notification payload:', {
+            providerId: service.provider_id,
+            bookingId: response.data.data.booking.id,
+            customerId: auth.currentUser.uid,
+            customerName: auth.currentUser.displayName || 'A customer',
+            message: `New booking request for ${service.title}`
+          });
+          
+          socket.emit('newBooking', {
+            providerId: service.provider_id,
+            bookingId: response.data.data.booking.id,
+            customerId: auth.currentUser.uid,
+            customerName: auth.currentUser.displayName || 'A customer',
+            message: `New booking request for ${service.title}`
+          });
+        } else {
+          console.log('Socket not connected, cannot send notification');
+        }
+
         Alert.alert(
           'Success',
           'Your booking request has been sent. The service provider will be notified and can accept or reject your request.',
@@ -137,15 +237,44 @@ export default function ServiceDetailScreen({ route, navigation }) {
     }
   };
 
+  // Add socket listener for booking responses
+  useEffect(() => {
+    if (socket) {
+      socket.on('bookingResponse', (data) => {
+        Alert.alert(
+          'Booking Update',
+          data.notification.message,
+          [{ text: 'OK' }]
+        );
+      });
+
+      return () => {
+        socket.off('bookingResponse');
+      };
+    }
+  }, [socket]);
+
+  const handlePayment = () => {
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'Payment',
+        params: {
+          amount: service.price,
+          eventId: null // or the appropriate event ID if needed
+        }
+      })
+    );
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <Image
-        source={{ uri: getImageUrl(service.imageUrl) || 'https://picsum.photos/300/300' }}
+        source={{ uri: imageUrl || 'https://picsum.photos/300/300' }}
         style={styles.serviceImage}
         onError={(e) => {
           console.error('Image loading error:', {
             serviceId: service.id,
-            imageUrl: service.imageUrl,
+            imageUrl: imageUrl,
             error: e.nativeEvent
           });
         }}
@@ -166,21 +295,16 @@ export default function ServiceDetailScreen({ route, navigation }) {
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Details</Text>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Category:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.category || 'Not specified'}</Text>
+            <Text style={[styles.detailValue, { color: theme.text }]}>{service.service_type || 'Not specified'}</Text>
           </View>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Duration:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.duration || 'Not specified'}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Availability:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.availability || 'Not specified'}</Text>
+            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Location:</Text>
+            <Text style={[styles.detailValue, { color: theme.text }]}>{service.location || 'Not specified'}</Text>
           </View>
         </View>
 
-        <View style={[styles.buttonContainer, { backgroundColor: theme.card }]}>
+        <View style={styles.buttonContainer}>
           {isProvider ? (
-            // Provider's buttons
             <>
               <TouchableOpacity
                 style={[styles.button, { backgroundColor: theme.primary }]}
@@ -199,7 +323,6 @@ export default function ServiceDetailScreen({ route, navigation }) {
               </TouchableOpacity>
             </>
           ) : (
-            // Customer's buttons
             <>
               <TouchableOpacity
                 style={[styles.button, { backgroundColor: theme.primary }]}
@@ -220,15 +343,6 @@ export default function ServiceDetailScreen({ route, navigation }) {
           )}
         </View>
       </View>
-
-      {!isProvider && (
-        <TouchableOpacity
-          style={[styles.bookButton, { backgroundColor: theme.primary }]}
-          onPress={() => setShowBookingModal(true)}
-        >
-          <Text style={styles.bookButtonText}>Book Now</Text>
-        </TouchableOpacity>
-      )}
 
       <BookingModal
         visible={showBookingModal}
@@ -327,6 +441,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   bookButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  payButton: {
+    padding: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  payButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

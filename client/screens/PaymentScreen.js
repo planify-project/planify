@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator,TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useStripe, CardField } from '@stripe/stripe-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { API_BASE } from '../config';
+import axios from 'axios';
 
 const PaymentScreen = () => {
   const route = useRoute();
@@ -14,52 +15,71 @@ const PaymentScreen = () => {
   const handlePayment = async () => {
     try {
       setLoading(true);
+      console.log('Starting payment process...');
+      console.log('Amount:', amount);
+      console.log('Event ID:', eventId);
       
       // Create payment intent
-      const response = await fetch(`${API_BASE}/payment`, {
-        method: 'POST',
+      console.log('Creating payment intent...');
+      const response = await axios.post(`${API_BASE}/payment`, {
+        amount: amount, // Send amount in dollars
+        currency: 'usd',
+        eventId: eventId
+      }, {
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          amount: amount * 100, // Convert to cents
-          currency: 'usd',
-          eventId: eventId
-        }),
+        timeout: 15000 // 15 second timeout
       });
 
-      let clientSecret;
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const { client_secret, error } = await response.json();
-        if (error) {
-          Alert.alert('Error', error.message);
-          return;
-        }
-        clientSecret = client_secret;
-      } else {
-        const text = await response.text();
-        console.error('Server response:', text);
-        Alert.alert('Error', 'Invalid response from server. Check console for details.');
+      console.log('Payment intent response:', response.data);
+      const { client_secret, error } = response.data;
+      
+      if (error) {
+        console.error('Payment intent error:', error);
+        Alert.alert('Error', error.message);
+        return;
+      }
+
+      if (!client_secret) {
+        console.error('No client secret received');
+        Alert.alert('Error', 'Payment intent not initialized. Please try again.');
         return;
       }
 
       // Confirm the payment
-      if (!clientSecret) {
-        Alert.alert('Error', 'Payment intent not initialized. Please try again.');
-        return;
-      }
-      const { error: confirmError } = await confirmPayment(clientSecret, {
+      console.log('Confirming payment...');
+      const { error: confirmError } = await confirmPayment(client_secret, {
         paymentMethodType: 'Card',
       });
       
       if (confirmError) {
+        console.error('Payment confirmation error:', confirmError);
         navigation.navigate('PaymentFailure', { message: confirmError.message });
       } else {
+        console.log('Payment successful!');
         navigation.navigate('PaymentSuccess');
       }
     } catch (err) {
-      Alert.alert('Error', err.message);
+      console.error('Payment error details:', {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+
+      if (err.code === 'ECONNABORTED') {
+        Alert.alert('Error', 'Request timed out. Please check your internet connection and try again.');
+      } else if (!err.response) {
+        Alert.alert('Error', 'Network error. Please check your internet connection and try again.');
+      } else if (err.response?.status === 404) {
+        Alert.alert('Error', 'Payment service not found. Please try again later.');
+      } else if (err.response?.status === 500) {
+        Alert.alert('Error', 'Server error. Please try again later.');
+      } else {
+        Alert.alert('Error', err.response?.data?.message || err.message || 'An error occurred during payment.');
+      }
     } finally {
       setLoading(false);
     }
