@@ -1,5 +1,5 @@
 // API and Socket configuration
-const LOCAL_IP = '192.168.0.89';
+const LOCAL_IP = '192.168.1.149';
 const PORT = 3000;
 
 // Base URLs
