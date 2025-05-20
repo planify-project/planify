@@ -87,8 +87,11 @@ server.listen(PORT, HOST, () => {
   console.log('\nServer running on:');
   console.log(`  Local: http://localhost:${PORT}`);
   console.log(`  Android Emulator: http://10.0.2.2:${PORT}`);
+  console.log(`  Network: http://192.168.1.164:${PORT}`);
   addresses.forEach(addr => {
-    console.log(`  Network: http://${addr}:${PORT}`);
+    if (addr !== '192.168.1.164') {
+      console.log(`  Network: http://${addr}:${PORT}`);
+    }
   });
   console.log(`\nEndpoints:`);
   console.log(`  Test: http://localhost:${PORT}/test`);

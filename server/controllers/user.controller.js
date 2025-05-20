@@ -30,6 +30,13 @@ exports.createUserFromFirebase = async (req, res) => {
     const { uid, email, displayName } = req.body;
     console.log('Creating/updating user from Firebase:', { uid, email, displayName });
 
+    if (!uid || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Firebase UID and email are required'
+      });
+    }
+
     // Check if user already exists by Firebase UID
     let user = await User.findOne({ where: { firebase_uid: uid } });
     
@@ -40,29 +47,35 @@ exports.createUserFromFirebase = async (req, res) => {
       if (user) {
         // Update existing user with Firebase UID
         console.log('Updating existing user with Firebase UID:', user.id);
-        await user.update({ firebase_uid: uid });
+        await user.update({ 
+          firebase_uid: uid,
+          name: displayName || user.name
+        });
       } else {
         // Create new user
         console.log('Creating new user with Firebase UID');
         user = await User.create({
           name: displayName || email.split('@')[0],
           email,
-          firebase_uid: uid
+          firebase_uid: uid,
+          password: null // No password needed for Firebase auth
         });
       }
     }
 
     console.log('User created/updated successfully:', user.id);
-    res.status(201).json({
+    
+    return res.json({
       success: true,
       data: user
     });
   } catch (error) {
     console.error('Error creating/updating user from Firebase:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: 'Failed to create/update user', 
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

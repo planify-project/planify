@@ -1,6 +1,6 @@
 // API and Socket configuration
-const LOCAL_IP = '192.168.0.89';
-const PORT = 3000;
+const LOCAL_IP = '192.168.1.157';
+const PORT = '3000';
 
 // Base URLs
 export const API_BASE = `http://${LOCAL_IP}:${PORT}/api`;

@@ -66,7 +66,7 @@ class ServicesController {
       let query = {};
       
       if (type) {
-        query.serviceType = type.toLowerCase();
+        query.service_type = type.toLowerCase();
       }
 
       const services = await Service.findAll({
@@ -76,7 +76,7 @@ class ServicesController {
           as: 'user',
           attributes: ['id', 'name', 'email']
         }],
-        attributes: ['id', 'title', 'description', 'price', 'serviceType', 'imageUrl', 'provider_id', 'createdAt', 'updatedAt']
+        attributes: ['id', 'type', 'description', 'price', 'service_type', 'image_url', 'provider_id', 'created_at', 'updated_at']
       });
 
       // Always return an array, even if empty
@@ -132,10 +132,10 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const { title, description, price, serviceType } = req.body;
+      const { type, description, price, service_type } = req.body;
       
       // Validate required fields
-      if (!title || !description || !price) {
+      if (!type || !description || !price) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields'
@@ -161,23 +161,23 @@ class ServicesController {
       }
 
       // Get image URL from uploaded file
-      const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
+      const image_url = req.file ? `/uploads/services/${req.file.filename}` : null;
 
       console.log('Creating service with data:', {
-        title,
+        type,
         description,
         price,
-        imageUrl,
-        serviceType,
+        image_url,
+        service_type,
         provider_id
       });
 
       const service = await Service.create({
-        title,
+        type,
         description,
         price,
-        imageUrl,
-        serviceType: serviceType || 'general',
+        image_url,
+        service_type: service_type || 'general',
         provider_id
       });
 
