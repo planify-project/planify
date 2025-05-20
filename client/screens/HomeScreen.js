@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import * as Location from 'expo-location';
+import { AuthContext } from '../context/AuthContext';
 import HomeHeader from '../components/home/HomeHeader';
 import HomeTabs from '../components/home/HomeTabs';
 import CreateEventModal from '../components/home/CreateEventModal';
@@ -26,6 +27,8 @@ export default function HomeScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
   const [publicEvents, setPublicEvents] = useState([]);
+  const navigation = useNavigation();
+  const { user } = useContext(AuthContext);
 
   // Reset active tab when screen comes into focus
   useFocusEffect(
@@ -75,7 +78,7 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-    
+
 
     fetchPublicEvents();
   }, []);
@@ -104,13 +107,21 @@ export default function HomeScreen({ navigation }) {
   const handleCreateEvent = () => {
     if (eventName && selectedDate) {
       setCreateEventModalVisible(false);
-      navigation.navigate('CreateEvent', { 
-        eventName: eventName, 
-        date: selectedDate 
+      navigation.navigate('CreateEvent', {
+        eventName: eventName,
+        date: selectedDate
       });
       // Reset form
       setEventName('');
       setSelectedDate('');
+    }
+  };
+
+  const handleCreateEventPress = () => {
+    if (user) {
+      setCreateEventModalVisible(true);
+    } else {
+      navigation.navigate('Auth');
     }
   };
 
@@ -129,7 +140,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
-      <HomeHeader 
+      <HomeHeader
         loading={loading}
         city={city}
         errorMsg={errorMsg}
@@ -145,7 +156,7 @@ export default function HomeScreen({ navigation }) {
         onUseCurrentLocation={getLocation}
       />
 
-      <CreateEventModal 
+      <CreateEventModal
         visible={createEventModalVisible}
         eventName={eventName}
         selectedDate={selectedDate}
@@ -159,7 +170,9 @@ export default function HomeScreen({ navigation }) {
         onCreateEvent={handleCreateEvent}
       />
 
-      <CreateEventButton onPress={() => setCreateEventModalVisible(true)} />
+      <CreateEventButton
+        onPress={handleCreateEventPress}
+      />
 
       <HomeTabs
         activeTab={activeTab}
@@ -175,7 +188,7 @@ export default function HomeScreen({ navigation }) {
       />
 
       <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
-      
+
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
     </ScrollView>
   );

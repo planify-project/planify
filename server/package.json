@@ -4,16 +4,24 @@
   "description": "Planify Event Planning App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon server.js", 
     "dev": "nodemon server.js",
-    "seed": "node seeds/publicEvents.js"
+    "seed": "node seeders/index.js",
+    "seed:publicEvents": "node seeds/publicEvents.js",
+    "seed:users": "node seeds/users.js",
+    "seed:events": "node seeds/events.js",
+    "seed:services": "node seeds/services.js",
+    "seed:eventSpaces": "node seeds/event__space.seed.js",
+    "seed:payments": "node seeds/payments.js"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "firebase-admin": "^11.5.0",
+    "express-session": "^1.18.1",
+    "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
@@ -23,6 +31,6 @@
     "stripe": "^18.1.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.1.10"
   }
 }

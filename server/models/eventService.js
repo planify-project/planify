@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('event_service', {
     event_id: { 
-      type: DataTypes.INTEGER, // Changed from UUID to INTEGER
+      type: DataTypes.UUID,
       primaryKey: true,
       references: {
         model: 'events',

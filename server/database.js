@@ -96,9 +96,6 @@ Booking.belongsTo(Service, { foreignKey: 'serviceId' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
 
-// Admin and User relationships
-Admin.belongsTo(User, { foreignKey: 'user_id' });
-User.hasOne(Admin, { foreignKey: 'user_id' });
 
 // User and Wishlist relationships
 User.hasMany(Wishlist, { foreignKey: 'user_id' });
@@ -168,9 +165,9 @@ const syncWithRetry = async (retries = 3) => {
         await User.sync({ alter: true });
         console.log('User model synchronized successfully.');
 
-        // Then sync all other models
-        await sequelize.sync({ alter: true });
-        console.log('All models were synchronized successfully.');
+    // Then sync all other models
+    await sequelize.sync({ alter: true });
+    console.log('All models were synchronized successfully.');
 
         // Import and run the event spaces seeder
         const seedEventSpaces = require('./seeds/eventSpaces');

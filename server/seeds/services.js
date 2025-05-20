@@ -1,40 +1,60 @@
-'use strict';
-const { v4: uuidv4 } = require('uuid');
-const { Service } = require('../database');
+const { faker } = require('@faker-js/faker');
+const { Sequelize } = require('sequelize');
+const ServiceModel = require('../models/service');
+const UserModel = require('../models/user');
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    const services = [
-      {
-        id: '1',
-        title: 'Professional Photography',
-        description: 'Expert event photography service',
-        price: 500,
-        serviceType: 'service',
-        imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32',
-        provider_id: 1
-      },
-      {
-        id: '2',
-        title: 'Catering Service',
-        description: 'Premium catering for all events',
-        price: 1000,
-        serviceType: 'service',
-        imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033',
-        provider_id: 1
-      }
-    ];
+// Initialize Sequelize
+const sequelize = new Sequelize('planify', 'root', 'root', {
+  host: 'localhost',
+  dialect: 'mysql',
+});
 
-    await Service.destroy({ where: {} });
-    console.log('Cleared existing services');
-    
-    const createdServices = await Service.bulkCreate(services);
-    console.log(`Seeded ${createdServices.length} services`);
-    
-    return createdServices;
-  },
+// Define models
+const Service = ServiceModel(sequelize, Sequelize.DataTypes);
+const User = UserModel(sequelize, Sequelize.DataTypes);
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('services', null, {});
+async function seedServices() {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Connected to DB');
+
+    // Get providers only
+    const users = await User.findAll({
+      where: { isProvider: true },
+      attributes: ['id']
+    });
+
+    if (users.length === 0) {
+      console.error('❌ No providers found. Make sure to seed users with isProvider=true');
+      return;
+    }
+
+    const services = [];
+
+    for (let i = 0; i < 100; i++) {
+      const createdAt = faker.date.between({ from: '2023-01-01', to: new Date() });
+      const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
+
+      services.push({
+        title: faker.commerce.productName(),
+        description: faker.commerce.productDescription(),
+        price: faker.commerce.price({ min: 10, max: 1000 }),
+        serviceType: faker.helpers.arrayElement(['general', 'catering', 'lighting', 'security']),
+        imageUrl: faker.image.url(),
+        provider_id: faker.helpers.arrayElement(users).id,
+        category_id: null, // Or generate logic for real categories
+        createdAt,
+        updatedAt
+      });
+    }
+
+    await Service.bulkCreate(services);
+    console.log('🎉 100 services seeded successfully.');
+  } catch (err) {
+    console.error('❌ Failed to seed services:', err);
+  } finally {
+    await sequelize.close();
   }
-};
+}
+
+seedServices();

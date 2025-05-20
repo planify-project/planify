@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
 
 // Create Express app and HTTP server
 const app = express();
@@ -175,6 +176,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/authadmin',AdminAuthRoutes)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

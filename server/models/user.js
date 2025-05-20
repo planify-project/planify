@@ -11,15 +11,22 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       allowNull: false,
     },
+    image: DataTypes.STRING,
     phone: DataTypes.STRING,
     contact_details: DataTypes.JSON,
     password: {
       type: DataTypes.STRING,
       allowNull: true, // Allow null for Firebase users
+    }, 
+    isBanned: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },isProvider: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
-  }, {
-    tableName: 'users',
+   }, {
     underscored: true,
-    timestamps: true,
+    timestamps: true, 
   });
 };

@@ -1,33 +1,33 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('event', {
     id: {
-      type: DataTypes.INTEGER,  // Keep using INTEGER
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false, // Event name is required
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true, // Optional field for event details
     },
     type: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: true, // Supports event categories like "wedding", "meeting", etc.
     },
     startDate: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: false, // Start date is required
     },
     endDate: {
       type: DataTypes.DATE,
-      allowNull: true,
+      allowNull: true, // Optional for multi-day events
     },
     location: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: true, // Optional for private events
     },
     latitude: {
       type: DataTypes.FLOAT,
@@ -37,14 +37,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.FLOAT,
       allowNull: true, // Added for geolocation support
     },
-    category: {
-      type: DataTypes.STRING,
-      allowNull: true, // Allow null if not all events have a category
-    },
     isPublic: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true, // Default to public events
+      defaultValue: false, // Renamed from "visibility" for clarity
     },
     status: {
       type: DataTypes.ENUM('pending', 'approved', 'rejected', 'cancelled', 'completed'),
@@ -64,9 +59,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     created_by: {
       type: DataTypes.UUID,
-      allowNull: false,
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      allowNull: false, // Required for tracking the event creator
     },
     agent_id: {
       type: DataTypes.INTEGER,
@@ -88,12 +81,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false, // Indicates whether the event is free
     },
-    rating: {
-      type: DataTypes.FLOAT, // Use FLOAT for ratings (e.g., 4.5)
-      allowNull: true, // Optional field for event ratings
-    },
   }, {
-    underscored: true,
-    timestamps: true
+    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    paranoid: false, // Enables soft deletes (adds deletedAt field)
   });
 };
