@@ -1,13 +1,19 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { auth } from '../firebase'; 
+import { auth } from '../firebase';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged,updateProfile, updateEmail, updatePassword,
-    
+    onAuthStateChanged, 
+    updateProfile,
+    updateEmail,
+    updatePassword,
+    GoogleAuthProvider,
+    FacebookAuthProvider
+
 } from 'firebase/auth';
+import { uploadToCloudinary } from '../api/cloudinary';
 import { API_BASE } from '../config';
 
 export const AuthContext = createContext({});
@@ -68,37 +74,17 @@ export const AuthProvider = ({ children }) => {
     // Register a new user
     const register = async (email, password, name) => {
         try {
-            // Create user in Firebase
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const firebaseUser = userCredential.user;
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
+            const user = userCredential.user;
+            // Set the display name
+            await updateProfile(user, { displayName: name });
+            // Send user data to backend
+            await axios.post(`${API_BASE}/auth/register`, {
+                id: user.uid,
+                email,
+                name,
+                password,
 
-            // Update the user's display name
-            await updateProfile(firebaseUser, {
-                displayName: name
-            });
-
-            // Get the Firebase token
-            const token = await firebaseUser.getIdToken();
-
-            // Create user in our database
-            const response = await axios.post(`${API_BASE}/users/firebase`, {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                displayName: name
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.data.success) {
-                throw new Error('Failed to create user in database');
-            }
-
-            // Store both Firebase user and our database user
-            setUser({
-                ...firebaseUser,
-                dbUser: response.data.data
             });
         } catch (error) {
             console.error('Registration Error:', error);
@@ -106,36 +92,40 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Log in an existing user
-    const login = async (email, password) => {
+    const updateUserProfile = async (name, imageFile) => {
+        let imageUrl = null;
+        if (imageFile) {
+            // Upload image to Cloudinary using the new helper
+            imageUrl = await uploadToCloudinary(imageFile);
+        }
+        if (user) {
+            // Update Firebase displayName and photoURL
+            await updateProfile(user, {
+                displayName: name,
+                photoURL: imageUrl || user.photoURL // fallback to existing photoURL if no new image
+            });
+            // Update backend
+            await axios.put(`${API_BASE}/auth/updatep-rofile`, {
+                id: user.uid,
+                name,
+                image: imageUrl || user.photoURL // send the correct image URL
+            });
+        }
+    };
+
+    // Log in an existing user and send data to backend
+    const login = async (email, password, name) => {
         try {
             // Sign in with Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const firebaseUser = userCredential.user;
-
-            // Get the Firebase token
-            const token = await firebaseUser.getIdToken();
-
-            // Get or create user in our database
-            const response = await axios.post(`${API_BASE}/users/firebase`, {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.data.success) {
-                throw new Error('Failed to sync user with database');
-            }
-
-            // Store both Firebase user and our database user
-            setUser({
-                ...firebaseUser,
-                dbUser: response.data.data
-            });
+            const id = userCredential.user.uid;
+            // Send user data to backend
+            // await axios.post(`${API_BASE}/auth/login`, {
+            //     id,
+            //     email,
+            //     name,
+            //     password,
+            // });
         } catch (error) {
             console.error('Login Error:', error);
             throw error;
@@ -154,7 +144,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUserProfile }}>
             {children}
         </AuthContext.Provider>
     );

@@ -92,9 +92,6 @@ Booking.belongsTo(Event, { foreignKey: 'event_id' });
 Booking.hasMany(Notification, { foreignKey: 'booking_id' });
 Notification.belongsTo(Booking, { foreignKey: 'booking_id' });
 
-// Admin and User relationships
-Admin.belongsTo(User, { foreignKey: 'user_id' });
-User.hasOne(Admin, { foreignKey: 'user_id' });
 
 // User and Wishlist relationships
 User.hasMany(Wishlist, { foreignKey: 'user_id' });
@@ -172,13 +169,13 @@ const syncDatabase = async () => {
    
 
     // Then sync all other models
-    await sequelize.sync({ force: true });
-    // console.log('All models were synchronized successfully.');
+    await sequelize.sync({ alter: true });
+    console.log('All models were synchronized successfully.');
 
     // Import and run the event spaces seeder
     const seedEventSpaces = require('./seeds/eventSpaces');
-    await seedEventSpaces();
-    console.log('Event spaces seeded successfully!');
+    // await seedEventSpaces();
+    // console.log('Event spaces seeded successfully!');
   } catch (error) {
     console.error('Error during database sync:', error);
     process.exit(1);

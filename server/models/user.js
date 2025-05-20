@@ -1,5 +1,3 @@
-
-
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('user', {
     id: {
@@ -13,15 +11,22 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       allowNull: false,
     },
+    image: DataTypes.STRING,
     phone: DataTypes.STRING,
     contact_details: DataTypes.JSON,
     password: {
       type: DataTypes.STRING,
       allowNull: false, // إذا كنت تستخدم كلمة مرور
     },
+    isBanned: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },isProvider: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   }, {
-    tableName: 'user', 
     underscored: true,
-    timestamps: true,
+    timestamps: true, 
   });
 };
