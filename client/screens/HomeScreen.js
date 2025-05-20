@@ -27,7 +27,6 @@ export default function HomeScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [activeTab, setActiveTab] = useState('event'); // Set default to 'event'
   const [publicEvents, setPublicEvents] = useState([]);
-  const navigation = useNavigation();
   const { user } = useContext(AuthContext);
 
   // Reset active tab when screen comes into focus

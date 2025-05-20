@@ -1,5 +1,5 @@
 // API and Socket configuration
-const LOCAL_IP = '192.168.1.18'; // Replace with your local IP address
+const LOCAL_IP = '192.168.1.103'; // Replace with your local IP address
 const PORT = 3000;
 
 // Base URLs
