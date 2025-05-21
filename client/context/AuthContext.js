@@ -8,9 +8,7 @@ import {
     onAuthStateChanged, 
     updateProfile,
     updateEmail,
-    updatePassword,
-    GoogleAuthProvider,
-    FacebookAuthProvider
+  sendPasswordResetEmail
 
 } from 'firebase/auth';
 import { uploadToCloudinary } from '../api/cloudinary';
@@ -111,8 +109,18 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const handleResetPassword = async (email) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+        } catch (error) {
+            console.error('Reset Password Error:', error.message);
+
+            throw error;
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUserProfile }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateUserProfile, handleResetPassword }}>
             {children}
         </AuthContext.Provider>
     );
