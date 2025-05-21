@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
     // Register a new user and send data to backend
     const register = async (email, password, name) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
+             const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
             const user = userCredential.user;
             // Set the display name
             await updateProfile(user, { displayName: name });
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
                 email,
                 name,
                 password,
-
+ 
             });
         } catch (error) {
             console.error('Registration Error:', error.message);
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
-            // Send user data to backend
+             // Send user data to backend
             // await axios.post(`${API_BASE}/auth/login`, {
             //     id,
             //     email,
@@ -93,7 +93,6 @@ export const AuthProvider = ({ children }) => {
             // });
         } catch (error) {
             console.error('Login Error:', error.message);
-
             throw error;
         }
     };

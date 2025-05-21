@@ -4,7 +4,8 @@
   "description": "Planify Event Planning App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon app.js",
+    "start": "nodemon server.js", 
+    "dev": "nodemon server.js",
     "seed": "node seeders/index.js",
     "seed:publicEvents": "node seeds/publicEvents.js",
     "seed:users": "node seeds/users.js",

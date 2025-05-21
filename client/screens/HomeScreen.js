@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert, View, Image, Dimensions } from 'react-native';
 import * as Location from 'expo-location';
 import { AuthContext } from '../context/AuthContext';
 import HomeHeader from '../components/home/HomeHeader';
@@ -14,9 +14,15 @@ import { normalize } from '../utils/scaling';
 import AllEventsScreen from './AllEventsScreen';
 import axios from 'axios';
 import { API_BASE } from '../config'; // Make sure this points to your backend
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { getImageUrl } from '../configs/url';
+import api from '../configs/api';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
+  const navigation = useNavigation();
+  const { theme } = useTheme();
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -77,10 +83,9 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-
-
     fetchPublicEvents();
   }, []);
+
   const fetchPublicEvents = async () => {
     try {
       console.log('Fetching public events...');
@@ -93,6 +98,7 @@ export default function HomeScreen({ navigation }) {
       setLoading(false);
     }
   };
+
   const handleSelectCity = (selectedCity) => {
     setCity(selectedCity);
     setLoading(false);
@@ -180,7 +186,7 @@ export default function HomeScreen({ navigation }) {
           if (tabId === 'events') {
             navigation.navigate('AllEvents');
           } else if (tabId === 'services') {
-            navigation.navigate('AllServicesScreen');
+            navigation.navigate('AllServices');
           }
         }}
         navigation={navigation}
@@ -189,17 +195,6 @@ export default function HomeScreen({ navigation }) {
       <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
 
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
-
-      <TouchableOpacity
-        style={styles.allEventsButton}
-        onPress={() => navigation.navigate('ServicesTab'
-          , {
-            screen: 'AllServicesScreen'
-          }
-        )}
-      >
-        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

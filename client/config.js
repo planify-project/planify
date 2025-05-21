@@ -1,6 +1,11 @@
+// Import all configuration from the centralized config file
+export * from './configs/url';
+
 // API and Socket configuration
 const LOCAL_IP = '192.168.1.3'; // Replace with your local IP address
 const PORT = 3000;
+export const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RO4rZCFiC25gcQ1k4TPSl46TGeLsebDfDuM2SXgE3bY0vukSGyW6tPztYv0c7LpxMekAirZtOygmId1ZRvpevvG007hrcgTw0'; // Replace with your actual publishable key
+
 
 // Base URLs
 export const API_BASE = `http://${LOCAL_IP}:${PORT}/api`;
@@ -8,21 +13,15 @@ export const SOCKET_URL = `http://${LOCAL_IP}:${PORT}`;
 
 // Socket.IO configuration
 export const SOCKET_CONFIG = {
-  transports: ['websocket', 'polling'],
-  path: '/socket.io/',
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
-  timeout: 10000,
-  autoConnect: true,
-  forceNew: true,
-  reconnection: true,
-  reconnectionDelayMax: 5000,
-  randomizationFactor: 0.5
-};
-
-// API configuration
-export const API_CONFIG = {
-  timeout: 10000,
-  retries: 3,
-  retryDelay: 1000
+  timeout: 45000,
+  pingTimeout: 10000,
+  pingInterval: 5000,
+  transports: ['websocket', 'polling'],
+  path: '/socket.io/',
+  withCredentials: true,
+  extraHeaders: {
+    'Accept': 'application/json'
+  }
 };

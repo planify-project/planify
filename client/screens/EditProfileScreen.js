@@ -16,6 +16,7 @@ import { Auth } from '../configs/firebase_config';
 import { updateProfile } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -69,17 +70,21 @@ export default function EditProfileScreen({ navigation }) {
       let newPhotoURL = photoURL;
       let newName = name.trim() || user.displayName || '';
 
-      // Only update name if no image is being updated
-      if (!photoURL || !photoURL.startsWith('file://')) {
-        await updateProfile(user, {
-          displayName: newName
+      // Update Firebase profile
+      await updateProfile(user, {
+        displayName: newName,
+        ...(newPhotoURL && { photoURL: newPhotoURL })
+      });
+
+      // Update user in database
+      try {
+        await axios.put(`${API_BASE}/users/${user.uid}`, {
+          name: newName,
+          ...(newPhotoURL && { photoURL: newPhotoURL })
         });
-      } else {
-        // If there's a new image, update both name and photo
-        await updateProfile(user, {
-          displayName: newName,
-          photoURL: photoURL
-        });
+      } catch (error) {
+        console.error('Error updating user in database:', error);
+        // Continue even if database update fails
       }
 
       Alert.alert('Success', 'Profile updated successfully');

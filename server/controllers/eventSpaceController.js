@@ -1,4 +1,5 @@
 const { EventSpace } = require('../database');
+const seedEventSpaces = require('../seeds/eventSpaces');
 
 exports.getAllEventSpaces = async (req, res) => {
   try {
@@ -69,4 +70,12 @@ exports.checkAvailability = async (req, res) => {
   }
 };
 
-// admin only 
+exports.syncEventSpaces = async (req, res) => {
+  try {
+    await seedEventSpaces();
+    res.status(200).json({ success: true, message: 'Event spaces synced successfully!' });
+  } catch (error) {
+    console.error('Error syncing event spaces:', error);
+    res.status(500).json({ success: false, message: 'Failed to sync event spaces', error: error.message });
+  }
+};

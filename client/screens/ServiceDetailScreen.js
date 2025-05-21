@@ -5,14 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../configs/api';
 import BookingModal from '../components/BookingModal';
 import { useSocket } from '../context/SocketContext';
-import { getAuth } from 'firebase/auth'; // Replace AWS Amplify with Firebase Auth
+import { getAuth } from 'firebase/auth';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { getImageUrl } from '../configs/url';
 
 export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
   const { service } = route.params;
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const { socket } = useSocket();
-  const auth = getAuth(); // Get Firebase Auth instance
+  const auth = getAuth();
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSpace, setSelectedSpace] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
+
+  useEffect(() => {
+    const checkProvider = async () => {
+      if (auth.currentUser) {
+        try {
+          const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+          if (userResponse.data.success) {
+            // Use the provider information directly from the service object
+            const isUserProvider = service.provider.email === auth.currentUser.email;
+            console.log('Current user email:', auth.currentUser.email);
+            console.log('Service provider email:', service.provider.email);
+            console.log('Is provider:', isUserProvider);
+            setIsProvider(isUserProvider);
+          }
+        } catch (error) {
+          console.error('Error checking provider:', error);
+        }
+      }
+    };
+    checkProvider();
+  }, [auth.currentUser, service.provider]);
+
+  const imageUrl = getImageUrl(service.image_url);
 
   const handleDelete = async () => {
     Alert.alert(
@@ -29,7 +59,15 @@ export default function ServiceDetailScreen({ route, navigation }) {
           onPress: async () => {
             try {
               await api.delete(`/services/${service.id}`);
-              navigation.goBack();
+              Alert.alert('Success', 'Service deleted successfully', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    // Navigate back and refresh the services list
+                    navigation.navigate('AllServices', { refresh: true });
+                  }
+                }
+              ]);
             } catch (error) {
               Alert.alert('Error', 'Failed to delete service');
             }
@@ -39,64 +77,213 @@ export default function ServiceDetailScreen({ route, navigation }) {
     );
   };
 
-  const handleBooking = async (bookingData) => {
+  const handleEdit = () => {
+    navigation.navigate('EditService', { 
+      service,
+      onUpdate: () => {
+        // Refresh the service details when returning from edit
+        navigation.setParams({ refresh: true });
+      }
+    });
+  };
+
+  // Add refresh effect
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (route.params?.refresh) {
+        // Reset the refresh param
+        navigation.setParams({ refresh: false });
+        // Re-fetch the service data
+        const fetchService = async () => {
+          try {
+            const response = await api.get(`/services/${service.id}`);
+            if (response.data.success) {
+              // Update the service data
+              navigation.setParams({ service: response.data.data });
+            }
+          } catch (error) {
+            console.error('Error refreshing service:', error);
+          }
+        };
+        fetchService();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, route.params?.refresh]);
+
+  const handleChat = () => {
+    console.log('Chat button pressed');
+    // navigation.dispatch(
+    //   CommonActions.navigate({
+    //     name: 'Root',
+    //     params: {
+    //       screen: 'AllEvents',
+    //       params: {
+    //         serviceId: service.id,
+    //         serviceProviderId: service.provider.id,
+    //         serviceProviderName: service.provider.name,
+    //         serviceProviderImage: service.provider.image_url
+    //       }
+    //     }
+    //   })
+    // );
+    navigation.navigate('Chat', { 
+      serviceId: service.id,
+      serviceProviderId: service.provider.id,
+      serviceProviderName: service.provider.name,
+      serviceProviderImage: service.provider.image_url
+    });
+
+  };
+
+  const handleBooking = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'You must be logged in to book a service');
+      return;
+    }
+
+    // Validate required fields
+    if (!selectedDate || !selectedSpace || !phoneNumber) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
     try {
-      if (!auth.currentUser) {
-        Alert.alert('Error', 'Please login to book a service');
-        navigation.navigate('Login');
-        return;
+      setLoading(true);
+
+      // First get the user's database ID
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      console.log('User response:', userResponse.data);
+      
+      if (!userResponse.data.success) {
+        throw new Error('Failed to get user data');
       }
 
-      // Validate booking data
-      if (!bookingData.date || !bookingData.space || !bookingData.phone_number) {
-        Alert.alert('Error', 'Please fill in all required fields');
-        return;
-      }
+      const dbUserId = userResponse.data.data.id;
+      console.log('Database user ID:', dbUserId);
 
-      // Format the booking payload to match server expectations
+      // Format the booking payload
       const bookingPayload = {
-        user_id: auth.currentUser.uid,
-        service_id: service.id,
-        event_id: "1", // Required field
-        date: new Date(bookingData.date).toISOString(),
-        space: bookingData.space.trim(),
-        phone_number: bookingData.phone_number.replace(/[^0-9]/g, ''),
-        status: 'pending'
+        userId: dbUserId,
+        serviceId: service.id,
+        date: new Date(selectedDate).toISOString(),
+        location: selectedSpace,
+        phone: phoneNumber,
+        status: 'pending' // Add status field
       };
 
-      console.log('Sending booking request:', bookingPayload);
+      console.log('Creating booking with payload:', bookingPayload);
+
+      // Close the modal before making the request
+      setShowBookingModal(false);
+
       const response = await api.post('/bookings', bookingPayload);
 
-      if (response.data.success) {
-        setShowBookingModal(false);
-        Alert.alert('Success', 'Booking request sent! Waiting for provider response.');
+      console.log('Booking response:', response.data);
 
-        // Emit socket event for real-time notification
-        socket?.emit('newBooking', {
-          serviceId: service.id,
-          providerId: service.provider_id
-        });
+      if (response.data.success) {
+        // Notify the service provider through socket
+        if (socket) {
+          console.log('Socket connected, emitting newBooking notification');
+          console.log('Notification payload:', {
+            providerId: service.provider_id,
+            bookingId: response.data.data.booking.id,
+            customerId: auth.currentUser.uid,
+            customerName: auth.currentUser.displayName || 'A customer',
+            message: `New booking request for ${service.title}`
+          });
+          
+          socket.emit('newBooking', {
+            providerId: service.provider_id,
+            bookingId: response.data.data.booking.id,
+            customerId: auth.currentUser.uid,
+            customerName: auth.currentUser.displayName || 'A customer',
+            message: `New booking request for ${service.title}`
+          });
+        } else {
+          console.log('Socket not connected, cannot send notification');
+        }
+
+        Alert.alert(
+          'Success',
+          'Your booking request has been sent. The service provider will be notified and can accept or reject your request.',
+          [{ text: 'OK' }]
+        );
+
+        // Listen for booking response
+        if (socket) {
+          socket.on('bookingResponse', (data) => {
+            if (data.notification.bookingId === response.data.data.booking.id) {
+              Alert.alert(
+                'Booking Update',
+                data.notification.message,
+                [{ text: 'OK' }]
+              );
+            }
+          });
+        }
+      } else {
+        throw new Error(response.data.message || 'Failed to create booking');
       }
     } catch (error) {
       console.error('Booking error:', error);
       Alert.alert(
-        'Error', 
-        error.response?.data?.message || 'Failed to send booking request'
+        'Error',
+        error.response?.data?.message || error.message || 'Failed to create booking. Please try again.'
       );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Add socket listener for booking responses
+  useEffect(() => {
+    if (socket) {
+      socket.on('bookingResponse', (data) => {
+        Alert.alert(
+          'Booking Update',
+          data.notification.message,
+          [{ text: 'OK' }]
+        );
+      });
+
+      return () => {
+        socket.off('bookingResponse');
+      };
+    }
+  }, [socket]);
+
+  const handlePayment = () => {
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'Payment',
+        params: {
+          amount: service.price,
+          eventId: null // or the appropriate event ID if needed
+        }
+      })
+    );
   };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <Image
-        source={{ uri: service.imageUrl || 'https://picsum.photos/300/300' }}
+        source={{ uri: imageUrl || 'https://picsum.photos/300/300' }}
         style={styles.serviceImage}
+        onError={(e) => {
+          console.error('Image loading error:', {
+            serviceId: service.id,
+            imageUrl: imageUrl,
+            error: e.nativeEvent
+          });
+        }}
       />
       
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>{service.title}</Text>
-          <Text style={[styles.price, { color: theme.primary }]}>${service.price}</Text>
+          <Text style={[styles.price, { color: theme.primary }]}>{service.price} DT</Text>
         </View>
         
         <View style={[styles.section, { backgroundColor: theme.card }]}>
@@ -108,45 +295,52 @@ export default function ServiceDetailScreen({ route, navigation }) {
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Details</Text>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Category:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.category || 'Not specified'}</Text>
+            <Text style={[styles.detailValue, { color: theme.text }]}>{service.service_type || 'Not specified'}</Text>
           </View>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Duration:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.duration || 'Not specified'}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Availability:</Text>
-            <Text style={[styles.detailValue, { color: theme.text }]}>{service.availability || 'Not specified'}</Text>
+            <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Location:</Text>
+            <Text style={[styles.detailValue, { color: theme.text }]}>{service.location || 'Not specified'}</Text>
           </View>
         </View>
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('Settings', { 
-              screen: 'EditService',
-              params: { service }
-            })}
-          >
-            <Ionicons name="create-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.error }]}
-            onPress={handleDelete}
-          >
-            <Ionicons name="trash-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.success }]}
-            onPress={() => setShowBookingModal(true)}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Book Now</Text>
-          </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          {isProvider ? (
+            <>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.primary }]}
+                onPress={handleEdit}
+              >
+                <Ionicons name="create-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Edit</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.error }]}
+                onPress={handleDelete}
+              >
+                <Ionicons name="trash-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.primary }]}
+                onPress={() => setShowBookingModal(true)}
+              >
+                <Ionicons name="calendar-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Book Now</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.secondary }]}
+                onPress={handleChat}
+              >
+                <Ionicons name="chatbubble-outline" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Chat</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
 
@@ -155,6 +349,13 @@ export default function ServiceDetailScreen({ route, navigation }) {
         onClose={() => setShowBookingModal(false)}
         onSubmit={handleBooking}
         service={service}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        selectedSpace={selectedSpace}
+        setSelectedSpace={setSelectedSpace}
+        phoneNumber={phoneNumber}
+        setPhoneNumber={setPhoneNumber}
+        loading={loading}
       />
     </ScrollView>
   );
@@ -210,12 +411,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  actionButtons: {
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 20,
   },
-  actionButton: {
+  button: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
@@ -227,10 +428,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
   },
-  actionButtonText: {
+  buttonText: {
     color: '#fff',
     marginLeft: 8,
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  bookButton: {
+    padding: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  payButton: {
+    padding: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

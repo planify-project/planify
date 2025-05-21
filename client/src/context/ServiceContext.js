@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
-
-const API_URL = 'http://172.20.10.3:3000';
+import { API_BASE, API_URL, getImageUrl } from '../../config';
 
 const ServiceContext = createContext();
 
@@ -14,19 +13,53 @@ export const ServiceProvider = ({ children }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/services`, {
+      console.log('Fetching services from:', `${API_BASE}/services`);
+      const response = await axios.get(`${API_BASE}/services`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Transform image URLs to include the API URL
-      const servicesWithFullUrls = response.data.data.map(service => ({
-        ...service,
-        imageUrl: service.imageUrl ? `${API_URL}${service.imageUrl}` : null
-      }));
+      console.log('Raw API Response:', response.data);
       
+      // Transform image URLs to include the API URL
+      const servicesWithFullUrls = response.data.data.map(service => {
+        console.log('Processing service:', service);
+        
+        // Use the getImageUrl helper for all image fields
+        const imageUrl = getImageUrl(service.imageUrl);
+        const coverImage = getImageUrl(service.coverImage);
+        const mainImage = getImageUrl(service.mainImage);
+        const images = service.images ? service.images.map(getImageUrl) : [];
+
+        console.log('Service image data:', {
+          original: {
+            imageUrl: service.imageUrl,
+            coverImage: service.coverImage,
+            mainImage: service.mainImage,
+            images: service.images
+          },
+          processed: {
+            imageUrl,
+            coverImage,
+            mainImage,
+            images
+          }
+        });
+
+        // Use the first available image
+        const finalImageUrl = imageUrl || coverImage || mainImage || (images.length > 0 ? images[0] : null);
+
+        return {
+          ...service,
+          imageUrl: finalImageUrl,
+          images: images.length > 0 ? images : (finalImageUrl ? [finalImageUrl] : [])
+        };
+      });
+      
+      console.log('Final processed services:', servicesWithFullUrls);
       setServices(servicesWithFullUrls);
       setError(null);
     } catch (err) {
+      console.error('Error fetching services:', err);
       setError(err.response?.data?.message || 'Failed to fetch services');
     } finally {
       setLoading(false);
@@ -55,7 +88,7 @@ export const ServiceProvider = ({ children }) => {
         }
       });
 
-      const response = await axios.post(`${API_URL}/api/services`, formData, {
+      const response = await axios.post(`${API_BASE}/services`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -65,7 +98,7 @@ export const ServiceProvider = ({ children }) => {
       // Transform the response data to include full image URL
       const serviceWithFullUrl = {
         ...response.data.data,
-        imageUrl: response.data.data.imageUrl ? `${API_URL}${response.data.data.imageUrl}` : null
+        imageUrl: getImageUrl(response.data.data.imageUrl)
       };
 
       await fetchServices();
@@ -102,7 +135,7 @@ export const ServiceProvider = ({ children }) => {
         }
       });
 
-      const response = await axios.put(`${API_URL}/api/services/${id}`, formData, {
+      const response = await axios.put(`${API_BASE}/services/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -112,7 +145,7 @@ export const ServiceProvider = ({ children }) => {
       // Transform the response data to include full image URL
       const serviceWithFullUrl = {
         ...response.data.data,
-        imageUrl: response.data.data.imageUrl ? `${API_URL}${response.data.data.imageUrl}` : null
+        imageUrl: getImageUrl(response.data.data.imageUrl)
       };
 
       await fetchServices();
@@ -131,7 +164,7 @@ export const ServiceProvider = ({ children }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/services/${id}`, {
+      await axios.delete(`${API_BASE}/services/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchServices();

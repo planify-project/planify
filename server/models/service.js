@@ -50,6 +50,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       onDelete: 'SET NULL',
       onUpdate: 'CASCADE'
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
     }
   }, {
     timestamps: true,

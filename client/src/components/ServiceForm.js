@@ -3,6 +3,10 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert,
 import { useService } from '../context/ServiceContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
 const ServiceForm = () => {
   const { createService, updateService, services } = useService();
@@ -40,6 +44,42 @@ const ServiceForm = () => {
     }));
   };
 
+  const validateImage = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      // Check file size
+      if (blob.size > MAX_IMAGE_SIZE) {
+        throw new Error('Image size must be less than 5MB');
+      }
+
+      // Check file type
+      if (!ALLOWED_IMAGE_TYPES.includes(blob.type)) {
+        throw new Error('Only JPEG, PNG and JPG images are allowed');
+      }
+
+      return true;
+    } catch (error) {
+      Alert.alert('Error', error.message);
+      return false;
+    }
+  };
+
+  const compressImage = async (uri) => {
+    try {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 1200 } }], // Resize to max width of 1200px
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress to 70% quality
+      );
+      return manipResult.uri;
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      return uri; // Return original if compression fails
+    }
+  };
+
   const pickImage = async (source) => {
     try {
       let result;
@@ -52,7 +92,7 @@ const ServiceForm = () => {
         }
         result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: false,
+          allowsEditing: true,
           quality: 1,
         });
       } else {
@@ -63,17 +103,25 @@ const ServiceForm = () => {
         }
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: false,
+          allowsEditing: true,
           quality: 1,
         });
       }
 
       if (!result.canceled) {
         const selectedAsset = result.assets[0];
+        
+        // Validate image
+        const isValid = await validateImage(selectedAsset.uri);
+        if (!isValid) return;
+
+        // Compress image
+        const compressedUri = await compressImage(selectedAsset.uri);
+        
         setFormData(prev => ({
           ...prev,
           image: {
-            uri: selectedAsset.uri,
+            uri: compressedUri,
             type: 'image/jpeg',
             name: 'photo.jpg'
           }

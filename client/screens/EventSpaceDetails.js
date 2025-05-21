@@ -1,12 +1,65 @@
-import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { normalize } from '../utils/scaling';
+import { getAuth } from 'firebase/auth';
+import api from '../configs/api';
+import EventSpaceBookingModal from '../components/EventSpaceBookingModal';
 
 const { width } = Dimensions.get('window');
 
 export default function EventSpaceDetails({ route, navigation }) {
   const { space } = route.params;
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const auth = getAuth();
+
+  const handleBooking = async (bookingData) => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'You must be logged in to book a space');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      if (!userResponse.data.success) {
+        throw new Error('Failed to get user data');
+      }
+
+      const dbUserId = userResponse.data.data.id;
+
+      const bookingPayload = {
+        userId: dbUserId,
+        eventSpaceId: space.id,
+        startDate: bookingData.startDate.toISOString(),
+        endDate: bookingData.endDate.toISOString(),
+        phoneNumber: bookingData.phoneNumber,
+        status: 'pending'
+      };
+
+      const response = await api.post('/event-spaces/bookings', bookingPayload);
+
+      if (response.data.success) {
+        Alert.alert(
+          'Success',
+          'Your booking request has been sent successfully!',
+          [{ text: 'OK', onPress: () => setShowBookingModal(false) }]
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || error.message || 'Failed to create booking. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -82,10 +135,18 @@ export default function EventSpaceDetails({ route, navigation }) {
       {/* Book Button */}
       <TouchableOpacity 
         style={styles.bookButton}
-        onPress={() => navigation.navigate('CreateEvent', { space })}
+        onPress={() => setShowBookingModal(true)}
       >
         <Text style={styles.bookButtonText}>Book This Space</Text>
       </TouchableOpacity>
+
+      <EventSpaceBookingModal
+        visible={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onConfirm={handleBooking}
+        loading={loading}
+        space={space}
+      />
     </ScrollView>
   );
 }
