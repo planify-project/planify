@@ -11,19 +11,19 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    providerId: {
-      type: DataTypes.UUID,
-      allowNull: false
-    },
     userId: {
       type: DataTypes.UUID,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     date: {
       type: DataTypes.DATE,
       allowNull: false
     },
-    space: {
+    location: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -36,8 +36,9 @@ module.exports = (sequelize) => {
       defaultValue: 'pending'
     }
   }, {
-    tableName: 'Bookings',
-    timestamps: true
+    tableName: 'bookings',
+    timestamps: true,
+    underscored: true
   });
 
   return Booking;

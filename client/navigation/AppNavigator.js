@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,12 +11,20 @@ import EventDetailScreen from '../screens/EventDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import EventSpaceScreen from '../screens/EventSpaceScreen';
-import EventSpaceDetailScreen from '../screens/EventDetailScreen';
+import EventSpaceDetailScreen from '../screens/EventSpaceDetailScreen';
 import ServicesScreen from '../screens/ServicesScreen';
 import ServiceDetailScreen from '../screens/ServiceDetailScreen';
 import AllEventsScreen from '../screens/AllEventsScreen';
 import AllServicesScreen from '../screens/AllServicesScreen';
+import PaymentScreen from '../screens/PaymentScreen';
+import ChatScreen from '../screens/ChatScreen';
 import { useTheme } from '../context/ThemeContext';
+import { CommonActions } from '@react-navigation/native';
+import NotificationBadge from '../components/NotificationBadge';
+import { View } from 'react-native';
+import api from '../configs/api';
+import BookingDetailScreen from '../screens/BookingDetailScreen';
+import BookingRequestsScreen from '../screens/BookingRequestsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -79,19 +87,32 @@ function ServicesStack() {
   return (
     <Stack.Navigator screenOptions={screenHeaderOptions}>
       <Stack.Screen 
-        name="AllServicesScreen" 
-        component={AllServicesScreen} 
-        options={{ title: 'All Services' }}
-      />
-      <Stack.Screen 
         name="ServicesMain" 
         component={ServicesScreen} 
         options={{ title: 'Services' }}
       />
       <Stack.Screen 
+        name="AllServices" 
+        component={AllServicesScreen} 
+        options={{ title: 'All Services' }}
+      />
+      <Stack.Screen 
         name="ServiceDetails" 
         component={ServiceDetailScreen} 
         options={{ title: 'Service Details' }}
+      />
+      <Stack.Screen 
+        name="BookingRequests" 
+        component={BookingRequestsScreen} 
+        options={{ title: 'Booking Requests' }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen} 
+        options={{ 
+          title: 'Chat',
+          headerBackTitle: 'Back'
+        }}
       />
     </Stack.Navigator>
   );
@@ -118,7 +139,25 @@ function ProfileStack() {
 // Main Tab Navigator
 const MainTabs = () => {
   const { theme } = useTheme();
-  
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await api.get(`/chat/unread/${auth.currentUser?.uid}`);
+        setUnreadCount(response.data.unreadCount);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Set up polling for unread count
+    const interval = setInterval(fetchUnreadCount, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -135,7 +174,12 @@ const MainTabs = () => {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View>
+              <Ionicons name={iconName} size={size} color={color} />
+              {route.name === 'ServicesTab' && <NotificationBadge count={unreadCount} />}
+            </View>
+          );
         },
         tabBarActiveTintColor: '#5D5FEE',
         tabBarInactiveTintColor: 'gray',
@@ -173,14 +217,48 @@ const MainTabs = () => {
 // Root Stack Navigator
 function RootStack() {
   return (
-    <Stack.Navigator screenOptions={screenHeaderOptions}>
+    <Stack.Navigator>
       <Stack.Screen
         name="MainTabs"
         component={MainTabs}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Payment" 
+        component={PaymentScreen} 
+        options={{ title: 'Payment' }}
+      />
+      <Stack.Screen 
+        name="BookingDetails" 
+        component={BookingDetailScreen}
+        options={{
+          title: 'Booking Details',
+          headerStyle: {
+            backgroundColor: '#5D5FEE',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{
+          title: 'Chat',
+          headerStyle: {
+            backgroundColor: '#5D5FEE',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
       />
     </Stack.Navigator>
   );
 }
 
 export default RootStack;
+ 

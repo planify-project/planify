@@ -1,77 +1,154 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { StripeProvider, useStripe, CardField } from '@stripe/stripe-react-native';
-import Constants from 'expo-constants';
+import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useStripe, CardField } from '@stripe/stripe-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { API_BASE } from '../config';
+import axios from 'axios';
 
 const PaymentScreen = () => {
-  const [amount, setAmount] = useState('20'); // (or use your event's price)
-  const [clientSecret, setClientSecret] = useState(null);
-  const { confirmPayment, createPaymentMethod } = useStripe();
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { confirmPayment } = useStripe();
+  const [loading, setLoading] = useState(false);
+  const { amount, eventId } = route.params;
 
   const handlePayment = async () => {
     try {
-      // 1. Call your backend (planify/server) endpoint to create a payment intent.
-      const res = await fetch(`${Constants.expoConfig.extra.API_URL}/api/payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: parseInt(amount, 10) * 100, currency: 'usd' }),
+      setLoading(true);
+      console.log('Starting payment process...');
+      console.log('Amount:', amount);
+      console.log('Event ID:', eventId);
+      
+      // Create payment intent
+      console.log('Creating payment intent...');
+      const response = await axios.post(`${API_BASE}/payment`, {
+        amount: amount, // Send amount in dollars
+        currency: 'usd',
+        eventId: eventId
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 15000 // 15 second timeout
       });
-      const { clientSecret: secret, error } = await res.json();
+
+      console.log('Payment intent response:', response.data);
+      const { client_secret, error } = response.data;
+      
       if (error) {
-         Alert.alert("Error", error);
-         return;
-      }
-      setClientSecret(secret);
-
-      // 2. (Optional) Create a payment method (e.g. via CardField) if you're using a custom UI.
-      const { paymentMethod, error: pmError } = await createPaymentMethod({ type: 'card' });
-      if (pmError) {
-         Alert.alert("Payment Method Error", pmError.message);
-         return;
+        console.error('Payment intent error:', error);
+        Alert.alert('Error', error.message);
+        return;
       }
 
-      // 3. Confirm the payment using the client secret (and payment method if available).
-      const { error: confirmError } = await confirmPayment(clientSecret, { paymentMethod });
+      if (!client_secret) {
+        console.error('No client secret received');
+        Alert.alert('Error', 'Payment intent not initialized. Please try again.');
+        return;
+      }
+
+      // Confirm the payment
+      console.log('Confirming payment...');
+      const { error: confirmError } = await confirmPayment(client_secret, {
+        paymentMethodType: 'Card',
+      });
+      
       if (confirmError) {
-         Alert.alert("Payment Confirmation Error", confirmError.message);
+        console.error('Payment confirmation error:', confirmError);
+        navigation.navigate('PaymentFailure', { message: confirmError.message });
       } else {
-         Alert.alert("Success", "Payment completed successfully!");
+        console.log('Payment successful!');
+        navigation.navigate('PaymentSuccess');
       }
     } catch (err) {
-      Alert.alert("Error", err.message);
+      console.error('Payment error details:', {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+
+      if (err.code === 'ECONNABORTED') {
+        Alert.alert('Error', 'Request timed out. Please check your internet connection and try again.');
+      } else if (!err.response) {
+        Alert.alert('Error', 'Network error. Please check your internet connection and try again.');
+      } else if (err.response?.status === 404) {
+        Alert.alert('Error', 'Payment service not found. Please try again later.');
+      } else if (err.response?.status === 500) {
+        Alert.alert('Error', 'Server error. Please try again later.');
+      } else {
+        Alert.alert('Error', err.response?.data?.message || err.message || 'An error occurred during payment.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <StripeProvider publishableKey={Constants.expoConfig.extra.STRIPE_PUBLISHABLE_KEY}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Payment</Text>
-        <TextInput
-          style={styles.input}
-          value={amount}
-          onChangeText={setAmount}
-          placeholder="Amount (e.g. 20)"
-          keyboardType="numeric"
-        />
-        <CardField
-          postalCodeEnabled={false}
-          style={styles.cardField}
-        />
-        <TouchableOpacity style={styles.button} onPress={handlePayment}>
-          <Text style={styles.buttonText}>Pay</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Payment Details</Text>
+      <Text style={styles.amount}>Amount: ${amount}</Text>
+      
+      <CardField
+        postalCodeEnabled={false}
+        placeholder={{
+          number: '4242 4242 4242 4242',
+        }}
+        cardStyle={styles.card}
+        style={styles.cardContainer}
+      />
+      
+      {loading ? (
+        <ActivityIndicator size="large" color="#5D5FEE" />
+      ) : (
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handlePayment}
+        >
+          <Text style={styles.buttonText}>Pay Now</Text>
         </TouchableOpacity>
-      </View>
-    </StripeProvider>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#F6F7FB' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, marginBottom: 20, backgroundColor: '#fff' },
-  cardField: { height: 50, marginVertical: 20, backgroundColor: '#fff' },
-  button: { backgroundColor: '#4F7CAC', borderRadius: 8, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#F6F7FB',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  amount: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  cardContainer: {
+    height: 50,
+    marginVertical: 20,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    textColor: '#000000',
+  },
+  button: {
+    backgroundColor: '#5D5FEE',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default PaymentScreen; 

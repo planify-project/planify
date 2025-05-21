@@ -15,10 +15,17 @@ exports.getWishlist = async (req, res) => {
       order: [['createdAt', 'DESC']] // Sort by newest first
     });
     console.log('Found wishlist items:', wishlistItems.length);
-    res.json(wishlistItems);
+    res.json({
+      success: true,
+      data: wishlistItems,
+      message: 'Wishlist items retrieved successfully'
+    });
   } catch (error) {
     console.error('Error getting wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || 'Error retrieving wishlist items'
+    });
   }
 };
 
@@ -31,6 +38,7 @@ exports.addToWishlist = async (req, res) => {
     if (!item_id || !item_type) {
       console.error('Missing required fields:', { received: req.body });
       return res.status(400).json({ 
+        success: false,
         message: 'Missing required fields',
         received: req.body
       });
@@ -41,7 +49,7 @@ exports.addToWishlist = async (req, res) => {
       where: { name: 'Default Wishlist' },
       defaults: { 
         name: 'Default Wishlist',
-        user_id: null
+        user_id: req.user?.id || null
       }
     });
 
@@ -55,7 +63,10 @@ exports.addToWishlist = async (req, res) => {
     });
 
     if (existingItem) {
-      return res.status(400).json({ message: 'Item already in wishlist' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Item already in wishlist' 
+      });
     }
 
     // Add item to wishlist
@@ -77,10 +88,17 @@ exports.addToWishlist = async (req, res) => {
     });
 
     console.log('Added to wishlist:', completeWishlistItem);
-    res.status(201).json(completeWishlistItem);
+    res.status(201).json({
+      success: true,
+      data: completeWishlistItem,
+      message: 'Item added to wishlist successfully'
+    });
   } catch (error) {
     console.error('Error adding to wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || 'Error adding item to wishlist'
+    });
   }
 };
 
@@ -96,13 +114,22 @@ exports.removeFromWishlist = async (req, res) => {
 
     if (deleted) {
       console.log('Successfully removed from wishlist');
-      res.json({ message: 'Item removed from wishlist' });
+      res.json({ 
+        success: true,
+        message: 'Item removed from wishlist successfully'
+      });
     } else {
       console.log('Item not found in wishlist');
-      res.status(404).json({ message: 'Item not found in wishlist' });
+      res.status(404).json({ 
+        success: false,
+        message: 'Item not found in wishlist'
+      });
     }
   } catch (error) {
     console.error('Error removing from wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || 'Error removing item from wishlist'
+    });
   }
 }; 

@@ -16,8 +16,8 @@ module.exports = (sequelize, DataTypes) => {
     contact_details: DataTypes.JSON,
     password: {
       type: DataTypes.STRING,
-      allowNull: false, // إذا كنت تستخدم كلمة مرور
-    },
+      allowNull: true, // Allow null for Firebase users
+    }, 
     isBanned: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-  }, {
+   }, {
     underscored: true,
     timestamps: true, 
   });

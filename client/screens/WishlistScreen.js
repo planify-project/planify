@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Dimensions, ActivityIndicator, Text } from 'react-native';
 import EventCard from '../components/EventCard';
 import { useWishlist } from '../context/WishlistContext';
-import axios from 'axios';
-import { API_BASE } from '../config';
+import api from '../configs/api';
+import { getImageUrl } from '../configs/url';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -16,56 +16,88 @@ export default function WishlistScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [allEvents, setAllEvents] = useState([]);
 
-  // Fetch all events once when component mounts
+  // Fetch events that are in the wishlist
   useEffect(() => {
-    const fetchAllEvents = async () => {
+    const fetchWishlistEvents = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/events/public`);
-        setAllEvents(response.data);
-      } catch (err) {
-        console.error('Error fetching all events:', err);
+        setLoading(true);
+        setError(null);
+
+        console.log('Current wishlist items:', wishlistItems);
+
+        // Get all event IDs from wishlist items
+        const eventIds = wishlistItems
+          .filter(item => item.item_type === 'event')
+          .map(item => item.item_id);
+
+        console.log('Filtered event IDs:', eventIds);
+
+        if (eventIds.length === 0) {
+          setEvents([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch events data for each ID
+        const eventsPromises = eventIds.map(async (eventId) => {
+          try {
+            console.log('Fetching event with ID:', eventId);
+            const response = await api.get(`/events/${eventId}`);
+            console.log('Event response:', response.data);
+            
+            // The event data is directly in response.data, not in response.data.data
+            const event = response.data;
+            return {
+              id: event.id,
+              name: event.name,
+              title: event.name,
+              location: event.location || 'Location not specified',
+              price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
+              rating: '4.5',
+              per: 'person',
+              image: getImageUrl(event.coverImage) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+              description: event.description,
+              startDate: event.startDate,
+              endDate: event.endDate,
+              type: event.type,
+              status: event.status,
+              maxParticipants: event.maxParticipants,
+              available_spots: event.available_spots,
+              budget: event.budget
+            };
+          } catch (error) {
+            console.error(`Error fetching event ${eventId}:`, error);
+            return null;
+          }
+        });
+
+        const eventsData = await Promise.all(eventsPromises);
+        console.log('Fetched events data:', eventsData);
+        
+        const validEvents = eventsData.filter(event => event !== null);
+        console.log('Valid events:', validEvents);
+        
+        setEvents(validEvents);
+      } catch (error) {
+        console.error('Error fetching wishlist events:', error);
+        setError(error.message || 'Failed to fetch wishlist events');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchAllEvents();
-  }, []);
 
-  // Update events whenever wishlistItems changes
+    fetchWishlistEvents();
+  }, [wishlistItems]);
+
+  // Add a refresh effect when the screen comes into focus
   useEffect(() => {
-    if (!wishlistItems || wishlistItems.length === 0) {
-      setEvents([]);
-      return;
-    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      refreshWishlist();
+    });
 
-    // Filter events that are in the wishlist
-    const wishlistedEvents = allEvents.filter(event => 
-      wishlistItems.some(item => Number(item.item_id) === Number(event.id))
-    );
-
-    // Format the events
-    const formattedEvents = wishlistedEvents.map(event => ({
-      id: event.id,
-      name: event.name,
-      title: event.name,
-      location: event.location || 'Location not specified',
-      price: event.is_free ? 'Free' : `${event.ticketPrice} DT`,
-      rating: '4.5',
-      per: 'person',
-      image: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-      description: event.description,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      type: event.type,
-      status: event.status,
-      maxParticipants: event.maxParticipants,
-      available_spots: event.available_spots,
-      budget: event.budget
-    }));
-
-    setEvents(formattedEvents);
-    setLoading(false);
-  }, [wishlistItems, allEvents]);
+    return unsubscribe;
+  }, [navigation, refreshWishlist]);
 
   if (wishlistLoading || loading) {
     return (
@@ -83,7 +115,7 @@ export default function WishlistScreen({ navigation }) {
     );
   }
 
-  if (!wishlistItems || wishlistItems.length === 0) {
+  if (!events || events.length === 0) {
     return (
       <View style={styles.screen}>
         <Text style={styles.emptyText}>Your wishlist is empty</Text>
