@@ -73,13 +73,25 @@ class ServicesController {
         where: query,
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }],
-        attributes: ['id', 'type', 'description', 'price', 'service_type', 'image_url', 'provider_id', 'created_at', 'updated_at']
+        attributes: [
+          'id', 
+          'title', 
+          'description', 
+          'price', 
+          'service_type', 
+          'image_url', 
+          'provider_id', 
+          'location',
+          'is_active',
+          'created_at', 
+          'updated_at'
+        ]
       });
 
-      // Always return an array, even if empty
+      console.log(`Found ${services.length} services`);
       res.status(200).json(services);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -105,7 +117,7 @@ class ServicesController {
       const service = await Service.findByPk(id, {
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }]
       });
@@ -132,7 +144,7 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const { type, description, price, service_type } = req.body;
+      const { title, description, price, service_type, location } = req.body;
       
       // Validate required fields
       if (!type || !description || !price) {
@@ -169,6 +181,7 @@ class ServicesController {
         price,
         image_url,
         service_type,
+        location,
         provider_id
       });
 
@@ -178,7 +191,9 @@ class ServicesController {
         price,
         image_url,
         service_type: service_type || 'general',
-        provider_id
+        location,
+        provider_id,
+        is_active: true
       });
 
       console.log('Created service:', service.toJSON());
@@ -332,7 +347,7 @@ class ServicesController {
         where: { provider_id: providerId },
         include: [{
           model: User,
-          as: 'user',
+          as: 'provider',
           attributes: ['id', 'name', 'email']
         }],
         order: [['createdAt', 'DESC']]

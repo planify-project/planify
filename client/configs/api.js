@@ -13,6 +13,7 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(
   async (config) => {
+    // Log the full URL being requested
     console.log('Making request to:', `${config.baseURL}${config.url}`);
     return config;
   },

@@ -3,51 +3,29 @@ import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 import NetInfo from '@react-native-community/netinfo';
 
 let socket = null;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = SOCKET_CONFIG.reconnectionAttempts;
 
-const initializeSocket = async () => {
-  if (socket) return socket;
-
-  // Check network connectivity first
-  const netInfo = await NetInfo.fetch();
-  if (!netInfo.isConnected) {
-    throw new Error('No network connection available');
+export const initializeSocket = (userId) => {
+  if (socket?.connected) {
+    return socket;
   }
-
+  
+  console.log('Initializing socket connection to:', SOCKET_URL);
+  
   socket = io(SOCKET_URL, {
-    transports: ['polling', 'websocket'],
-    reconnection: true,
-    reconnectionAttempts: SOCKET_CONFIG.reconnectionAttempts,
-    reconnectionDelay: SOCKET_CONFIG.reconnectionDelay,
-    timeout: SOCKET_CONFIG.timeout,
-    pingTimeout: SOCKET_CONFIG.pingTimeout,
-    pingInterval: SOCKET_CONFIG.pingInterval,
+    ...SOCKET_CONFIG,
     autoConnect: true,
-    forceNew: true
+    transports: ['websocket']
   });
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id);
-    reconnectAttempts = 0;
-  });
-
-  socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
-    reconnectAttempts++;
-    
-    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.error('Max reconnection attempts reached');
-      socket.disconnect();
+    console.log('Socket connected successfully');
+    if (userId) {
+      socket.emit('joinUserRoom', { userId });
     }
   });
 
-  socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason);
-    if (reason === 'io server disconnect') {
-      // Server initiated disconnect, try to reconnect
-      socket.connect();
-    }
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected');
   });
 
   // Add error handler
@@ -58,9 +36,10 @@ const initializeSocket = async () => {
   return socket;
 };
 
-export const getSocket = async () => {
-  if (!socket) {
-    return await initializeSocket();
+export const getSocket = () => socket;
+export const disconnectSocket = () => {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
-  return socket;
-};
+}; 

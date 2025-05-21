@@ -1,119 +1,224 @@
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
 const http = require('http');
-const initializeSocket = require('./socket');
+const { Server } = require('socket.io');
+const cors = require('cors');
+require('dotenv').config();
 const { sequelize } = require('./database');
+const path = require('path');
+const morgan = require('morgan');
 
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+const serviceRoutes = require('./routes/services.js');
+const eventsRouter = require('./routes/events');
+const userRouter = require('./routes/user.route');
+const agentRoutes = require('./routes/agentRoutes');
+const bookingRouter = require('./routes/booking.routes.js');
+const notificationRoutes = require('./routes/notificationRoutes');
+const stripeRoutes = require("./routes/stripeRoutes");
+const wishlistRoutes = require('./routes/wishlist.route');
+const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+
+// Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// Middleware
+// Basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Configure CORS
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Upgrade', 'Connection', 'Sec-WebSocket-Key', 'Sec-WebSocket-Version', 'Sec-WebSocket-Extensions'],
-  exposedHeaders: ['Upgrade', 'Connection']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
 }));
-
-// Handle preflight requests
-app.options('*', cors());
-
-app.use(express.json());
-app.use(morgan('dev'));
 
 // Test endpoint
 app.get('/test', (req, res) => {
   res.json({ 
-    status: 'ok', 
+    status: 'ok',
     message: 'Server is running',
-    clientIp: req.ip,
-    clientHeaders: req.headers
+    timestamp: new Date().toISOString()
   });
 });
 
-// Initialize Socket.IO
-const io = initializeSocket(server);
-
-// Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/users', require('./routes/user.route'));
-app.use('/api/services', require('./routes/services'));
-app.use('/api/bookings', require('./routes/booking.routes'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/api/events', require('./routes/events'));
-app.use('/api/event-spaces', require('./routes/eventSpaceRoutes'));
-app.use('/api/wishlist', require('./routes/wishlist.route'));
-app.use('/api', require('./routes/stripeRoutes'));
-
-// Add a health check endpoint
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    socketConnections: io.engine.clientsCount,
-    clientIp: req.ip
+    uptime: process.uptime()
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: err.message
-  });
+// Configure Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  },
+  transports: ['websocket']
 });
 
-const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0'; // Bind to all network interfaces
+// Make io accessible to routes
+app.set('io', io);
 
-// Start server with detailed logging
-server.listen(PORT, HOST, () => {
-  const networkInterfaces = require('os').networkInterfaces();
-  const addresses = [];
-  
-  // Get all network interfaces
-  Object.keys(networkInterfaces).forEach((interfaceName) => {
-    networkInterfaces[interfaceName].forEach((iface) => {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        addresses.push(iface.address);
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  // Get user ID from query parameters
+  const userId = socket.handshake.query.userId;
+  if (userId) {
+    const roomName = `user_${userId}`;
+    socket.join(roomName);
+    console.log(`Socket ${socket.id} joined room: ${roomName}`);
+  }
+
+  // Handle new booking notifications
+  socket.on('newBooking', (data) => {
+    console.log('New booking notification:', data);
+    const { providerId, bookingId, customerId, customerName, message } = data;
+    
+    // Emit to provider's room
+    io.to(`user_${providerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'New Booking Request',
+        message: message || `New booking request from ${customerName}`,
+        bookingId,
+        customerId,
+        customerName,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
+    });
+
+    // Also emit to customer's room for confirmation
+    io.to(`user_${customerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'Booking Request Sent',
+        message: 'Your booking request has been sent to the service provider.',
+        bookingId,
+        createdAt: new Date().toISOString(),
+        is_read: false
       }
     });
   });
 
-  console.log('\nServer running on:');
-  console.log(`  Local: http://localhost:${PORT}`);
-  console.log(`  Android Emulator: http://10.0.2.2:${PORT}`);
-  console.log(`  Network: http://192.168.1.164:${PORT}`);
-  addresses.forEach(addr => {
-    if (addr !== '192.168.1.164') {
-      console.log(`  Network: http://${addr}:${PORT}`);
-    }
-  });
-  console.log(`\nEndpoints:`);
-  console.log(`  Test: http://localhost:${PORT}/test`);
-  console.log(`  Health: http://localhost:${PORT}/health`);
-  console.log(`  Socket.IO: http://localhost:${PORT}/socket.io/`);
-  
-  console.log('\nSocket.IO Configuration:');
-  console.log('  - Transports: polling, websocket');
-  console.log('  - Path: /socket.io/');
-  console.log('  - CORS: enabled for all origins');
-  console.log('  - Ping Interval: 10000ms');
-  console.log('  - Ping Timeout: 5000ms');
-});
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Closing HTTP server...');
-  server.close(() => {
-    console.log('HTTP server closed');
-    sequelize.close().then(() => {
-      console.log('Database connection closed');
-      process.exit(0);
+  // Handle booking responses
+  socket.on('bookingResponse', (data) => {
+    console.log('Booking response:', data);
+    const { customerId, bookingId, status, message } = data;
+    
+    // Emit to customer's room
+    io.to(`user_${customerId}`).emit('bookingResponse', {
+      notification: {
+        id: bookingId,
+        type: 'booking_response',
+        title: 'Booking Update',
+        message: message || `Your booking request has been ${status}`,
+        bookingId,
+        status,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
     });
   });
-}); 
+
+  // Handle notification deletion
+  socket.on('deleteNotification', (data) => {
+    console.log('Deleting notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDeleted', { notificationId });
+  });
+
+  // Handle notification dismissal
+  socket.on('dismissNotification', (data) => {
+    console.log('Dismissing notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDismissed', { notificationId });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Debug middleware for Socket.IO
+io.engine.on("connection_error", (err) => {
+  console.log('Connection Error:', {
+    message: err.message,
+    description: err.description,
+    type: err.type,
+    context: err.context
+  });
+});
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/users', userRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/agents', agentRoutes);
+app.use('/api', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/bookings', bookingRouter);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/authadmin',AdminAuthRoutes)
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Sync database and start server
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
+
+const startServer = async () => {
+  try {
+
+    // Start server
+    server.listen(PORT, HOST, () => {
+      const urls = [
+        `http://localhost:${PORT}`,
+        `http://${HOST}:${PORT}`,
+        `http://192.168.1.166:${PORT}`
+      ];
+      
+      console.log('\nServer running on:');
+      urls.forEach(url => {
+        console.log(`\n${url}:`);
+        console.log(`  - Test endpoint: ${url}/test`);
+        console.log(`  - Health check: ${url}/health`);
+        console.log(`  - Socket.IO: ${url}/socket.io/`);
+      });
+      console.log('\nSocket.IO Configuration:');
+      console.log('  - Transports: websocket');
+      console.log('  - Path: /socket.io/');
+      console.log('  - CORS: enabled for all origins');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer(); 

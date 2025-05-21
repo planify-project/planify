@@ -4,7 +4,17 @@ require('dotenv').config();
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.USER_NAME, process.env.DB_PASSWORD, {
     host: 'localhost',
     dialect: 'mysql',
-    logging: false // Disable logging for production
+    logging: false, // Disable logging for production
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    },
+    retry: {
+        max: 3,
+        match: [/Deadlock/i, /ER_LOCK_DEADLOCK/]
+    }
 });
 
 try {
@@ -68,9 +78,8 @@ EventGuest.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 User.hasMany(EventGuest, { foreignKey: 'user_id', as: 'guestEvents' });
 EventGuest.belongsTo(User, { foreignKey: 'user_id', as: 'guest' });
 
-// User and Service relationships
-User.hasMany(Service, { foreignKey: 'provider_id' });
-Service.belongsTo(User, { foreignKey: 'provider_id' });
+User.hasMany(Service, { foreignKey: 'provider_id', as: 'services' });
+Service.belongsTo(User, { foreignKey: 'provider_id', as: 'provider' }); 
 
 // Service and ServiceCategory relationships
 Service.belongsTo(ServiceCategory, { foreignKey: 'category_id' });
@@ -80,13 +89,10 @@ ServiceCategory.hasMany(Service, { foreignKey: 'category_id' });
 Event.belongsToMany(Service, { through: EventService, foreignKey: 'event_id', otherKey: 'service_id' });
 Service.belongsToMany(Event, { through: EventService, foreignKey: 'service_id', otherKey: 'event_id' });
 
-// User and Booking relationships
-User.hasMany(Booking, { foreignKey: 'user_id' });
-Booking.belongsTo(User, { foreignKey: 'user_id' });
-
-Service.hasMany(Booking, { foreignKey: 'service_id' });
-Booking.belongsTo(Service, { foreignKey: 'service_id' });
-
+User.hasMany(Booking, { foreignKey: 'userId' });
+Booking.belongsTo(User, { foreignKey: 'userId' }); 
+Service.hasMany(Booking, { foreignKey: 'serviceId' }); 
+Booking.belongsTo(Service, { foreignKey: 'serviceId' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
 Booking.hasMany(Notification, { foreignKey: 'booking_id' });
@@ -100,18 +106,15 @@ Wishlist.belongsTo(User, { foreignKey: 'user_id' });
 Wishlist.hasMany(WishlistItem, { foreignKey: 'wishlist_id' });
 WishlistItem.belongsTo(Wishlist, { foreignKey: 'wishlist_id' });
 
-// User and Message relationships
-// User.hasMany(Message, { foreignKey: 'from_user_id', as: 'sentMessages' });
-// User.hasMany(Message, { foreignKey: 'to_user_id', as: 'receivedMessages' });
-// Message.belongsTo(User, { foreignKey: 'from_user_id', as: 'sender' });
-// Message.belongsTo(User, { foreignKey: 'to_user_id', as: 'recipient' });
-// Message.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
-
+// Message associations
 User.hasMany(Message, { foreignKey: 'from_user_id', as: 'sentMessages' });
 User.hasMany(Message, { foreignKey: 'to_user_id', as: 'receivedMessages' });
 Message.belongsTo(User, { foreignKey: 'from_user_id', as: 'sender' });
 Message.belongsTo(User, { foreignKey: 'to_user_id', as: 'recipient' });
+Message.belongsTo(Service, { foreignKey: 'service_id' });
+Service.hasMany(Message, { foreignKey: 'service_id' });
 Message.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+Event.hasMany(Message, { foreignKey: 'event_id' });
 
 // User and Review relationships
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
@@ -138,20 +141,17 @@ Offer.belongsTo(User, { foreignKey: 'provider_id' });
 // User and Notification relationships
 User.hasMany(Notification, { foreignKey: 'user_id' });
 Notification.belongsTo(User, { foreignKey: 'user_id' });
+ 
+Notification.belongsTo(Booking, { foreignKey: 'booking_id' });
+Booking.hasMany(Notification, { foreignKey: 'booking_id' });
 
-// Admin and AuditLog relationships
-Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
+Admin.hasMany(AuditLog, { foreignKey: 'admin_id' }); 
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
-
-// Event and Message relationships
-Event.hasMany(Message, { foreignKey: 'event_id' });
-Message.belongsTo(Event, { foreignKey: 'event_id' });
-
-// Event and Payment relationships
+ 
 Event.hasMany(Payment, { foreignKey: 'event_id' });
 Payment.belongsTo(Event, { foreignKey: 'event_id' });
 
-Service.hasMany(Payment, { foreignKey: 'service_id' });
+Service.hasMany(Payment, { foreignKey: 'service_id' }); 
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
@@ -159,31 +159,35 @@ Review.belongsTo(User, { foreignKey: 'reviewer_id' });
 
 Event.hasMany(Review, { foreignKey: 'event_id' });
 Review.belongsTo(Event, { foreignKey: 'event_id' });
-// Sync database (optional, uncomment if needed)
-Event.belongsTo(EventSpace, { foreignKey: 'event_space_id' });
-EventSpace.hasMany(Event, { foreignKey: 'event_space_id' });
 
-// Sync database and seed data
-const syncDatabase = async () => {
-  try {
-   
+// Sync database with retry logic
+const syncWithRetry = async (retries = 3) => {
+    try {
+        // First sync the User model separately to handle the JSON column
+        await User.sync({ alter: true });
+        console.log('User model synchronized successfully.');
 
     // Then sync all other models
     await sequelize.sync({ alter: true });
     console.log('All models were synchronized successfully.');
 
-    // Import and run the event spaces seeder
-    const seedEventSpaces = require('./seeds/eventSpaces');
-    // await seedEventSpaces();
-    // console.log('Event spaces seeded successfully!');
-  } catch (error) {
-    console.error('Error during database sync:', error);
-    process.exit(1);
-  }
+        // Import and run the event spaces seeder
+        const seedEventSpaces = require('./seeds/eventSpaces');
+        await seedEventSpaces();
+        console.log('Event spaces seeded successfully!');
+    } catch (error) {
+        if (retries > 0 && (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_LOCK_DEADLOCK')) {
+            console.log(`Deadlock detected, retrying... (${retries} attempts remaining)`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            return syncWithRetry(retries - 1);
+        }
+        console.error('Error during database sync:', error);
+        process.exit(1);
+    }
 };
 
 // Run the sync
-// syncDatabase();
+// syncWithRetry();
 
 // Export all models and sequelize instance
 module.exports = {

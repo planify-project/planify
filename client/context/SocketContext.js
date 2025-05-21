@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import { getAuth } from 'firebase/auth';
+import api from '../configs/api';
+import { useAuth } from './AuthContext';
 import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 import NetInfo from '@react-native-community/netinfo';
 import { Alert } from 'react-native';
@@ -20,138 +23,140 @@ export const SocketProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 3;
+  const { user, loading: authLoading } = useAuth();
 
-  const initializeSocket = async () => {
+  const disconnectSocket = useCallback(() => {
+    if (socket) {
+      console.log('Disconnecting existing socket connection');
+      socket.disconnect();
+      setSocket(null);
+      setIsConnected(false);
+    }
+  }, [socket]);
+
+  const connectSocket = useCallback(async () => {
+    if (authLoading) {
+      console.log('Auth still loading, waiting to initialize socket...');
+      return;
+    }
+
+    if (!user?.uid) {
+      console.log('No user ID available, skipping socket initialization');
+      disconnectSocket();
+      return;
+    }
+
     try {
-      // Check network connectivity
-      const netInfo = await NetInfo.fetch();
-      if (!netInfo.isConnected) {
-        throw new Error('No network connection available');
+      console.log('Initializing socket connection for user:', user.uid);
+      
+      // Disconnect existing socket if any
+      disconnectSocket();
+
+          const userResponse = await api.get(`/users/firebase/${user.uid}`);
+      if (!userResponse.data.success || !userResponse.data.data?.id) {
+        throw new Error('Failed to get user data');
       }
 
-      // Create socket instance with explicit configuration
-      const socketInstance = io(SOCKET_URL, {
+            const dbUserId = userResponse.data.data.id;
+      console.log('Got database user ID:', dbUserId);
+            
+      // Initialize socket connection with centralized config
+      const newSocket = io(SOCKET_URL, {
         ...SOCKET_CONFIG,
-        transports: ['websocket', 'polling'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 20000,
-        forceNew: true,
-        autoConnect: false // We'll connect manually after setup
-      });
+              query: { userId: dbUserId }
+            });
 
-      // Set up event handlers before connecting
-      socketInstance.on('connect', () => {
-        console.log('Socket connected successfully:', {
-          id: socketInstance.id,
-          transport: socketInstance.io.engine.transport.name
-        });
+      newSocket.on('connect', () => {
+        console.log('Socket connected successfully');
         setIsConnected(true);
         setError(null);
         setRetryCount(0);
+
+        // Join user's room after connection
+            newSocket.emit('joinRoom', `user_${dbUserId}`);
       });
 
-      socketInstance.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', {
-          reason,
-          transport: socketInstance.io.engine.transport.name
-        });
+      newSocket.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
         setIsConnected(false);
+        
+        // Attempt to reconnect if not disconnected intentionally
+        if (reason !== 'io client disconnect' && retryCount < 3) {
+          setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            setRetryCount(prev => prev + 1);
+            connectSocket();
+          }, 2000);
+        }
       });
 
-      socketInstance.on('connect_error', (error) => {
-        console.error('Socket connection error:', {
-          message: error.message,
-          type: error.type,
-          description: error.description
-        });
-        setIsConnected(false);
-        setError(error.message);
+      newSocket.on('error', (err) => {
+        console.error('Socket error:', err);
+        setError(err.message);
       });
 
-      socketInstance.on('test', (data) => {
-        console.log('Received test event:', data);
-      });
+            // Handle new booking notifications
+            newSocket.on('newBooking', (data) => {
+              console.log('Received new booking notification:', data);
+              if (data.notification) {
+                setNotifications(prev => [data.notification, ...prev]);
+              }
+            });
 
-      socketInstance.on('notification', (notification) => {
-        console.log('Received notification:', notification);
-        setNotifications(prev => [...prev, notification]);
-      });
+            // Handle booking response notifications
+            newSocket.on('bookingResponse', (data) => {
+              console.log('Received booking response notification:', data);
+              if (data.notification) {
+                setNotifications(prev => [data.notification, ...prev]);
+              }
+            });
 
-      // Handle reconnection events
-      socketInstance.io.on("reconnect_attempt", (attempt) => {
-        console.log('Reconnection attempt:', attempt);
-      });
+      // Handle notification deletion
+      newSocket.on('notificationDeleted', (data) => {
+        console.log('Notification deleted:', data);
+        setNotifications(prev => prev.filter(n => n.id !== data.notificationId));
+            });
 
-      socketInstance.io.on("reconnect_error", (error) => {
-        console.error('Reconnection error:', error);
-      });
-
-      socketInstance.io.on("reconnect_failed", () => {
-        console.error('Reconnection failed');
-        Alert.alert(
-          'Connection Error',
-          'Unable to establish a stable connection to the server. Please check your internet connection and try again.',
-          [{ text: 'OK' }]
+      // Handle notification dismissal
+      newSocket.on('notificationDismissed', (data) => {
+        console.log('Notification dismissed:', data);
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === data.notificationId 
+              ? { ...n, is_read: true }
+              : n
+          )
         );
       });
 
-      // Now connect the socket
-      socketInstance.connect();
-      setSocket(socketInstance);
+            setSocket(newSocket);
 
     } catch (err) {
       console.error('Socket initialization error:', err);
-      setError(err.message);
-      
-      // Implement retry logic
-      if (retryCount < MAX_RETRIES) {
-        setRetryCount(prev => prev + 1);
-        setTimeout(() => {
-          initializeSocket();
-        }, 2000 * (retryCount + 1)); // Exponential backoff
-      } else {
-        Alert.alert(
-          'Connection Error',
-          'Unable to connect to the server. Please check your internet connection and try again.',
-          [{ text: 'OK' }]
-        );
-      }
-    }
-  };
+          setError('Failed to initialize connection. Please try again.');
+          setIsConnected(false);
+          
+          if (retryCount < 3) {
+            setTimeout(() => {
+              console.log('Retrying socket connection...');
+              setRetryCount(prev => prev + 1);
+              connectSocket();
+            }, 2000);
+          }
+        }
+  }, [user?.uid, authLoading, retryCount, disconnectSocket]);
 
+  // Initialize socket connection when user changes
   useEffect(() => {
-    let mounted = true;
-    let socketInstance = null;
-
-    const setupSocket = async () => {
-      if (mounted) {
-        await initializeSocket();
-      }
-    };
-
-    setupSocket();
-
-    // Monitor network connectivity
-    const unsubscribe = NetInfo.addEventListener(state => {
-      if (state.isConnected && !isConnected) {
-        setupSocket();
-      }
-    });
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-      if (socketInstance) {
-        console.log('Cleaning up socket connection');
-        socketInstance.disconnect();
-      }
-    };
-  }, []);
+    connectSocket();
+    return () => disconnectSocket();
+  }, [user?.uid, connectSocket, disconnectSocket]);
 
   const joinUserRoom = (userId) => {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
+      query: { userId }
+    });
     if (!socket || !userId) {
       console.error('Socket not initialized or userId is missing:', {
         socket: !!socket,
@@ -162,12 +167,50 @@ export const SocketProvider = ({ children }) => {
 
     try {
       console.log('Attempting to join user room:', userId);
-      socket.emit('joinUserRoom', { userId });
+      socket.emit('joinRoom', `user_${userId}`);
       console.log('Join user room request sent');
     } catch (err) {
       console.error('Error joining user room:', err);
       setError(err.message);
     }
+  };
+
+  // Function to send a booking notification to a service provider
+  const sendBookingNotification = (providerId, bookingData) => {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
+      query: { userId: user?.uid }
+    });
+    if (!socket?.connected) {
+      console.error('Socket not connected, cannot send booking notification');
+      return;
+    }
+
+      console.log('Sending booking notification to provider:', providerId);
+      socket.emit('sendBookingNotification', {
+        providerId,
+        bookingId: bookingData.id,
+      customerId: user?.uid,
+      customerName: user?.displayName,
+      message: `New booking request from ${user?.displayName || 'a customer'}`
+      });
+  };
+
+  // Test function to send a test notification
+  const sendTestNotification = () => {
+    const socket = io(SOCKET_URL, {
+      ...SOCKET_CONFIG,
+      query: { userId: user?.uid }
+    });
+    if (!socket?.connected) {
+      console.error('Socket not connected, cannot send test notification');
+      // Try to reconnect
+      connectSocket();
+      return;
+    }
+
+      console.log('Sending test notification...');
+      socket.emit('testNotification', { message: 'This is a test notification' });
   };
 
   const value = {
@@ -176,7 +219,10 @@ export const SocketProvider = ({ children }) => {
     error,
     notifications,
     setNotifications,
-    joinUserRoom
+    joinUserRoom,
+    sendTestNotification,
+    sendBookingNotification,
+    reconnect: connectSocket
   };
 
   return (

@@ -14,11 +14,20 @@ import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 
-export default function BookingModal({ visible, onClose, onSubmit, service, isSubmitting }) {
+export default function BookingModal({ 
+  visible, 
+  onClose, 
+  onSubmit, 
+  service,
+  selectedDate,
+  setSelectedDate,
+  selectedSpace,
+  setSelectedSpace,
+  phoneNumber,
+  setPhoneNumber,
+  loading
+}) {
   const { theme } = useTheme();
-  const [selectedDate, setSelectedDate] = useState('');
-  const [space, setSpace] = useState('');
-  const [phone, setPhone] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const submissionLockRef = useRef(false);
@@ -61,7 +70,7 @@ export default function BookingModal({ visible, onClose, onSubmit, service, isSu
     if (submissionLockRef.current) return;
     // Only allow numbers and limit to 8 digits
     const cleaned = text.replace(/[^0-9]/g, '').slice(0, 8);
-    setPhone(cleaned);
+    setPhoneNumber(cleaned);
   };
 
   const handleSpaceChange = (text) => {
@@ -84,67 +93,48 @@ export default function BookingModal({ visible, onClose, onSubmit, service, isSu
     }
 
     // Validate phone number
-    if (phone.length !== 8) {
+    if (phoneNumber.length !== 8) {
       Alert.alert('Error', 'Phone number must be exactly 8 digits');
       return;
     }
 
     // Validate all fields
-    if (!selectedDate || !space.trim()) {
+    if (!selectedDate || !selectedSpace.trim()) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
 
-    try {
-      console.log('Starting submission process...');
-      submissionLockRef.current = true;
-      setIsConfirming(true);
-      lastSubmissionTimeRef.current = now;
-
-      await onSubmit({
-        date: selectedDate,
-        space: space.trim(),
-        phone_number: phone
-      });
-      
-      console.log('Submission completed successfully');
-    } catch (error) {
-      console.error('Submission error:', error);
-      Alert.alert('Error', 'Failed to submit booking. Please try again.');
-    } finally {
-      console.log('Cleaning up submission state...');
-      setIsConfirming(false);
-      // Keep the lock for a moment to prevent rapid re-submissions
-      setTimeout(() => {
-        submissionLockRef.current = false;
-      }, SUBMISSION_COOLDOWN);
-    }
+    onSubmit();
   };
 
-  const handleClose = () => {
-    if (!submissionLockRef.current) {
-      onClose();
-    }
-  };
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: theme.text }]}>Book Service</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={theme.text} />
+            </TouchableOpacity>
+          </View>
 
-  const renderContent = () => (
-    <ScrollView>
-      {/* Date Selection */}
-      <Text style={[styles.label, { color: theme.text }]}>Select Date</Text>
-      <TouchableOpacity
-        style={[
-          styles.dateButton, 
-          { backgroundColor: theme.background },
-          submissionLockRef.current && styles.disabledInput
-        ]}
-        onPress={() => !submissionLockRef.current && setShowCalendar(!showCalendar)}
-        disabled={submissionLockRef.current}
-      >
-        <Ionicons name="calendar-outline" size={20} color={theme.text} />
-        <Text style={[styles.dateText, { color: theme.text }]}>
-          {selectedDate ? new Date(selectedDate).toLocaleDateString() : 'Select a date'}
-        </Text>
-      </TouchableOpacity>
+          <ScrollView>
+            {/* Date Selection */}
+            <Text style={[styles.label, { color: theme.text }]}>Select Date</Text>
+            <TouchableOpacity
+              style={[styles.dateButton, { backgroundColor: theme.background }]}
+              onPress={() => setShowCalendar(!showCalendar)}
+            >
+              <Ionicons name="calendar-outline" size={20} color={theme.text} />
+              <Text style={[styles.dateText, { color: theme.text }]}>
+                {selectedDate ? new Date(selectedDate).toLocaleDateString() : 'Select a date'}
+              </Text>
+            </TouchableOpacity>
 
       {showCalendar && !submissionLockRef.current && (
         <Calendar
@@ -163,76 +153,34 @@ export default function BookingModal({ visible, onClose, onSubmit, service, isSu
         />
       )}
 
-      {/* Space/Venue Input */}
-      <Text style={[styles.label, { color: theme.text }]}>Venue/Space</Text>
-      <TextInput
-        style={[
-          styles.input, 
-          { backgroundColor: theme.background, color: theme.text },
-          submissionLockRef.current && styles.disabledInput
-        ]}
-        placeholder="Enter venue or space details"
-        placeholderTextColor={theme.textSecondary}
-        value={space}
-        onChangeText={handleSpaceChange}
-        editable={!submissionLockRef.current}
-      />
+            {/* Space/Venue Input */}
+            <Text style={[styles.label, { color: theme.text }]}>Venue/Space</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
+              placeholder="Enter venue or space details"
+              placeholderTextColor={theme.textSecondary}
+              value={selectedSpace}
+              onChangeText={setSelectedSpace}
+            />
 
-      {/* Phone Input */}
-      <Text style={[styles.label, { color: theme.text }]}>Phone Number</Text>
-      <TextInput
-        style={[
-          styles.input, 
-          { backgroundColor: theme.background, color: theme.text },
-          submissionLockRef.current && styles.disabledInput
-        ]}
-        placeholder="Enter your phone number (8 digits)"
-        placeholderTextColor={theme.textSecondary}
-        value={phone}
-        onChangeText={handlePhoneChange}
-        keyboardType="phone-pad"
-        maxLength={8}
-        editable={!submissionLockRef.current}
-      />
-    </ScrollView>
-  );
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={handleClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.text }]}>Book Service</Text>
-            <TouchableOpacity onPress={handleClose} disabled={submissionLockRef.current}>
-              <Ionicons name="close" size={24} color={theme.text} />
-            </TouchableOpacity>
-          </View>
-
-          {submissionLockRef.current || isSubmitting ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.primary} />
-              <Text style={[styles.loadingText, { color: theme.text }]}>
-                Processing your booking...
-              </Text>
-            </View>
-          ) : (
-            renderContent()
-          )}
+            {/* Phone Input */}
+            <Text style={[styles.label, { color: theme.text }]}>Phone Number</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
+              placeholder="Enter your phone number (8 digits)"
+              placeholderTextColor={theme.textSecondary}
+              value={phoneNumber}
+              onChangeText={handlePhoneChange}
+              keyboardType="phone-pad"
+              maxLength={8}
+            />
+          </ScrollView>
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[
-                styles.button, 
-                { backgroundColor: theme.error },
-                (submissionLockRef.current || isSubmitting) && styles.buttonDisabled
-              ]}
-              onPress={handleClose}
-              disabled={submissionLockRef.current || isSubmitting}
+              style={[styles.button, { backgroundColor: theme.error }]}
+              onPress={onClose}
+              disabled={loading}
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
@@ -243,10 +191,10 @@ export default function BookingModal({ visible, onClose, onSubmit, service, isSu
                 (submissionLockRef.current || isConfirming || isSubmitting) && styles.buttonDisabled
               ]}
               onPress={handleConfirm}
-              disabled={submissionLockRef.current || isConfirming || isSubmitting}
+              disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {isConfirming || isSubmitting ? 'Submitting...' : 'Confirm'}
+                {loading ? 'Processing...' : 'Confirm'}
               </Text>
             </TouchableOpacity>
           </View>

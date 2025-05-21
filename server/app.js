@@ -23,6 +23,7 @@ const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 const AdminAuthRoutes = require('./routes/AdminAuth.routes');
 const bookingRoutes = require('./routes/booking.routes.js');
 
+ 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
@@ -76,7 +77,8 @@ io.on('connection', (socket) => {
   console.log('New client connected:', {
     id: socket.id,
     transport: socket.conn.transport.name,
-    address: socket.handshake.address
+    address: socket.handshake.address,
+    userId: socket.handshake.query.userId
   });
 
   // Send test event to verify connection
@@ -85,20 +87,44 @@ io.on('connection', (socket) => {
     timestamp: new Date().toISOString()
   });
 
+  // Handle both joinRoom and joinUserRoom events
+  const handleRoomJoin = (room) => {
+    if (!room) {
+      console.error('Invalid room name provided');
+      return;
+    }
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room: ${room}`);
+  };
+
+  socket.on('joinRoom', handleRoomJoin);
   socket.on('joinUserRoom', ({ userId }) => {
     if (!userId) {
       console.error('Invalid userId provided for room join');
       return;
     }
-    const roomName = `user_${userId}`;
-    socket.join(roomName);
-    console.log(`Socket ${socket.id} joined room: ${roomName}`);
+    handleRoomJoin(`user_${userId}`);
+  });
+
+  // Handle new booking notifications
+  socket.on('newBooking', (data) => {
+    console.log('New booking notification:', data);
+    const { providerId, bookingId, customerId, customerName, message } = data;
+    io.to(`user_${providerId}`).emit('newBooking', {
+      notification: {
+        bookingId,
+        customerId,
+        customerName,
+        message
+      }
+    });
   });
 
   socket.on('disconnect', (reason) => {
     console.log('Client disconnected:', {
       id: socket.id,
-      reason: reason
+      reason: reason,
+      userId: socket.handshake.query.userId
     });
   });
 
@@ -106,8 +132,27 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error('Socket error:', {
       id: socket.id,
+      userId: socket.handshake.query.userId,
       error: error.message
     });
+  });
+
+  // Chat event handlers
+  socket.on('joinChat', ({ serviceId, userId, serviceProviderId }) => {
+    const roomId = `chat_${serviceId}_${userId}_${serviceProviderId}`;
+    socket.join(roomId);
+    console.log(`User ${userId} joined chat room ${roomId}`);
+  });
+
+  socket.on('sendMessage', (messageData) => {
+    const { serviceId, toUserId } = messageData;
+    const roomId = `chat_${serviceId}_${messageData.fromUserId}_${toUserId}`;
+    io.to(roomId).emit('newMessage', messageData);
+  });
+
+  socket.on('typing', ({ serviceId, userId, serviceProviderId, isTyping }) => {
+    const roomId = `chat_${serviceId}_${userId}_${serviceProviderId}`;
+    socket.to(roomId).emit('userTyping', { userId, isTyping });
   });
 });
 
@@ -172,6 +217,7 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
 app.use('/api/authadmin',AdminAuthRoutes)
+app.use('/api/chat', chatRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Error handling middleware
@@ -192,7 +238,7 @@ server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
     `http://${HOST}:${PORT}`,
-    `http://192.168.1.164:${PORT}`
+    `http://192.168.152.126:${PORT}`
   ];
   
   console.log('\nServer running on:');

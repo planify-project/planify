@@ -1,26 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getUserNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  deleteNotification,
-  getUnreadNotificationCount
-} = require('../controllers/notificationController');
+const notificationController = require('../controllers/notificationController');
 
-// Get all notifications for a user
-router.get('/user/:user_id', getUserNotifications);
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'Notifications API is working',
+    timestamp: new Date().toISOString()
+  });
+});
 
-// Get unread notification count for a user
-router.get('/user/:user_id/unread/count', getUnreadNotificationCount);
+// Create test notification
+router.post('/test/:userId', notificationController.createTestNotification);
 
-// Mark a notification as read
-router.patch('/:notification_id/read', markNotificationAsRead);
+// Get notifications by user (keep this first to avoid conflicts)
+router.get('/user/:userId', notificationController.getNotificationsByUser);
 
-// Mark all notifications as read for a user
-router.patch('/user/:user_id/read-all', markAllNotificationsAsRead);
+// Get single notification
+router.get('/single/:id', notificationController.getNotificationById);
 
-// Delete a notification
-router.delete('/:notification_id', deleteNotification);
+// Create notification
+router.post('/', notificationController.createNotification);
+
+// Update notification
+router.put('/:id', notificationController.updateNotification);
+
+// Delete notification
+router.delete('/:notificationId', notificationController.deleteNotification);
+
+// Mark notification as read
+router.patch('/:notificationId/read', notificationController.markAsRead);
+
+// Dismiss notification
+router.put('/:notificationId/dismiss', notificationController.dismissNotification);
 
 module.exports = router;

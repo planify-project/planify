@@ -1,44 +1,23 @@
+// Import all configuration from the centralized config file
+export * from './configs/url';
+
 // API and Socket configuration
-const LOCAL_IP = '192.168.1.157';
-const PORT = '3000';
+export const API_URL = 'http://192.168.152.126:3000/api';
+export const SOCKET_URL = 'http://192.168.152.126:3000';
 
-// Base URLs
-export const API_BASE = `http://${LOCAL_IP}:${PORT}/api`;
-export const SOCKET_URL = `http://${LOCAL_IP}:${PORT}`;
+export const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RO4rZCFiC25gcQ1k4TPSl46TGeLsebDfDuM2SXgE3bY0vukSGyW6tPztYv0c7LpxMekAirZtOygmId1ZRvpevvG007hrcgTw0'; // Replace with your actual publishable key
 
-// Socket.IO configuration
+
 export const SOCKET_CONFIG = {
-  transports: ['polling', 'websocket'],
-  path: '/socket.io/',
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
-  timeout: 20000,
-  autoConnect: false,
-  forceNew: true,
-  reconnection: true,
-  reconnectionDelayMax: 5000,
-  randomizationFactor: 0.5,
-  maxHttpBufferSize: 1e8,
+  timeout: 45000,
+  pingTimeout: 10000,
+  pingInterval: 5000,
+  transports: ['websocket', 'polling'],
+  path: '/socket.io/',
+  withCredentials: true,
   extraHeaders: {
-    'Access-Control-Allow-Origin': '*',
-    'Upgrade': 'websocket',
-    'Connection': 'Upgrade'
-  },
-  upgrade: true,
-  rememberUpgrade: true,
-  rejectUnauthorized: false,
-  perMessageDeflate: {
-    threshold: 2048
-  }
-};
-
-// API configuration
-export const API_CONFIG = {
-  timeout: 20000,
-  retries: 3,
-  retryDelay: 1000,
-  headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 };

@@ -1,125 +1,156 @@
 const { Booking, Service, User, Event, Notification } = require('../database');
 
 const createBooking = async (req, res) => {
-  const { user_id, service_id, date, space, phone_number } = req.body;
-  console.log('Received booking data:', req.body);
+  const { userId, serviceId, date, location, phone } = req.body;
+  console.log('1. Received booking request:', { userId, serviceId, date, location, phone });
 
   try {
-    // Validate required fields
-    if (!user_id || !service_id || !date || !space || !phone_number) {
-      console.log('Missing required fields:', { user_id, service_id, date, space, phone_number });
-      return res.status(400).json({ 
-        success: false,
-        message: "All fields are required"
-      });
-    }
+    // Get service and provider info
+    const service = await Service.findByPk(serviceId, {
+      include: [{ model: User, as: 'provider' }]
+    });
 
-    // Validate date format
-    const bookingDate = new Date(date);
-    if (isNaN(bookingDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date format"
-      });
-    }
-
-    // Check if date is in the future
-    if (bookingDate < new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: "Booking date must be in the future"
-      });
-    }
-
-    // Validate phone number format (8 digits for Tunisia)
-    const phoneRegex = /^[0-9]{8}$/;
-    if (!phoneRegex.test(phone_number)) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone number must be exactly 8 digits"
-      });
-    }
-
-    // Check if service exists
-    const service = await Service.findByPk(service_id);
     if (!service) {
-      console.log('Service not found:', service_id);
+      console.log('2. Service not found:', serviceId);
       return res.status(404).json({
         success: false,
         message: "Service not found"
       });
     }
-
-    // Get user details for notification
-    console.log('Looking up user with Firebase UID:', user_id);
-    const user = await User.findOne({ where: { firebase_uid: user_id } });
-    if (!user) {
-      console.log('User not found with Firebase UID:', user_id);
-      return res.status(404).json({
-        success: false,
-        message: "User not found. Please try logging out and logging back in."
-      });
-    }
-
-    console.log('Found user:', user.id);
-
-    // Create booking
-    const newBooking = await Booking.create({
-      userId: user.id,
-      serviceId: service_id,
-      providerId: service.provider_id,
-      date: bookingDate,
-      space: space,
-      phone: phone_number,
-      status: 'pending'
+    console.log('2. Found service:', { 
+      id: service.id, 
+      title: service.title, 
+      provider_id: service.provider_id,
+      provider_name: service.provider?.name 
     });
 
-    // Create notification for service provider
-    const notification = await Notification.create({
-      user_id: service.provider_id,
+    // Get user info
+    const user = await User.findByPk(userId);
+    if (!user) {
+      console.log('3. User not found:', userId);
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    console.log('3. Found user:', { id: user.id, name: user.name });
+
+    // Create booking
+    const booking = await Booking.create({
+      userId,
+      serviceId,
+      date,
+      location,
+      phone,
+      status: 'pending'
+    });
+    console.log('4. Created booking:', { 
+      id: booking.id, 
+      userId: booking.userId,
+      serviceId: booking.serviceId,
+      status: booking.status 
+    });
+
+    // Create notification for the service owner
+    const ownerNotification = await Notification.create({
+      userId: service.provider_id,
       title: 'New Booking Request',
-      message: `${user.name} has requested to book your service for ${bookingDate.toLocaleDateString()}`,
-      type: 'booking',
-      booking_id: newBooking.id,
-      is_read: false,
-      metadata: {
-        bookingId: newBooking.id,
-        serviceId: service_id,
-        userId: user.id,
-        userName: user.name,
-        date: bookingDate,
-        space: space
+      message: `${user.name} wants to book your service "${service.title}" on ${new Date(date).toLocaleDateString()} at ${location}. Phone: ${phone}`,
+      type: 'booking_request',
+      booking_id: booking.id,
+      is_read: false
+    });
+    console.log('5. Created owner notification:', { 
+      id: ownerNotification.id, 
+      userId: ownerNotification.userId,
+      type: ownerNotification.type,
+      message: ownerNotification.message
+    });
+
+    // Create notification for the booking user
+    const userNotification = await Notification.create({
+      userId: userId,
+      title: 'Booking Request Sent',
+      message: `Your booking request for "${service.title}" has been sent to ${service.provider.name}.`,
+      type: 'booking_request',
+      booking_id: booking.id,
+      is_read: false
+    });
+    console.log('6. Created user notification:', { 
+      id: userNotification.id, 
+      userId: userNotification.userId,
+      type: userNotification.type,
+      message: userNotification.message
+    });
+
+    // Send notifications via socket
+    const io = req.app.get('io');
+    const ownerRoom = `user_${service.provider_id}`;
+    const userRoom = `user_${userId}`;
+
+    console.log('7. Sending socket notifications to rooms:', {
+      ownerRoom,
+      userRoom,
+      ownerSocketCount: io.sockets.adapter.rooms.get(ownerRoom)?.size || 0,
+      userSocketCount: io.sockets.adapter.rooms.get(userRoom)?.size || 0
+    });
+
+    // Send to service provider
+    io.to(ownerRoom).emit('newBooking', { 
+      notification: {
+        id: ownerNotification.id,
+        title: ownerNotification.title,
+        message: ownerNotification.message,
+        type: ownerNotification.type,
+        booking_id: ownerNotification.booking_id,
+        createdAt: ownerNotification.created_at,
+        booking: {
+          id: booking.id,
+          service: {
+            id: service.id,
+            title: service.title
+          },
+          user: {
+            id: user.id,
+            name: user.name
+          }
+        }
       }
     });
 
-    // Get socket instance
-    const io = req.app.get('io');
-    if (io) {
-      // Emit to provider's room
-      io.to(`user_${service.provider_id}`).emit('notification', {
-        type: 'booking',
-        notification,
-        booking: newBooking
-      });
+    // Send to booking user
+    io.to(userRoom).emit('newBooking', { 
+      notification: {
+        id: userNotification.id,
+        title: userNotification.title,
+        message: userNotification.message,
+        type: userNotification.type,
+        booking_id: userNotification.booking_id,
+        createdAt: userNotification.created_at,
+        booking: {
+          id: booking.id,
+          service: {
+            id: service.id,
+            title: service.title
+          },
+          provider: {
+            id: service.provider.id,
+            name: service.provider.name
+          }
+        }
+      }
+    });
 
-      // Also emit to user's room for confirmation
-      io.to(`user_${user.id}`).emit('notification', {
-        type: 'booking_confirmation',
-        notification: {
-          title: 'Booking Request Sent',
-          message: `Your booking request for ${service.title} has been sent to the provider.`,
-          type: 'booking_confirmation',
-          booking_id: newBooking.id,
-          is_read: false
-        },
-        booking: newBooking
-      });
-    }
+    console.log('8. Socket notifications sent');
 
     res.status(201).json({
       success: true,
-      data: newBooking,
-      message: "Booking created successfully"
+      message: "Booking request sent successfully",
+      data: { 
+        booking, 
+        ownerNotification,
+        userNotification 
+      }
     });
 
   } catch (error) {
@@ -136,8 +167,8 @@ const getBookings = async (req, res) => {
   try {
     const bookings = await Booking.findAll({
       include: [
-        { model: User, attributes: ['id', 'fullName'] },
-        { model: Service, attributes: ['id', 'name'] },
+        { model: User, attributes: ['id', 'name'] },
+        { model: Service, attributes: ['id', 'title'] },
         { model: Event, attributes: ['id', 'title'] },
       ],
     });
@@ -171,86 +202,177 @@ const updateBooking = async (req, res) => {
 
 const deleteBooking = async (req, res) => {
   try {
-    const booking = await Booking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    const { bookingId } = req.params;
+    console.log('1. Deleting booking:', bookingId);
+
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        { model: Service, include: [{ model: User, as: 'provider' }] },
+        { model: User }
+      ]
+    });
+
+    if (!booking) {
+      console.log('2. Booking not found:', bookingId);
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    console.log('2. Found booking:', {
+      id: booking.id,
+      userId: booking.userId,
+      serviceId: booking.serviceId,
+      status: booking.status
+    });
+
+    // Create notifications for both users
+    const notifications = await Promise.all([
+      // Notification for service provider
+      Notification.create({
+        userId: booking.Service.provider_id,
+        title: 'Booking Cancelled',
+        message: `${booking.User.name} has cancelled their booking for "${booking.Service.title}".`,
+        type: 'booking_cancelled',
+        booking_id: booking.id,
+        is_read: false
+      }),
+      // Notification for booking user
+      Notification.create({
+        userId: booking.userId,
+        title: 'Booking Cancelled',
+        message: `You have cancelled your booking for "${booking.Service.title}".`,
+        type: 'booking_cancelled',
+        booking_id: booking.id,
+        is_read: false
+      })
+    ]);
+
+    console.log('3. Created cancellation notifications');
+
+    // Send socket notifications
+    const io = req.app.get('io');
+    io.to(`user_${booking.Service.provider_id}`).emit('bookingCancelled', {
+      notification: {
+        id: notifications[0].id,
+        title: notifications[0].title,
+        message: notifications[0].message,
+        type: notifications[0].type,
+        booking_id: notifications[0].booking_id,
+        createdAt: notifications[0].created_at
+      }
+    });
+
+    io.to(`user_${booking.userId}`).emit('bookingCancelled', {
+      notification: {
+        id: notifications[1].id,
+        title: notifications[1].title,
+        message: notifications[1].message,
+        type: notifications[1].type,
+        booking_id: notifications[1].booking_id,
+        createdAt: notifications[1].created_at
+      }
+    });
+
+    console.log('4. Sent socket notifications');
+
+    // Delete the booking
     await booking.destroy();
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: 'Error deleting booking' });
+    console.log('5. Deleted booking');
+
+    res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully",
+      data: { notifications }
+    });
+
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete booking",
+      error: error.message
+    });
   }
 };
 
 const respondToBooking = async (req, res) => {
-  try {
-    const { bookingId } = req.params;
-    const { response } = req.body; // 'confirmed' or 'canceled'
+  const { bookingId } = req.params;
+  const { response } = req.body; // 'accepted' or 'rejected'
 
-    const existingBooking = await Booking.findByPk(bookingId, {
+  console.log('1. Responding to booking:', { bookingId, response });
+
+  try {
+    const booking = await Booking.findByPk(bookingId, {
       include: [
-        { model: User, as: 'user' },
-        { model: Service, as: 'service' }
+        { model: Service, include: [{ model: User, as: 'provider' }] },
+        { model: User }
       ]
     });
 
-    if (!existingBooking) {
-      return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      console.log('2. Booking not found:', bookingId);
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
     }
 
-    // Update booking status
-    existingBooking.status = response;
-    await existingBooking.save();
+    console.log('2. Found booking:', {
+      id: booking.id,
+      userId: booking.userId,
+      serviceId: booking.serviceId,
+      status: booking.status
+    });
 
-    // Create notification for the customer
+    // Update booking status
+    await booking.update({ status: response });
+    console.log('3. Updated booking status to:', response);
+
+    // Create notification for the user who made the booking
     const notification = await Notification.create({
-      user_id: existingBooking.userId,
-      title: `Booking ${response}`,
-      message: `Your booking for ${existingBooking.service.title} has been ${response} by the provider.`,
-      is_read: false,
+      userId: booking.userId,
+      title: `Booking ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
+      message: `Your booking request for "${booking.Service.title}" has been ${response === 'accepted' ? 'accepted' : 'rejected'} by ${booking.Service.provider.name}.`,
       type: 'booking_response',
-      booking_id: existingBooking.id,
-      metadata: {
-        bookingId: existingBooking.id,
-        serviceId: existingBooking.serviceId,
-        status: response,
-        date: existingBooking.date
+      booking_id: booking.id,
+      is_read: false
+    });
+
+    console.log('4. Created notification:', {
+      id: notification.id,
+      userId: notification.userId,
+      type: notification.type
+    });
+
+    // Send socket notification to user
+    const io = req.app.get('io');
+    io.to(`user_${booking.userId}`).emit('bookingResponse', {
+      notification: {
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        bookingId: notification.booking_id,
+        createdAt: notification.created_at
       }
     });
 
-    // Get socket instance
-    const io = req.app.get('io');
-    if (io) {
-      // Emit to customer's room
-      io.to(`user_${existingBooking.userId}`).emit('notification', {
-        type: 'booking_response',
-        notification,
-        booking: existingBooking
-      });
-
-      // Also emit to provider's room for confirmation
-      io.to(`user_${existingBooking.providerId}`).emit('notification', {
-        type: 'booking_response_confirmation',
-        notification: {
-          title: 'Booking Response Sent',
-          message: `You have ${response} the booking request.`,
-          type: 'booking_response_confirmation',
-          booking_id: existingBooking.id,
-          is_read: false
-        },
-        booking: existingBooking
-      });
-    }
+    console.log('5. Sent socket notification');
 
     res.status(200).json({
       success: true,
-      data: existingBooking,
-      message: `Booking ${response} successfully`
+      message: `Booking ${response} successfully`,
+      data: { booking, notification }
     });
+
   } catch (error) {
     console.error("Error responding to booking:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Failed to respond to booking",
-      error: error.message 
+      error: error.message
     });
   }
 };
