@@ -14,9 +14,9 @@ import { normalize } from '../utils/scaling';
 import AllEventsScreen from './AllEventsScreen';
 import axios from 'axios';
 import { API_BASE } from '../config'; // Make sure this points to your backend
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -78,10 +78,9 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-
-
     fetchPublicEvents();
   }, []);
+
   const fetchPublicEvents = async () => {
     try {
       console.log('Fetching public events...');
@@ -94,6 +93,7 @@ export default function HomeScreen({ navigation }) {
       setLoading(false);
     }
   };
+
   const handleSelectCity = (selectedCity) => {
     setCity(selectedCity);
     setLoading(false);
