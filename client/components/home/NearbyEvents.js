@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
+import axios from 'axios';
 import EventCard from '../EventCard';
 import { styles } from './styles';
-import api from '../../configs/api';
-import { normalize } from '../../utils/scaling';
+import { API_BASE } from '../../config';
+
+const { width } = Dimensions.get('window');
+const scale = width / 375;
+const normalize = (size) => Math.round(scale * size);
+
+const API_BASE_URL = API_BASE;
 
 const NearbyEvents = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -27,7 +33,8 @@ const NearbyEvents = ({ navigation }) => {
       });
 
       // Fetch nearby events
-      const response = await api.get('/events/nearby', {
+      const response = await axios.get('/events/nearby', {
+        baseURL: API_BASE_URL,
         params: {
           lat: location.coords.latitude,
           lon: location.coords.longitude,
@@ -73,7 +80,7 @@ const NearbyEvents = ({ navigation }) => {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Nearby Events</Text>
         <View style={{ height: normalize(250), justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#5D5FEE" />
+          <ActivityIndicator size="large" color="#8d8ff3" />
         </View>
       </View>
     );

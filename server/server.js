@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
-const db = require('./database');
+const { sequelize } = require('./database');
 const path = require('path');
 const morgan = require('morgan');
 
@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
 
 // Create Express app and HTTP server
 const app = express();
@@ -25,13 +26,18 @@ const server = http.createServer(app);
 
 // Basic middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure CORS
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
 }));
 
 // Test endpoint
@@ -58,52 +64,94 @@ const io = new Server(server, {
     origin: '*',
     methods: ['GET', 'POST']
   },
-  transports: ['websocket', 'polling'],
-  path: '/socket.io/',
-  serveClient: false,
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  cookie: false,
-  allowEIO3: true
+  transports: ['websocket']
 });
+
+// Make io accessible to routes
+app.set('io', io);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected:', {
-    id: socket.id,
-    transport: socket.conn.transport.name,
-    address: socket.handshake.address
-  });
+  console.log('New client connected:', socket.id);
 
-  // Send test event to verify connection
-  socket.emit('test', { 
-    message: 'Connected successfully',
-    timestamp: new Date().toISOString()
-  });
-
-  socket.on('joinUserRoom', ({ userId }) => {
-    if (!userId) {
-      console.error('Invalid userId provided for room join');
-      return;
-    }
+  // Get user ID from query parameters
+  const userId = socket.handshake.query.userId;
+  if (userId) {
     const roomName = `user_${userId}`;
     socket.join(roomName);
     console.log(`Socket ${socket.id} joined room: ${roomName}`);
-  });
+  }
 
-  socket.on('disconnect', (reason) => {
-    console.log('Client disconnected:', {
-      id: socket.id,
-      reason: reason
+  // Handle new booking notifications
+  socket.on('newBooking', (data) => {
+    console.log('New booking notification:', data);
+    const { providerId, bookingId, customerId, customerName, message } = data;
+    
+    // Emit to provider's room
+    io.to(`user_${providerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'New Booking Request',
+        message: message || `New booking request from ${customerName}`,
+        bookingId,
+        customerId,
+        customerName,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
+    });
+
+    // Also emit to customer's room for confirmation
+    io.to(`user_${customerId}`).emit('newBooking', {
+      notification: {
+        id: bookingId,
+        type: 'booking_request',
+        title: 'Booking Request Sent',
+        message: 'Your booking request has been sent to the service provider.',
+        bookingId,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
     });
   });
 
-  // Handle errors
-  socket.on('error', (error) => {
-    console.error('Socket error:', {
-      id: socket.id,
-      error: error.message
+  // Handle booking responses
+  socket.on('bookingResponse', (data) => {
+    console.log('Booking response:', data);
+    const { customerId, bookingId, status, message } = data;
+    
+    // Emit to customer's room
+    io.to(`user_${customerId}`).emit('bookingResponse', {
+      notification: {
+        id: bookingId,
+        type: 'booking_response',
+        title: 'Booking Update',
+        message: message || `Your booking request has been ${status}`,
+        bookingId,
+        status,
+        createdAt: new Date().toISOString(),
+        is_read: false
+      }
     });
+  });
+
+  // Handle notification deletion
+  socket.on('deleteNotification', (data) => {
+    console.log('Deleting notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDeleted', { notificationId });
+  });
+
+  // Handle notification dismissal
+  socket.on('dismissNotification', (data) => {
+    console.log('Dismissing notification:', data);
+    const { notificationId, userId } = data;
+    io.to(`user_${userId}`).emit('notificationDismissed', { notificationId });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
   });
 });
 
@@ -131,6 +179,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
+app.use('/api/authadmin',AdminAuthRoutes)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -142,26 +191,37 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Sync database and start server
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
-server.listen(PORT, HOST, () => {
-  const urls = [
-    `http://localhost:${PORT}`,
-    `http://${HOST}:${PORT}`,
-    `http://192.168.1.149:${PORT}`
-  ];
-  
-  console.log('\nServer running on:');
-  urls.forEach(url => {
-    console.log(`\n${url}:`);
-    console.log(`  - Test endpoint: ${url}/test`);
-    console.log(`  - Health check: ${url}/health`);
-    console.log(`  - Socket.IO: ${url}/socket.io/`);
-  });
-  console.log('\nSocket.IO Configuration:');
-  console.log('  - Transports: websocket, polling');
-  console.log('  - Path: /socket.io/');
-  console.log('  - CORS: enabled for all origins');
-}); 
+const startServer = async () => {
+  try {
+
+    // Start server
+    server.listen(PORT, HOST, () => {
+      const urls = [
+        `http://localhost:${PORT}`,
+        `http://${HOST}:${PORT}`,
+        `http://192.168.1.164:${PORT}`
+      ];
+      
+      console.log('\nServer running on:');
+      urls.forEach(url => {
+        console.log(`\n${url}:`);
+        console.log(`  - Test endpoint: ${url}/test`);
+        console.log(`  - Health check: ${url}/health`);
+        console.log(`  - Socket.IO: ${url}/socket.io/`);
+      });
+      console.log('\nSocket.IO Configuration:');
+      console.log('  - Transports: websocket');
+      console.log('  - Path: /socket.io/');
+      console.log('  - CORS: enabled for all origins');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer(); 

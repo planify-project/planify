@@ -28,6 +28,7 @@ router.get('/popular', eventsController.getPopularEvents);
 
 // GET /api/events/search
 router.get('/search', eventsController.searchEvents);
+
 // GET /api/events/:id
 router.get('/:id', eventsController.getEventById);
 

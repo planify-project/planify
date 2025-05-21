@@ -1,11 +1,12 @@
-import React, { useState , useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { AuthContext } from '../context/AuthContext'; 
-
 import { useWishlist } from '../context/WishlistContext';
+import axios from 'axios';
+import { API_BASE } from '../config';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -34,12 +35,32 @@ export default function EventDetailScreen({ route }) {
     }
   };
 
-  // Generate additional images for preview
+  const [relatedEvents, setRelatedEvents] = useState([]);
+
+  useEffect(() => {
+    fetchRelatedEvents();
+  }, [event.type]);
+
+  const fetchRelatedEvents = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/events/public?type=${event.type}`);
+      if (response.data) {
+        // Filter out the current event and get up to 3 other events
+        const otherEvents = response.data
+          .filter(e => e.id !== event.id && e.coverImage)
+          .slice(0, 3);
+        setRelatedEvents(otherEvents);
+      }
+    } catch (error) {
+      console.error('Error fetching related events:', error);
+    }
+  };
+
+  // Generate gallery images from event's own image and related events
   const images = [
-    event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-    'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
-    'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
-  ];
+    event.coverImage,
+    ...relatedEvents.map(e => e.coverImage)
+  ].filter(Boolean); // Remove any null/undefined values
 
   // Use actual event coordinates if available, otherwise use default
   const eventCoords = {
@@ -55,7 +76,7 @@ export default function EventDetailScreen({ route }) {
         {/* Main Image */}
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: event.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c' }} 
+            source={{ uri: event.coverImage }} 
             style={styles.mainImage}
             onError={(e) => {
               console.error('Image loading error:', e.nativeEvent.error);
@@ -78,7 +99,7 @@ export default function EventDetailScreen({ route }) {
           <Text style={styles.eventTitle}>{event.name}</Text>
           
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={normalize(16)} color="#4f78f1" />
+            <Ionicons name="location-outline" size={normalize(16)} color="#6C6FD1" />
             <Text style={styles.locationText}>{event.location}</Text>
           </View>
 
@@ -148,48 +169,42 @@ export default function EventDetailScreen({ route }) {
             )}
           />
         </View>
+
+        {/* Write Review Button */}
+        <TouchableOpacity 
+          style={[styles.joinBtn, { backgroundColor: '#fff', marginHorizontal: normalize(20), marginTop: normalize(20), marginBottom: normalize(20), borderWidth: 1, borderColor: '#6C6FD1' }]}
+          onPress={() => {
+            console.log("😍😍😍😍😍",event);
+            navigation.navigate('Review', { event })}}
+        >
+          <Text style={[styles.joinBtnText, { color: '#6C6FD1' }]}>Write a Review</Text>
+        </TouchableOpacity>
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+            onPress={() => navigation.navigate('JoinEvent', { event })}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Join Event</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+            onPress={() => {
+              // Extract numeric value from event.price (e.g., '20 DT' -> 20)
+              const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+              navigation.push('Payment', { 
+                amount: price,
+                eventId: event.id 
+              });
+            }}
+          >
+            <Ionicons name="card-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Pay & Join</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-
-
-
-            {/* Join Event Button */}
-      {/* <TouchableOpacity 
-        style={styles.joinBtn}
-        onPress={() => navigation.navigate('JoinEvent', { event })}
-      >
-        <Text style={styles.joinBtnText}>Join Event</Text>
-      </TouchableOpacity> */}
-      {/* Write Review Button */}
-<TouchableOpacity 
-  style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#4f78f1' }]}
-  onPress={() => {
-    console.log("😍😍😍😍😍",event);
-    navigation.navigate('Review', { event })}}
->
-  <Text style={[styles.joinBtnText, { color: '#4f78f1' }]}>Write a Review</Text>
-</TouchableOpacity>
-
-
-
-
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-          onPress={() => navigation.navigate('JoinEvent', { event })}
-        >
-          <Ionicons name="calendar-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Join Event</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-          onPress={() => navigation.navigate('Payment')}
-        >
-          <Ionicons name="card-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Pay & Join</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -278,9 +293,9 @@ const styles = StyleSheet.create({
     marginBottom: normalize(6),
   },
   price: {
-    fontSize: normalize(20),
+    color: '#6C6FD1',
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#4f78f1',
   },
   perText: {
     fontSize: normalize(14),
@@ -369,7 +384,7 @@ const styles = StyleSheet.create({
     marginRight: normalize(10),
   },
   joinBtn: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#6C6FD1',
     paddingVertical: normalize(16),
     borderRadius: normalize(30),
     position: 'absolute',

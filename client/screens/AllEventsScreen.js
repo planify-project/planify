@@ -120,6 +120,15 @@ export default function AllEventsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Create Event Button */}
+      <TouchableOpacity
+        style={styles.createEventButton}
+        onPress={() => navigation.navigate('CreateEvent')}
+      >
+        <Ionicons name="add-circle-outline" size={24} color="#fff" />
+        <Text style={styles.createEventText}>Create Event</Text>
+      </TouchableOpacity>
+
       {/* Search Bar */}
       <View style={{ marginBottom: normalize(12) }}>
         <View style={{
@@ -188,7 +197,7 @@ export default function AllEventsScreen({ navigation }) {
       {/* Event List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4f78f1" />
+          <ActivityIndicator size="large" color="#6C6FD1" />
         </View>
       ) : error ? (
         <View style={[styles.container, styles.centered]}>
@@ -210,145 +219,6 @@ export default function AllEventsScreen({ navigation }) {
     </View>
   );
 }
-
-//   const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F8FAFC',
-//     padding: normalize(16),
-//   },
-//   filterContainer: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//     gap: normalize(8),
-//     marginBottom: normalize(16),
-//   },
-//   filterButton: {
-//     backgroundColor: '#E0E7FF',
-//     paddingVertical: normalize(6),
-//     paddingHorizontal: normalize(16),
-//     borderRadius: normalize(20),
-//   },
-//   filterButtonActive: {
-//     backgroundColor: '#4338CA',
-//   },
-//   filterText: {
-//     color: '#4338CA',
-//     fontWeight: '600',
-//     fontSize: normalize(14),
-//   },
-//   filterTextActive: {
-//     color: '#fff',
-//   },
-//   listContent: {
-//     paddingBottom: normalize(30),
-//   },
-//   card: {
-//     backgroundColor: '#fff',
-//     borderRadius: normalize(18),
-//     marginBottom: normalize(20),
-//     shadowColor: '#000',
-//     shadowOpacity: 0.06,
-//     shadowRadius: normalize(8),
-//     shadowOffset: { width: 0, height: 4 },
-//     elevation: 4,
-//   },
-//   image: {
-//     width: '100%',
-//     height: normalize(180),
-//     borderTopLeftRadius: normalize(18),
-//     borderTopRightRadius: normalize(18),
-//   },
-//   cardContent: {
-//     padding: normalize(16),
-//   },
-//   tagContainer: {
-//     position: 'absolute',
-//     top: normalize(14),
-//     left: normalize(14),
-//     backgroundColor: '#4338CA',
-//     borderRadius: normalize(6),
-//     paddingHorizontal: normalize(10),
-//     paddingVertical: normalize(4),
-//     zIndex: 10,
-//   },
-//   tag: {
-//     color: '#fff',
-//     fontSize: normalize(11),
-//     fontWeight: '600',
-//     letterSpacing: 0.5,
-//     textTransform: 'uppercase',
-//   },
-//   title: {
-//     fontSize: normalize(18),
-//     fontWeight: '700',
-//     color: '#0F172A',
-//     marginBottom: normalize(4),
-//     textAlign: 'right',
-//     letterSpacing: 0.3,
-//   },
-//   infoRow: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: normalize(6),
-//   },
-//   rating: {
-//     fontSize: normalize(13),
-//     color: '#FBBF24',
-//     fontWeight: '500',
-//     marginLeft: normalize(4),
-//     marginRight: normalize(10),
-//   },
-//   attendees: {
-//     fontSize: normalize(13),
-//     color: '#475569',
-//     fontStyle: 'italic',
-//   },
-//   location: {
-//     fontSize: normalize(13),
-//     color: '#334155',
-//     marginTop: normalize(2),
-//     marginBottom: normalize(10),
-//   },
-//   footer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//   },
-//   price: {
-//     fontSize: normalize(15),
-//     fontWeight: '600',
-//     color: '#4338CA',
-//   },
-//   detailsButton: {
-//     backgroundColor: '#EEF2FF',
-//     borderRadius: normalize(12),
-//     paddingHorizontal: normalize(14),
-//     paddingVertical: normalize(8),
-//   },
-//   detailsButtonText: {
-//     color: '#4338CA',
-//     fontSize: normalize(13),
-//     fontWeight: '600',
-//     letterSpacing: 0.4,
-//   },
-//   loadingContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   errorContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   errorText: {
-//     color: '#DC2626',
-//     fontSize: normalize(15),
-//     fontWeight: '500',
-//     textAlign: 'center',
-//   },
-// });
 
 const styles = StyleSheet.create({
   container: {
@@ -401,8 +271,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   filterButtonActive: {
-    backgroundColor: '#4F46E5', // Deeper indigo for more professional look
-    borderColor: '#4F46E5',
+    backgroundColor: '#6C6FD1',
+    borderColor: '#6C6FD1',
   },
   filterText: {
     color: '#4B5563', // More neutral color when inactive
@@ -439,7 +309,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 18,
     left: 18,
-    backgroundColor: 'rgba(79, 70, 229, 0.9)', // Semi-transparent for modern look
+    backgroundColor: 'rgba(108, 111, 209, 0.9)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -449,7 +319,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 3,
-    backdropFilter: 'blur(4px)', // Add if supported in your React Native version
+    backdropFilter: 'blur(4px)',
   },
   tag: {
     color: '#FFFFFF',
@@ -508,15 +378,15 @@ const styles = StyleSheet.create({
     borderTopColor: '#F3F4F6', // Light gray divider
   },
   price: {
-    fontSize: 20, // Larger price
-    fontWeight: '800', // Extra bold
-    color: '#4F46E5', // Deeper indigo
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#6C6FD1',
   },
   detailsButton: {
-    backgroundColor: '#4F46E5', // Solid color button for more emphasis
+    backgroundColor: '#6C6FD1',
     borderRadius: 14,
     paddingHorizontal: 18,
-    paddingVertical: 12, // Taller button
+    paddingVertical: 12,
   },
   detailsButtonText: {
     color: '#FFFFFF', // White text on colored background
@@ -555,5 +425,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 24, // Better readability
+  },
+  createEventButton: {
+    backgroundColor: '#6C6FD1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: normalize(12),
+    borderRadius: normalize(12),
+    marginBottom: normalize(16),
+    shadowColor: '#6C6FD1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  createEventText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    marginLeft: normalize(8),
   },
 });

@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   contactBtn: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     borderRadius: normalize(8),
     paddingHorizontal: normalize(20),
     paddingVertical: normalize(8),
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     fontSize: normalize(13),
-    color: '#4f78f1',
+    color: '#8d8ff3',
     fontWeight: '500'
   },
   eventCard: {

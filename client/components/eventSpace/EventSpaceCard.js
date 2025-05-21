@@ -29,7 +29,7 @@ const EventSpaceCard = ({ space, onPress }) => {
             <FontAwesome name="users" size={16} color="#666" />
             <Text style={styles.infoText}>Up to {space.capacity}</Text>
           </View>
-          <Text style={styles.price}>${space.price}/day</Text>
+          <Text style={styles.price}>{space.price} DT/day</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: normalize(16),
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#8d8ff3',
   },
 });
 

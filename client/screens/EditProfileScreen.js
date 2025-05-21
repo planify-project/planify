@@ -16,6 +16,7 @@ import { Auth } from '../configs/firebase_config';
 import { updateProfile } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -69,17 +70,21 @@ export default function EditProfileScreen({ navigation }) {
       let newPhotoURL = photoURL;
       let newName = name.trim() || user.displayName || '';
 
-      // Only update name if no image is being updated
-      if (!photoURL || !photoURL.startsWith('file://')) {
-        await updateProfile(user, {
-          displayName: newName
+      // Update Firebase profile
+      await updateProfile(user, {
+        displayName: newName,
+        ...(newPhotoURL && { photoURL: newPhotoURL })
+      });
+
+      // Update user in database
+      try {
+        await axios.put(`${API_BASE}/users/${user.uid}`, {
+          name: newName,
+          ...(newPhotoURL && { photoURL: newPhotoURL })
         });
-      } else {
-        // If there's a new image, update both name and photo
-        await updateProfile(user, {
-          displayName: newName,
-          photoURL: photoURL
-        });
+      } catch (error) {
+        console.error('Error updating user in database:', error);
+        // Continue even if database update fails
       }
 
       Alert.alert('Success', 'Profile updated successfully');
@@ -100,7 +105,7 @@ export default function EditProfileScreen({ navigation }) {
             <Image source={{ uri: photoURL }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={normalize(60)} color="#5D5FEE" />
+              <Ionicons name="person" size={normalize(60)} color="#8d8ff3" />
             </View>
           )}
           <View style={styles.editIconContainer}>
@@ -170,7 +175,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
     width: normalize(36),
     height: normalize(36),
     borderRadius: normalize(18),
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   button: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
     borderRadius: normalize(8),
     padding: normalize(16),
     alignItems: 'center',

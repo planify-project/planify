@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import AgentModal from '../components/AgentModal';
 import { API_BASE } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import axios from 'axios';
+import { getAuth } from 'firebase/auth';
+import { normalize } from '../utils/scaling';
 
 // Update the axios configuration at the top of the file
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
@@ -40,7 +41,8 @@ api.interceptors.response.use(
       status: error.response?.status,
       message: error.message,
       code: error.code,
-      url: error.config?.url
+      url: error.config?.url,
+      response: error.response?.data
     });
     return Promise.reject(error);
   }
@@ -67,18 +69,14 @@ api.interceptors.response.use(
 // };
 
 export default function CreateEventScreen({ navigation, route }) {
-  // Remove equipment from state
   const [activeTab, setActiveTab] = useState('space');
   const [venues, setVenues] = useState([]);
   const [services, setServices] = useState([]);
-  // Remove equipment state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [agentModalVisible, setAgentModalVisible] = useState(false);
   const [selectedItems, setSelectedItems] = useState({
     venue: null,
     services: [],
-    // Remove equipment from selectedItems
   });
 
   const fetchData = async (type) => {
@@ -97,7 +95,6 @@ export default function CreateEventScreen({ navigation, route }) {
           endpoint = '/services';
           serviceType = 'service';
           break;
-        // Remove equipment case
         default:
           throw new Error('Invalid type');
       }
@@ -105,14 +102,19 @@ export default function CreateEventScreen({ navigation, route }) {
       const url = serviceType ? `${endpoint}?serviceType=${serviceType}` : endpoint;
       console.log(`Fetching ${type} data from: ${API_BASE}${url}`);
       
-      const response = await api.get(url, {
-        timeout: 10000,
-        retries: 3,
-        retryDelay: 1000
-      });
+      const response = await api.get(url);
+      console.log(`${type} response:`, response.data);
+
+      if (!response.data) {
+        throw new Error(`No data received for ${type}`);
+      }
+
       const responseData = Array.isArray(response.data) ? response.data : response.data.data;
 
-      if (responseData) {
+      if (!responseData || !Array.isArray(responseData)) {
+        throw new Error(`Invalid data format for ${type}`);
+      }
+
         const formattedData = responseData.map(item => ({
           id: item.id,
           name: item.title || item.name,
@@ -134,29 +136,54 @@ export default function CreateEventScreen({ navigation, route }) {
           case 'services':
             setServices(formattedData);
             break;
-          // Remove equipment case
-        }
-      } else {
-        console.error(`No data received for ${type}`);
-        setError(`No ${type} available. Please try again later.`);
       }
     } catch (err) {
       console.error(`Error fetching ${type}:`, {
         message: err.message,
         code: err.code,
-        response: err.response?.data
+        response: err.response?.data,
+        stack: err.stack
       });
-      setError(`Failed to fetch ${type}. Please check your connection and try again.`);
+      
+      let errorMessage = `Failed to fetch ${type}. `;
+      if (err.code === 'ERR_NETWORK') {
+        errorMessage += 'Please check your internet connection and try again.';
+      } else if (err.response?.status === 404) {
+        errorMessage += 'No data available.';
+      } else if (err.response?.status === 500) {
+        errorMessage += 'Server error. Please try again later.';
+      } else {
+        errorMessage += err.response?.data?.message || err.message || 'Please try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Add retry functionality with delay
+  // Add retry functionality with exponential backoff
   const retryWithDelay = async (type) => {
     setError(null);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
-    fetchData(type);
+    const maxRetries = 3;
+    let retryCount = 0;
+    
+    const attemptFetch = async () => {
+      try {
+        await fetchData(type);
+      } catch (err) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          console.log(`Retrying ${type} fetch in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return attemptFetch();
+        }
+        throw err;
+      }
+    };
+
+    await attemptFetch();
   };
 
   useEffect(() => {
@@ -174,7 +201,6 @@ export default function CreateEventScreen({ navigation, route }) {
         return venues;
       case 'services':
         return services;
-      // Remove equipment case
       default:
         return [];
     }
@@ -223,7 +249,6 @@ export default function CreateEventScreen({ navigation, route }) {
         return selectedItems.venue?.id === item.id;
       case 'services':
         return selectedItems.services.some(s => s.id === item.id);
-      // Remove equipment case
       default:
         return false;
     }
@@ -241,7 +266,6 @@ export default function CreateEventScreen({ navigation, route }) {
               ? prev.services.filter(s => s.id !== item.id)
               : [...prev.services, item]
           };
-        // Remove equipment case
         default:
           return prev;
       }
@@ -281,22 +305,76 @@ export default function CreateEventScreen({ navigation, route }) {
   };
 
   const handleDone = async () => {
-    if (!selectedItems.venue) {
-      Alert.alert('Error', 'Please select a venue first');
-      return;
-    }
-
     try {
       setLoading(true);
+      
+      // Get the current user from Firebase Auth
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        Alert.alert('Error', 'You must be logged in to create an event');
+        navigation.navigate('Auth');
+        return;
+      }
+
+      // Validate required fields from route params
+      if (!route.params?.eventName || !route.params?.date) {
+        Alert.alert('Error', 'Event name and date are required');
+        return;
+      }
+
+      // First, ensure the user exists in our database
+      let dbUser;
+      try {
+        // Try to get the user first
+        console.log('Fetching user with Firebase UID:', currentUser.uid);
+        const userResponse = await api.get(`/users/firebase/${currentUser.uid}`);
+        console.log('User response:', userResponse.data);
+        // Access the nested data property
+        dbUser = userResponse.data.data;
+      } catch (error) {
+        console.error('Error getting user:', error.response?.data || error.message);
+        // If user doesn't exist, create them
+        try {
+          console.log('Creating new user with Firebase UID:', currentUser.uid);
+          const createResponse = await api.post('/users/firebase', {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName || currentUser.email.split('@')[0]
+          });
+          console.log('Create user response:', createResponse.data);
+          // Access the nested data property
+          dbUser = createResponse.data.data;
+        } catch (createError) {
+          console.error('Error creating user:', createError.response?.data || createError.message);
+          // If we can't create the user, try to proceed with the Firebase UID
+          console.log('Falling back to Firebase UID');
+          dbUser = { id: currentUser.uid };
+        }
+      }
+
+      // Ensure we have a valid user ID
+      if (!dbUser || !dbUser.id) {
+        console.error('No valid user ID found:', { dbUser, currentUser });
+        Alert.alert('Error', 'Could not verify user account. Please try logging out and back in.');
+        return;
+      }
+
+      console.log('Using user ID for event creation:', dbUser.id);
+
       const eventData = {
-        name: route.params?.eventName || 'New Event',
-        type: route.params?.eventType || 'social',
-        date: route.params?.date || new Date().toISOString(),
-        venue: {
+        name: route.params.eventName,
+        type: route.params.eventType || 'social',
+        date: route.params.date,
+        created_by: dbUser.id,
+        location: selectedItems.venue?.location || '',
+        coverImage: selectedItems.venue?.images?.[0] || null,
+        venue: selectedItems.venue ? {
           name: selectedItems.venue.name,
           price: parseFloat(selectedItems.venue.price),
           location: selectedItems.venue.location
-        },
+        } : null,
         services: selectedItems.services.map(s => ({
           id: s.id,
           name: s.name,
@@ -311,16 +389,16 @@ export default function CreateEventScreen({ navigation, route }) {
         navigation.navigate('Schedule', {
           refresh: true,
           newEvent: response.data.data,
-          selectedDate: route.params?.date
+          selectedDate: route.params.date
         });
       } else {
         throw new Error(response.data.message || 'Failed to create event');
       }
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error creating event:', error.response?.data || error.message);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to create event. Please try again.'
+        error.response?.data?.message || error.message || 'Failed to create event. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -329,44 +407,19 @@ export default function CreateEventScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <AgentModal 
-        visible={agentModalVisible}
-        onClose={() => setAgentModalVisible(false)}
-        onChooseAgent={() => {
-          setAgentModalVisible(false);
-        }}
-      />
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Create Event</Text>
-          <View style={styles.subHeader}>
-            <Text style={styles.eventType}>{route.params?.eventType || 'Event Type'}</Text>
-            <Ionicons name="pencil" size={16} color="#007bff" style={{ marginHorizontal: 4 }} />
-            <Text style={styles.date}>{route.params?.eventDate || 'Event Date'}</Text>
-          </View>
-        </View>
-        <TouchableOpacity 
-          style={styles.contactButton}
-          onPress={() => setAgentModalVisible(true)}
-        >
-          <Text style={styles.contactButtonText}>Contact Agent</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Tabs */}
       <View style={styles.tabs}>
         <TouchableOpacity 
           onPress={() => setActiveTab('space')} 
           style={[styles.tabButton, activeTab === 'space' && styles.activeTab]}
         >
-          <Text style={activeTab === 'space' ? styles.activeTabText : styles.tabText}>Event space</Text>
+          <Text style={activeTab === 'space' ? styles.activeTabText : styles.tabText}>Event space (Optional)</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setActiveTab('services')} 
           style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}
         >
-          <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>Services</Text>
+          <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>Services (Optional)</Text>
         </TouchableOpacity>
       </View>
 
@@ -377,12 +430,8 @@ export default function CreateEventScreen({ navigation, route }) {
 
       {/* Done Button */}
       <TouchableOpacity 
-        style={[
-          styles.doneButton,
-          (!selectedItems.venue && activeTab === 'space') && styles.disabledButton
-        ]}
+        style={styles.doneButton}
         onPress={handleDone}
-        disabled={!selectedItems.venue && activeTab === 'space'}
       >
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
@@ -394,42 +443,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F4F8'
-  },
-  header: {
-    height: 60,
-    backgroundColor: '#4f78f1',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF'
-  },
-  subHeader: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  eventType: {
-    fontSize: 14,
-    color: '#FFFFFF'
-  },
-  date: {
-    fontSize: 14,
-    color: '#FFFFFF'
-  },
-  contactButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8
-  },
-  contactButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600'
   },
   tabs: {
     flexDirection: 'row',
@@ -449,7 +462,7 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   activeTab: {
-    backgroundColor: '#4f78f1'
+    backgroundColor: '#8d8ff3'
   },
   tabText: {
     color: '#7C7C7C',
@@ -505,7 +518,7 @@ const styles = StyleSheet.create({
     color: '#1E1E1E'
   },
   selectButton: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -525,7 +538,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -534,9 +547,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4
-  },
-  disabledButton: {
-    backgroundColor: '#B8B8B8'
   },
   doneButtonText: {
     color: '#FFFFFF',
@@ -559,7 +569,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   retryButton: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8
@@ -578,5 +588,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  submitButton: {
+    backgroundColor: '#8d8ff3',
+    paddingVertical: normalize(16),
+    borderRadius: normalize(12),
+    alignItems: 'center',
+    marginTop: normalize(24),
+  },
+  addPhotoButton: {
+    backgroundColor: '#8d8ff3',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    alignItems: 'center',
+    marginTop: normalize(8),
+  },
+  categoryButton: {
+    backgroundColor: '#8d8ff3',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    marginRight: normalize(8),
+  },
+  locationButton: {
+    backgroundColor: '#8d8ff3',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    marginTop: normalize(8),
   },
 });

@@ -1,15 +1,27 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, RefreshControl } from 'react-native';
 import { useService } from '../context/ServiceContext';
 import { useNavigation } from '@react-navigation/native';
 
 const ServiceList = () => {
   const { services, loading, error, deleteService, fetchServices } = useService();
   const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchServices();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchServices();
+    } catch (error) {
+      console.error('Error refreshing services:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -37,38 +49,65 @@ const ServiceList = () => {
     }
   };
 
-  const renderService = ({ item }) => (
-    <View style={styles.serviceCard}>
-      {item.imageUrl && (
-        <Image
-          source={{ uri: item.imageUrl }}
-          style={styles.serviceImage}
-        />
-      )}
-      <View style={styles.serviceInfo}>
-        <Text style={styles.serviceName}>{item.title}</Text>
-        <Text style={styles.serviceDescription}>{item.description}</Text>
-        <View style={styles.serviceDetails}>
-          <Text style={styles.servicePrice}>${item.price}</Text>
-          <Text style={styles.serviceType}>{item.serviceType}</Text>
-        </View>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ServiceForm', { id: item.id })}
-            style={styles.editButton}
-          >
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-            style={styles.deleteButton}
-          >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
+  const renderService = ({ item }) => {
+    console.log('Rendering service:', {
+      id: item.id,
+      name: item.name,
+      title: item.title,
+      imageUrl: item.imageUrl,
+      coverImage: item.coverImage,
+      fullItem: item
+    });
+
+    const imageUri = item.imageUrl || item.coverImage;
+    console.log('Image URI:', imageUri);
+
+    return (
+      <View style={styles.serviceCard}>
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.serviceImage}
+            resizeMode="cover"
+            onError={(error) => {
+              console.error('Image loading error:', {
+                serviceId: item.id,
+                serviceTitle: item.title,
+                imageUri,
+                error: error.nativeEvent
+              });
+            }}
+          />
+        ) : (
+          <View style={[styles.serviceImage, styles.placeholderImage]}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        <View style={styles.serviceInfo}>
+          <Text style={styles.serviceName}>{item.title || item.name}</Text>
+          <Text style={styles.serviceDescription}>{item.description}</Text>
+          <View style={styles.serviceDetails}>
+            <Text style={styles.servicePrice}>${item.price}</Text>
+            <Text style={styles.serviceType}>{item.serviceType}</Text>
+          </View>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ServiceForm', { id: item.id })}
+              style={styles.editButton}
+            >
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleDelete(item.id)}
+              style={styles.deleteButton}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -99,8 +138,14 @@ const ServiceList = () => {
         renderItem={renderService}
         keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContainer}
-        refreshing={loading}
-        onRefresh={fetchServices}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
       />
     </View>
   );
@@ -192,6 +237,15 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#ef4444',
+    fontSize: 16,
+  },
+  placeholderImage: {
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#666',
     fontSize: 16,
   },
 });

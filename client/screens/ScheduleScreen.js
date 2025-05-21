@@ -99,7 +99,7 @@ export default function ScheduleScreen({ navigation, route }) {
           ...prev,
           [route.params.selectedDate]: {
             selected: true,
-            selectedColor: '#5D5FEE'
+            selectedColor: '#8d8ff3'
           }
         }));
       }
@@ -112,7 +112,7 @@ export default function ScheduleScreen({ navigation, route }) {
       ...prev,
       [day.dateString]: {
         selected: true,
-        selectedColor: '#5D5FEE'
+        selectedColor: '#8d8ff3'
       }
     }));
   };
@@ -130,8 +130,8 @@ export default function ScheduleScreen({ navigation, route }) {
         theme={{
           selectedDayBackgroundColor: '#4CAF50',
           selectedDayTextColor: '#FFFFFF',
-          todayTextColor: '#5D5FEE',
-          arrowColor: '#5D5FEE',
+          todayTextColor: '#6C6FD1',
+          arrowColor: '#6C6FD1',
         }}
         markingType="custom"
       />
@@ -205,10 +205,10 @@ const styles = StyleSheet.create({
   myEventsText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#4f78f1',
+    color: '#6C6FD1',
   },
   seeAllText: {
-    color: '#4f78f1',
+    color: '#6C6FD1',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#4f78f1',
+    shadowColor: '#6C6FD1',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: normalize(2) },
     shadowRadius: normalize(4),
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   eventPrice: {
-    color: '#4f78f1',
+    color: '#6C6FD1',
     marginTop: normalize(2),
     fontWeight: 'bold',
     fontSize: normalize(13),
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   eventStatus: {
     fontSize: normalize(12),
-    color: '#4f78f1',
+    color: '#6C6FD1',
     marginTop: normalize(2)
   }
 });

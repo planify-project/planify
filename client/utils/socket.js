@@ -2,52 +2,38 @@ import { io } from 'socket.io-client';
 import { SOCKET_URL, SOCKET_CONFIG } from '../config';
 
 let socket = null;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = SOCKET_CONFIG.reconnectionAttempts;
 
-const initializeSocket = () => {
-  if (socket) return socket;
-
+export const initializeSocket = (userId) => {
+  if (socket?.connected) {
+    return socket;
+  }
+  
+  console.log('Initializing socket connection to:', SOCKET_URL);
+  
   socket = io(SOCKET_URL, {
-    transports: ['polling', 'websocket'],
-    reconnection: true,
-    reconnectionAttempts: SOCKET_CONFIG.reconnectionAttempts,
-    reconnectionDelay: SOCKET_CONFIG.reconnectionDelay,
-    timeout: SOCKET_CONFIG.timeout,
-    pingTimeout: SOCKET_CONFIG.pingTimeout,
-    pingInterval: SOCKET_CONFIG.pingInterval,
+    ...SOCKET_CONFIG,
     autoConnect: true,
-    forceNew: true
+    transports: ['websocket']
   });
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id);
-    reconnectAttempts = 0;
-  });
-
-  socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
-    reconnectAttempts++;
-    
-    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.error('Max reconnection attempts reached');
-      socket.disconnect();
+    console.log('Socket connected successfully');
+    if (userId) {
+      socket.emit('joinUserRoom', { userId });
     }
   });
 
-  socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason);
-    if (reason === 'io server disconnect') {
-      socket.connect();
-    }
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected');
   });
 
   return socket;
 };
 
-export const getSocket = () => {
-  if (!socket) {
-    return initializeSocket();
+export const getSocket = () => socket;
+export const disconnectSocket = () => {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
-  return socket;
-};
+}; 

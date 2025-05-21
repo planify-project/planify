@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useSocket } from '../../context/SocketContext';
 import { styles } from './styles';
 
 const HomeHeader = ({ 
@@ -11,6 +11,9 @@ const HomeHeader = ({
   onLocationPress, 
   onNotificationPress
 }) => {
+  const { notifications } = useSocket();
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   return (
     <View style={styles.header}>
       <View>
@@ -33,6 +36,13 @@ const HomeHeader = ({
           onPress={onNotificationPress}
         >
           <Ionicons name="notifications-outline" size={24} color="#000" />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>

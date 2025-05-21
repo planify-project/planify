@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { normalize } from '../../utils/scaling';
+// import { navigationRef } from '../../navigationRef';
 
 const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const tabs = [
@@ -12,7 +13,7 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const handleTabPress = (index, screen) => {
     onTabPress(index);
     if (screen === 'AllServicesScreen') {
-      navigation.getParent()?.navigate('Services');
+      navigation.navigate('Services');
     } else {
       navigation.navigate(screen);
     }
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     borderRadius: normalize(20),
   },
   activeTab: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
   },
   tabText: {
     fontSize: normalize(14),

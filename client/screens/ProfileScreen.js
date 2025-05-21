@@ -67,7 +67,7 @@ const ProfileScreen = ({ navigation }) => {
             />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={normalize(60)} color="#5D5FEE" />
+              <Ionicons name="person" size={normalize(60)} color="#6C6FD1" />
             </View>
           )}
         </View>
@@ -95,7 +95,7 @@ const ProfileScreen = ({ navigation }) => {
           style={[styles.menuItem, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('EditProfile')}
         >
-          <Ionicons name="person-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="person-outline" size={normalize(22)} color="#6C6FD1" />
           <View style={styles.menuItemText}>
             <Text style={[styles.menuItemTitle, { color: theme.text }]}>Edit Profile</Text>
             <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Update your personal information</Text>
@@ -107,7 +107,7 @@ const ProfileScreen = ({ navigation }) => {
           style={[styles.menuItem, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('ChangePassword')}
         >
-          <Ionicons name="lock-closed-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="lock-closed-outline" size={normalize(22)} color="#6C6FD1" />
           <View style={styles.menuItemText}>
             <Text style={[styles.menuItemTitle, { color: theme.text }]}>Change Password</Text>
             <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Update your password</Text>
@@ -119,7 +119,7 @@ const ProfileScreen = ({ navigation }) => {
           style={[styles.menuItem, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('NotificationSettings')}
         >
-          <Ionicons name="notifications-outline" size={normalize(22)} color="#5D5FEE" />
+          <Ionicons name="notifications-outline" size={normalize(22)} color="#6C6FD1" />
           <View style={styles.menuItemText}>
             <Text style={[styles.menuItemTitle, { color: theme.text }]}>Notification Settings</Text>
             <Text style={[styles.menuItemSubtitle, { color: theme.textSecondary }]}>Manage your notifications</Text>
