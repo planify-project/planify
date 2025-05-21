@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
-import { getImageUrl } from '../config/index';
+import { getImageUrl } from '../configs/url';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;

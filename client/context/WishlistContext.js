@@ -14,12 +14,21 @@ export const WishlistProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching wishlist...');
       const response = await api.get('/wishlist');
       console.log('Wishlist response:', response.data);
-      setWishlistItems(response.data);
+      
+      if (response.data.success) {
+        setWishlistItems(response.data.data || []);
+      } else {
+        setWishlistItems([]);
+        console.error('Failed to fetch wishlist:', response.data.message);
+        setError(response.data.message);
+      }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
-      setError(error.message || 'Error fetching wishlist');
+      setError(error.response?.data?.message || error.message || 'Error fetching wishlist');
+      setWishlistItems([]);
     } finally {
       setLoading(false);
     }
@@ -35,40 +44,46 @@ export const WishlistProvider = ({ children }) => {
         return;
       }
 
-      // Convert itemId to number for comparison
-      const numericItemId = Number(itemId);
-      const isInWishlist = wishlistItems.some(item => Number(item.item_id) === numericItemId);
-      console.log('Toggling wishlist item:', { itemId: numericItemId, itemType, isInWishlist });
+      // Convert itemId to string for comparison
+      const stringItemId = String(itemId);
+      const isInWishlist = wishlistItems.some(item => String(item.item_id) === stringItemId);
+      console.log('Toggling wishlist item:', { itemId: stringItemId, itemType, isInWishlist });
 
       if (isInWishlist) {
-        await api.delete(`/wishlist/${numericItemId}`);
-        setWishlistItems(prev => prev.filter(item => Number(item.item_id) !== numericItemId));
+        console.log('Removing from wishlist:', stringItemId);
+        const response = await api.delete(`/wishlist/${stringItemId}`);
+        if (response.data.success) {
+          setWishlistItems(prev => prev.filter(item => String(item.item_id) !== stringItemId));
+        } else {
+          throw new Error(response.data.message || 'Failed to remove from wishlist');
+        }
       } else {
         const data = {
-          item_id: numericItemId,
+          item_id: stringItemId,
           item_type: itemType || 'event'
         };
         console.log('Adding to wishlist with data:', data);
         const response = await api.post('/wishlist', data);
         console.log('Add to wishlist response:', response.data);
-        setWishlistItems(prev => [...prev, response.data]);
+        
+        if (response.data.success) {
+          setWishlistItems(prev => [...prev, response.data.data]);
+        } else {
+          throw new Error(response.data.message || 'Failed to add to wishlist');
+        }
       }
 
       // Refresh the wishlist after any change
       await fetchWishlist();
     } catch (error) {
       console.error('Error toggling wishlist item:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        setError(error.response.data.message || 'Error updating wishlist');
-      } else {
-        setError(error.message || 'Error updating wishlist');
-      }
+      setError(error.response?.data?.message || error.message || 'Error updating wishlist');
     }
   };
 
   const isInWishlist = (itemId) => {
-    return wishlistItems.some(item => Number(item.item_id) === Number(itemId));
+    if (!itemId) return false;
+    return wishlistItems.some(item => String(item.item_id) === String(itemId));
   };
 
   useEffect(() => {

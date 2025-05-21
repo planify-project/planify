@@ -194,9 +194,6 @@ const HOST = '0.0.0.0';
 
 const startServer = async () => {
   try {
-    // Sync database
-    await sequelize.sync({ alter: true });
-    console.log('Database synced successfully');
 
     // Start server
     server.listen(PORT, HOST, () => {

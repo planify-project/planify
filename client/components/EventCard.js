@@ -16,12 +16,15 @@ export default function EventCard({ image, title, location, price, rating, per, 
 
   const handleWishlistPress = (e) => {
     e.stopPropagation();
-    if (id && id !== 0) {
-      console.log('Toggling wishlist for event:', id);
-      toggleWishlistItem(id, 'event');
-    } else {
+    if (!id) {
       console.error('Invalid event ID for wishlist toggle:', id);
+      return;
     }
+    
+    // Convert id to string to match the database schema
+    const itemId = String(id);
+    console.log('Toggling wishlist for event:', itemId);
+    toggleWishlistItem(itemId, 'event');
   };
 
   return (

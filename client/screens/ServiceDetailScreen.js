@@ -7,7 +7,7 @@ import BookingModal from '../components/BookingModal';
 import { useSocket } from '../context/SocketContext';
 import { getAuth } from 'firebase/auth';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { getImageUrl } from '../config/index';
+import { getImageUrl } from '../configs/url';
 
 export default function ServiceDetailScreen({ route, navigation }) {
   const { theme } = useTheme();
