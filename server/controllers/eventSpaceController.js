@@ -68,3 +68,5 @@ exports.checkAvailability = async (req, res) => {
     res.status(500).json({ error: 'Failed to check availability' });
   }
 };
+
+// admin only 

@@ -418,6 +418,7 @@ function MainTabs() {
         tabBarActiveTintColor: '#5D5FEE',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
+        tabBarShowLabel: false, 
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />

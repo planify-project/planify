@@ -9,7 +9,7 @@ exports.getWishlist = async (req, res) => {
       include: [
         {
           model: Wishlist,
-          attributes: ['name']
+          attributes: ['id', 'name']
         }
       ],
       order: [['createdAt', 'DESC']] // Sort by newest first
@@ -67,15 +67,11 @@ exports.addToWishlist = async (req, res) => {
 
     // Fetch the complete wishlist item with its associated wishlist
     const completeWishlistItem = await WishlistItem.findOne({
-      where: { 
-        wishlist_id: wishlist.id,
-        item_id: item_id,
-        item_type: item_type
-      },
+      where: { id: wishlistItem.id },
       include: [
         {
           model: Wishlist,
-          attributes: ['name']
+          attributes: ['id', 'name']
         }
       ]
     });
@@ -109,4 +105,4 @@ exports.removeFromWishlist = async (req, res) => {
     console.error('Error removing from wishlist:', error);
     res.status(500).json({ message: error.message });
   }
-};
+}; 
