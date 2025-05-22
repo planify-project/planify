@@ -18,7 +18,7 @@ function HomeStack() {
               style={styles.notificationButton}
               onPress={() => navigation.navigate('Notifications')}
             >
-              <Ionicons name="notifications-outline" size={24} color="#5D5FEE" />
+              <Ionicons name="notifications-outline" size={24} color="#8d8ff3" />
               {unreadCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{unreadCount}</Text>

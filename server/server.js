@@ -168,7 +168,10 @@ io.engine.on("connection_error", (err) => {
   });
 });
 
-// API routes
+// Make io accessible to routes
+app.set('io', io);
+
+ // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/users', userRouter);

@@ -1,5 +1,5 @@
 // API Configuration
-const API_HOST = '192.168.132.126';
+const API_HOST = '192.168.1.189';
 const API_PORT = '3000';
 
 // Base URLs

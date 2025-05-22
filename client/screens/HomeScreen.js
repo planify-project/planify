@@ -175,10 +175,6 @@ export default function HomeScreen() {
         onCreateEvent={handleCreateEvent}
       />
 
-      <CreateEventButton
-        onPress={handleCreateEventPress}
-      />
-
       <HomeTabs
         activeTab={activeTab}
         onTabPress={(tabId) => {
@@ -206,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9'
   },
   allEventsButton: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     padding: normalize(12),
     borderRadius: normalize(8),
     alignItems: 'center',

@@ -99,7 +99,7 @@ export default function EventDetailScreen({ route }) {
           <Text style={styles.eventTitle}>{event.name}</Text>
           
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={normalize(16)} color="#4f78f1" />
+            <Ionicons name="location-outline" size={normalize(16)} color="#6C6FD1" />
             <Text style={styles.locationText}>{event.location}</Text>
           </View>
 
@@ -169,40 +169,42 @@ export default function EventDetailScreen({ route }) {
             )}
           />
         </View>
-      </ScrollView>
 
-
-
-            {/* Join Event Button */}
-      {/* <TouchableOpacity 
-        style={styles.joinBtn}
-        onPress={() => navigation.navigate('JoinEvent', { event })}
-      >
-        <Text style={styles.joinBtnText}>Join Event</Text>
-      </TouchableOpacity> */}
-      {/* Write Review Button */}
-<TouchableOpacity 
-  style={[styles.joinBtn, { backgroundColor: '#fff', top: normalize(20), bottom: undefined, borderWidth: 1, borderColor: '#4f78f1' }]}
-  onPress={() => {
-    console.log("😍😍😍😍😍",event);
-    navigation.navigate('Review', { event })}}
->
-  <Text style={[styles.joinBtnText, { color: '#4f78f1' }]}>Write a Review</Text>
-</TouchableOpacity>
-
-
-
-
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-          onPress={() => navigation.navigate('JoinEvent', { event })}
+        {/* Write Review Button */}
+        <TouchableOpacity 
+          style={[styles.joinBtn, { backgroundColor: '#fff', marginHorizontal: normalize(20), marginTop: normalize(20), marginBottom: normalize(20), borderWidth: 1, borderColor: '#6C6FD1' }]}
+          onPress={() => {
+            console.log("😍😍😍😍😍",event);
+            navigation.navigate('Review', { event })}}
         >
-          <Ionicons name="calendar-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Join Event</Text>
+          <Text style={[styles.joinBtnText, { color: '#6C6FD1' }]}>Write a Review</Text>
         </TouchableOpacity>
-      </View>
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+            onPress={() => navigation.navigate('JoinEvent', { event })}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Join Event</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+            onPress={() => {
+              // Extract numeric value from event.price (e.g., '20 DT' -> 20)
+              const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+              navigation.push('Payment', { 
+                amount: price,
+                eventId: event.id 
+              });
+            }}
+          >
+            <Ionicons name="card-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Pay & Join</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -291,9 +293,9 @@ const styles = StyleSheet.create({
     marginBottom: normalize(6),
   },
   price: {
-    fontSize: normalize(20),
+    color: '#6C6FD1',
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#4f78f1',
   },
   perText: {
     fontSize: normalize(14),
@@ -382,7 +384,7 @@ const styles = StyleSheet.create({
     marginRight: normalize(10),
   },
   joinBtn: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#6C6FD1',
     paddingVertical: normalize(16),
     borderRadius: normalize(30),
     position: 'absolute',

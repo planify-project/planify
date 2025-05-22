@@ -695,6 +695,21 @@ exports.registerForEvent = async (req, res) => {
       });
     }
 
+    // Check if user is already registered
+    const existingRegistration = await EventGuest.findOne({
+      where: {
+        event_id: eventId,
+        user_id: userId
+      }
+    });
+
+    if (existingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already registered for this event'
+      });
+    }
+
     // Create event guest record
     const eventGuest = await EventGuest.create({
       event_id: eventId,
@@ -704,9 +719,10 @@ exports.registerForEvent = async (req, res) => {
     });
 
     // Update event attendees count
+    const numAttendees = parseInt(attendees) || 1;
     await event.update({
-      attendees_count: (event.attendees_count || 0) + attendees,
-      available_spots: (event.available_spots || 0) - attendees
+      attendees_count: (event.attendees_count || 0) + numAttendees,
+      available_spots: Math.max(0, (event.available_spots || 0) - numAttendees)
     });
 
     res.status(201).json({

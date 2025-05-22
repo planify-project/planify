@@ -105,7 +105,7 @@ export default function EditProfileScreen({ navigation }) {
             <Image source={{ uri: photoURL }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={normalize(60)} color="#5D5FEE" />
+              <Ionicons name="person" size={normalize(60)} color="#8d8ff3" />
             </View>
           )}
           <View style={styles.editIconContainer}>
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
     width: normalize(36),
     height: normalize(36),
     borderRadius: normalize(18),
@@ -249,8 +249,10 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#8d8ff3',
+    borderRadius: normalize(8),
+    padding: normalize(16),
+     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5D5FEE',
     borderRadius: normalize(12),

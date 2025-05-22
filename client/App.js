@@ -64,7 +64,7 @@ const Tab = createBottomTabNavigator();
 
 const screenHeaderOptions = {
   headerShown: true,
-  headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+  headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
   headerTintColor: '#fff',
   headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
 };
@@ -118,7 +118,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Event Spaces",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -129,7 +129,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Space Details",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -145,7 +145,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Notifications",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -154,7 +154,7 @@ function HomeStack() {
         name="Popular Events"
         component={PopularEventsScreen}
         options={{ headerShown: true,
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 } }}
       />
@@ -164,7 +164,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "All Events",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -190,7 +190,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Agent Profile",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -201,7 +201,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "All Services",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -212,7 +212,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Add New Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -223,7 +223,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Service Details",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -234,7 +234,7 @@ function HomeStack() {
         options={{
           headerShown: true,
           headerTitle: "Write a Review",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -268,7 +268,7 @@ function ScheduleStack() {
         options={{
           headerShown: true,
           headerTitle: "All Events",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
@@ -297,7 +297,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "My Profile",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -308,7 +308,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "My Services",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -319,7 +319,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "Edit Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -330,7 +330,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "About",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -341,7 +341,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "Help & Support",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -352,7 +352,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "Privacy Policy",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -363,7 +363,7 @@ function SettingsStack() {
         options={{
           headerShown: true,
           headerTitle: "Notifications",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -382,7 +382,7 @@ function ServicesStack() {
         options={{
           headerShown: true,
           headerTitle: "All Services",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -393,7 +393,7 @@ function ServicesStack() {
         options={{
           headerShown: true,
           headerTitle: "Service Details",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -404,7 +404,7 @@ function ServicesStack() {
         options={{
           headerShown: true,
           headerTitle: "Add New Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -415,7 +415,7 @@ function ServicesStack() {
         options={{
           headerShown: true,
           headerTitle: "Edit Service",
-          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }} 
@@ -446,7 +446,7 @@ function MainTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#5D5FEE',
+        tabBarActiveTintColor: '#6C6FD1',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarShowLabel: false, 
@@ -488,7 +488,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -499,7 +499,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment Success",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -510,18 +510,18 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment Failed",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
         />
-                  <Stack.Screen 
+                   <Stack.Screen 
                     name="EventDetail" 
                     component={EventDetailScreen}
                     options={{
                       headerShown: true,
                       headerTitle: "Event Details",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                      headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
@@ -540,7 +540,7 @@ const AppContent = () => {
                     options={{
                       headerShown: true,
                       headerTitle: "All Events",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                      headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
@@ -551,7 +551,7 @@ const AppContent = () => {
                     options={{
                       headerShown: true,
                       headerTitle: "Join Event",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                      headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
@@ -562,7 +562,7 @@ const AppContent = () => {
                     options={{
                       headerShown: true,
                       headerTitle: "Write a Review",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                      headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
@@ -573,7 +573,7 @@ const AppContent = () => {
                     options={{
                       headerShown: true,
                       headerTitle: "Edit Profile",
-                      headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                      headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
                       headerTintColor: '#fff',
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
@@ -606,7 +606,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Add Service",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -617,7 +617,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Service Details",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -628,7 +628,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Edit Service",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}

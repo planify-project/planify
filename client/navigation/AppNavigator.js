@@ -31,7 +31,7 @@ const Tab = createBottomTabNavigator();
 
 const screenHeaderOptions = {
   headerShown: true,
-  headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+  headerStyle: { backgroundColor: '#8d8ff3', height: 80 },
   headerTintColor: '#fff',
   headerTitleStyle: { fontWeight: 'bold', fontSize: 22 },
 };
@@ -181,11 +181,11 @@ const MainTabs = () => {
             </View>
           );
         },
-        tabBarActiveTintColor: '#5D5FEE',
+        tabBarActiveTintColor: '#8d8ff3',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.background,
+          backgroundColor: '#8d8ff3',
           borderTopColor: theme.border,
         },
       })}
@@ -234,7 +234,7 @@ function RootStack() {
         options={{
           title: 'Booking Details',
           headerStyle: {
-            backgroundColor: '#5D5FEE',
+            backgroundColor: '#8d8ff3',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -248,7 +248,7 @@ function RootStack() {
         options={{
           title: 'Chat',
           headerStyle: {
-            backgroundColor: '#5D5FEE',
+            backgroundColor: '#8d8ff3',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {

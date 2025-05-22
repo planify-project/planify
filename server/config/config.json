@@ -3,7 +3,7 @@
     "username": "root",
     "password": "Sgdkkt123",
     "database": "planify",
-    "host": "192.168.132.126",
+    "host": "192.168.1.189",
     "dialect": "mysql",
     "logging": false
   },
@@ -11,7 +11,7 @@
     "username": "root",
     "password": "Sgdkkt123",
     "database": "planify",
-    "host": "192.168.132.126",
+    "host": "192.168.1.189",
     "dialect": "mysql",
     "logging": false
   },
@@ -19,7 +19,7 @@
     "username": "root",
     "password": "Sgdkkt123",
     "database": "planify",
-    "host": "192.168.132.126",
+    "host": "192.168.1.189",
     "dialect": "mysql",
     "logging": false
   }

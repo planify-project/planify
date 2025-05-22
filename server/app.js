@@ -23,6 +23,7 @@ const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 const AdminAuthRoutes = require('./routes/adminAuth.routes');
 const chatRoutes = require('./routes/chat.routes');
+const paymentsRoutes = require('./routes/payments');
  
 // Create Express app and HTTP server
 const app = express();
@@ -211,6 +212,7 @@ app.use('/api/services', servicesRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api', stripeRoutes);
+app.use('/api/payments', paymentsRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
@@ -236,7 +238,7 @@ server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
     `http://127.0.0.1:${PORT}`,
-    `http://192.168.132.126:${PORT}`
+    `http://192.168.1.189:${PORT}`
   ];
   
   console.log('\nServer running on:');
@@ -250,7 +252,7 @@ server.listen(PORT, HOST, () => {
   console.log('  - Transports: websocket, polling');
   console.log('  - Path: /socket.io/');
   console.log('  - CORS: enabled for all origins');
-  console.log(`Server running at http://192.168.132.126:${PORT}`);
+  console.log(`Server running at http://192.168.1.189:${PORT}`);
 });
 
 
