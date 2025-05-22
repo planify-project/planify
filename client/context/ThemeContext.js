@@ -8,8 +8,8 @@ export const ThemeProvider = ({ children }) => {
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   const theme = isDark
-    ? { background: '#181A20', text: '#fff', card: '#23262F', primary: '#5D5FEE' }
-    : { background: '#F4F6FC', text: '#222', card: '#fff', primary: '#5D5FEE' };
+    ? { background: '#181A20', text: '#fff', card: '#23262F', primary: '#6C6FD1' }
+    : { background: '#F4F6FC', text: '#222', card: '#fff', primary: '#6C6FD1' };
 
   return (
     <ThemeContext.Provider value={{ isDark, theme, toggleTheme }}>

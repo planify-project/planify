@@ -336,7 +336,7 @@ const ChatScreen = () => {
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#5D5FEE" />
+        <ActivityIndicator size="large" color="#8d8ff3" />
         <Text style={[styles.loadingText, { color: theme.text }]}>
           Loading chat...
         </Text>
@@ -385,7 +385,7 @@ const ChatScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#5D5FEE']}
+            colors={['#8d8ff3']}
           />
         }
         ListEmptyComponent={
@@ -419,7 +419,7 @@ const ChatScreen = () => {
           style={[
             styles.sendButton,
             { 
-              backgroundColor: newMessage.trim() ? '#5D5FEE' : '#E0E0E0',
+              backgroundColor: newMessage.trim() ? '#8d8ff3' : '#E0E0E0',
               opacity: newMessage.trim() ? 1 : 0.5
             }
           ]}
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   ownMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
     borderRadius: 15,
     padding: 10,
   },

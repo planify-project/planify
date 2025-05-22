@@ -14,6 +14,8 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { Calendar } from 'react-native-calendars';
 import { normalize } from '../utils/scaling';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomAlert from './CustomAlert';
 import api from '../configs/api';
 
 export default function EventSpaceBookingModal({ visible, onClose, onConfirm, loading, space }) {
@@ -93,6 +95,16 @@ export default function EventSpaceBookingModal({ visible, onClose, onConfirm, lo
             </TouchableOpacity>
           </View>
 
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your phone number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+              />
+            </View>
           <ScrollView style={styles.formContainer}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
               <View style={styles.inputGroup}>
@@ -203,7 +215,7 @@ export default function EventSpaceBookingModal({ visible, onClose, onConfirm, lo
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -249,6 +261,19 @@ const styles = StyleSheet.create({
     borderRadius: normalize(8),
     padding: normalize(12),
     fontSize: normalize(16),
+    backgroundColor: '#FAFBFF',
+    color: '#2A2A3C',
+  },
+  inputFocused: {
+    borderColor: '#8D8FF3',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#8D8FF3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  dateContainer: {
+    marginBottom: normalize(20),
     backgroundColor: '#f8f8f8',
   },
   messageInput: {
@@ -267,6 +292,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: normalize(8),
   },
+  dateButton: {
+    borderWidth: 1.5,
+    borderColor: 'rgba(141, 143, 243, 0.2)',
+    borderRadius: normalize(14),
+    padding: normalize(14),
+    backgroundColor: '#FAFBFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    fontSize: normalize(16),
+    color: '#2A2A3C',
+  },
+  dateIcon: {
+    marginLeft: normalize(8),
   cancelButton: {
     backgroundColor: '#f0f0f0',
   },
@@ -292,6 +333,10 @@ const styles = StyleSheet.create({
     height: normalize(50),
     width: '100%',
   },
+  confirmButton: {
+    backgroundColor: '#8D8FF3',
+    borderRadius: normalize(16),
+    padding: normalize(16),
   calendar: {
     borderRadius: normalize(8),
     marginBottom: normalize(8),

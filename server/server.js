@@ -165,6 +165,9 @@ io.engine.on("connection_error", (err) => {
   });
 });
 
+// Make io accessible to routes
+app.set('io', io);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
@@ -196,8 +199,23 @@ const startServer = async () => {
   try {
     // Start server
     server.listen(PORT, HOST, () => {
-      console.log(`Server running at http://${HOST}:${PORT}`);
-      console.log(`Local access: http://localhost:${PORT}`);
+      const urls = [
+        `http://localhost:${PORT}`,
+        `http://${HOST}:${PORT}`,
+        `http://192.168.132.232:${PORT}`
+      ];
+      
+      console.log('\nServer running on:');
+      urls.forEach(url => {
+        console.log(`\n${url}:`);
+        console.log(`  - Test endpoint: ${url}/test`);
+        console.log(`  - Health check: ${url}/health`);
+        console.log(`  - Socket.IO: ${url}/socket.io/`);
+      });
+      console.log('\nSocket.IO Configuration:');
+      console.log('  - Transports: websocket');
+      console.log('  - Path: /socket.io/');
+      console.log('  - CORS: enabled for all origins');
     });
   } catch (error) {
     console.error('Failed to start server:', error);
