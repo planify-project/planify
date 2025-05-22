@@ -1,5 +1,6 @@
 const { Conversation, User, Message } = require("../database");
 const { Op } = require("sequelize");
+const { sequelize } = require("../database");
 
 module.exports = {
     getAllConversations: async (req, res) => {
@@ -50,29 +51,83 @@ module.exports = {
     createConversation: async (req, res) => {
         try {
             const { senderId, receiverId } = req.body;
+            
+            if (!senderId || !receiverId) {
+                console.error('Missing required fields:', { senderId, receiverId });
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields: senderId and receiverId'
+                });
+            }
+
             console.log('Creating conversation between:', senderId, 'and', receiverId);
-            
-            const allConvs = await Conversation.findAll();
-            console.log('Existing conversations:', allConvs);
-            
-            const existingConversation = allConvs.find(conv => {
-                const members = Array.isArray(conv.members) ? conv.members : JSON.parse(conv.members);
-                return members.includes(senderId) && members.includes(receiverId) && members.length === 2;
+
+            // Check if users exist
+            const [sender, receiver] = await Promise.all([
+                User.findByPk(senderId),
+                User.findByPk(receiverId)
+            ]);
+
+            if (!sender || !receiver) {
+                console.error('Users not found:', { sender, receiver });
+                return res.status(404).json({
+                    success: false,
+                    message: 'One or both users not found'
+                });
+            }
+
+            // Find existing conversation
+            const existingConversation = await Conversation.findOne({
+                where: {
+                    members: {
+                        [Op.or]: [
+                            sequelize.literal(`JSON_CONTAINS(members, '["${senderId}", "${receiverId}"]')`),
+                            sequelize.literal(`JSON_CONTAINS(members, '["${receiverId}", "${senderId}"]')`)
+                        ]
+                    }
+                }
             });
             
             if (existingConversation) {
-                console.log('Found existing conversation:', existingConversation);
-                return res.status(200).json(existingConversation);
+                console.log('Found existing conversation:', existingConversation.id);
+                return res.status(200).json({
+                    success: true,
+                    data: existingConversation
+                });
             }
             
+            // Create new conversation with members as an array
             const newConversation = await Conversation.create({
-                members: [senderId, receiverId]
+                members: [senderId, receiverId],
+                lastMessage: null,
+                lastMessageTime: null
             });
-            console.log('Created new conversation:', newConversation);
-            res.status(201).json(newConversation);
+
+            if (!newConversation) {
+                throw new Error('Failed to create conversation');
+            }
+
+            console.log('Created new conversation:', newConversation.id);
+            
+            // Fetch the created conversation with all fields
+            const createdConversation = await Conversation.findByPk(newConversation.id, {
+                include: [{
+                    model: User,
+                    attributes: ['id', 'name', 'email', 'profilePic']
+                }]
+            });
+            
+            return res.status(201).json({
+                success: true,
+                data: createdConversation
+            });
         } catch (error) {
             console.error('Create conversation error:', error);
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to create conversation',
+                error: error.message
+            });
         }
     },
 
@@ -126,16 +181,18 @@ module.exports = {
         try {
             const { userId, otherUserId } = req.params;
             const conversation = await Conversation.findOne({
+                where: {
+                    members: {
+                        [Op.or]: [
+                            sequelize.literal(`JSON_CONTAINS(members, '["${userId}", "${otherUserId}"]')`),
+                            sequelize.literal(`JSON_CONTAINS(members, '["${otherUserId}", "${userId}"]')`)
+                        ]
+                    }
+                },
                 include: [{
                     model: User,
                     attributes: ['id', 'name', 'email', 'profilePic']
-                }],
-                where: {
-                    [Op.and]: [
-                        { '$Users.id$': userId },
-                        { '$Users.id$': otherUserId }
-                    ]
-                }
+                }]
             });
             if (!conversation) {
                 return res.status(404).json({ message: 'Conversation not found' });
@@ -150,22 +207,26 @@ module.exports = {
         try {
             const { userId, otherUserId } = req.params;
             const conversation = await Conversation.findOne({
-                include: [{
-                    model: User,
-                    attributes: ['id', 'name', 'email', 'profilePic']
-                }],
                 where: {
-                    [Op.and]: [
-                        { '$Users.id$': userId },
-                        { '$Users.id$': otherUserId }
-                    ]
+                    members: {
+                        [Op.or]: [
+                            sequelize.literal(`JSON_CONTAINS(members, '["${userId}", "${otherUserId}"]')`),
+                            sequelize.literal(`JSON_CONTAINS(members, '["${otherUserId}", "${userId}"]')`)
+                        ]
+                    }
                 }
             });
             if (!conversation) {
                 return res.status(404).json({ message: 'Conversation not found' });
             }
             const messages = await Message.findAll({
-                where: { conversationId: conversation.id }
+                where: { roomId: conversation.id },
+                include: [{
+                    model: User,
+                    as: 'sender',
+                    attributes: ['id', 'name', 'email', 'profilePic']
+                }],
+                order: [['createdAt', 'ASC']]
             });
             res.status(200).json(messages);
         } catch (error) {

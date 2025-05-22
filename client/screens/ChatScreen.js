@@ -15,20 +15,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
 import io from 'socket.io-client';
 import { API_BASE } from '../config';
-import { NotificationContext } from '../src/context/NotificationContext';
-import Toast from 'react-native-toast-message';
 
 // Extract base URL without /api
 const SOCKET_BASE = API_BASE.replace('/api', '');
 
-// Helper to get the base URL without /api
-const BASE_URL = API_BASE.replace('/api', '');
-
 export default function Chat({ route, navigation }) {
-  const { recipientId, recipientName, recipientProfilePic, itemTitle } = route.params;
+  const { recipientId, recipientName, recipientProfilePic } = route.params;
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -37,10 +32,10 @@ export default function Chat({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [socket, setSocket] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
+  const [receiverId, setReceiverId] = useState(null);
   const flatListRef = useRef(null);
-  const roomIdRef = useRef(null);
-  const[customReason, setCustomReason] = useState('');
-  const { notifications, markChatNotificationsAsRead } = React.useContext(NotificationContext);
+  const { user } = useAuth();
 
   const scrollToBottom = () => {
     if (flatListRef.current && messages.length > 0) {
@@ -81,20 +76,42 @@ export default function Chat({ route, navigation }) {
 
     const initializeChat = async () => {
       try {
-        const userId = await AsyncStorage.getItem('userUID');
-        if (!userId) {
+        if (!user?.uid) {
           console.error('No user ID found');
           setLoading(false);
           return;
         }
-        setCurrentUserId(userId);
 
-        // Create roomId before socket connection
-        const roomId = [userId, recipientId].sort().join('-');
-        roomIdRef.current = roomId;
-        console.log('Initializing chat with roomId:', roomId);
+        setCurrentUserId(user.uid);
+        setReceiverId(recipientId);
 
-        // Initialize socket connection with improved configuration
+        console.log('Initializing chat with:', {
+          senderId: user.uid,
+          receiverId: recipientId
+        });
+
+        // Create or get conversation
+        const conversationResponse = await axios.post(`${API_BASE}/conversations/create`, {
+          senderId: user.uid,
+          receiverId: recipientId
+        });
+        
+        console.log('Conversation response:', conversationResponse.data);
+
+        if (!conversationResponse.data.success) {
+          throw new Error(conversationResponse.data.message || 'Failed to create conversation');
+        }
+
+        const conversation = conversationResponse.data.data;
+        console.log('Conversation created/found:', conversation);
+
+        if (!conversation || !conversation.id) {
+          throw new Error('Invalid conversation data received');
+        }
+
+        setConversationId(conversation.id);
+
+        // Initialize socket connection
         const socketInstance = io(SOCKET_BASE, {
           transports: ['websocket'],
           reconnection: true,
@@ -102,119 +119,123 @@ export default function Chat({ route, navigation }) {
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
           timeout: 20000,
-          path: '/socket.io',
+          path: '/socket.io/',
           forceNew: true,
-          autoConnect: true
+          autoConnect: true,
+          query: {
+            userId: user.uid
+          }
         });
 
         // Handle connection events
         socketInstance.on('connect', () => {
-          console.log('Socket connected, joining room:', roomId);
-          // Join room after successful connection
-          socketInstance.emit('join_room', roomId, (response) => {
-            if (!response?.success) {
-              console.error('Failed to join room:', response?.error);
-              // Retry joining room if failed
-              setTimeout(() => {
-                socketInstance.emit('join_room', roomId);
-              }, 1000);
-            } else {
-              console.log('Successfully joined room:', roomId);
-            }
-          });
+          console.log('Socket connected');
+          // Join the conversation room immediately after connection
+          socketInstance.emit('join_room', conversation.id);
+          console.log('Joined room:', conversation.id);
         });
 
         socketInstance.on('connect_error', (error) => {
           console.error('Socket connection error:', error);
           // Attempt to reconnect with exponential backoff
           setTimeout(() => {
-            socketInstance.connect();
-          }, 2000);
+            if (!socketInstance.connected) {
+              socketInstance.connect();
+            }
+          }, Math.min(1000 * Math.pow(2, socketInstance.io.reconnectionAttempts), 5000));
         });
 
         socketInstance.on('disconnect', (reason) => {
           console.log('Socket disconnected:', reason);
           if (reason === 'transport error' || reason === 'transport close') {
-            // Attempt to reconnect immediately for transport errors
-            socketInstance.connect();
+            // Attempt to reconnect
+            setTimeout(() => {
+              if (!socketInstance.connected) {
+                socketInstance.connect();
+              }
+            }, 2000);
           }
         });
 
-        // Remove existing listeners
-        socketInstance.off('receive_message');
-        socketInstance.off('messages_read');
-
         // Listen for new messages
-        socketInstance.on('receive_message', (data, callback) => {
+        socketInstance.on('receive_message', (data) => {
           console.log('Received new message:', data);
-          setMessages(prevMessages => {
-            // Only add the message if it's not from the current user
-            // or if it's not already in the messages list
-            const isDuplicate = prevMessages.some(msg => 
-              msg.id === data.id || 
-              (msg._isLocal && msg.senderId === data.senderId && msg.text === data.text)
-            );
-            
-            if (!isDuplicate) {
-              const newMessages = [...prevMessages, data];
-              if (callback) callback({ success: true });
-              return newMessages;
-            }
-            return prevMessages;
-          });
+          if (isMounted) {
+            setMessages(prevMessages => {
+              const isDuplicate = prevMessages.some(msg => 
+                msg.id === data.id || 
+                (msg._isLocal && msg.senderId === data.senderId && msg.text === data.text)
+              );
+              
+              if (!isDuplicate) {
+                const newMessages = [...prevMessages, data];
+                console.log('Updated messages:', newMessages);
+                return newMessages;
+              }
+              return prevMessages;
+            });
+          }
         });
 
-        // Listen for message read status
-        socketInstance.on('messages_read', (data) => {
-          console.log('Messages marked as read:', data);
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              data.messageIds.includes(msg.id) 
-                ? { ...msg, isRead: true }
-                : msg
-            )
-          );
+        // Listen for message status updates
+        socketInstance.on('message_status_update', ({ messageId, status }) => {
+          console.log('Message status update:', { messageId, status });
+          if (isMounted) {
+            setMessages(prev => {
+              const updated = prev.map(msg => 
+                msg.id === messageId ? { ...msg, status } : msg
+              );
+              console.log('Updated message status:', updated);
+              return updated;
+            });
+          }
         });
 
         setSocket(socketInstance);
 
         // Fetch initial messages
-        console.log('Fetching messages for room:', roomId);
-        const response = await axios.get(`${API_BASE}/message/room/${roomId}`);
-        console.log('Received messages:', response.data);
-        setMessages(response.data);
+        try {
+          console.log('Fetching messages for conversation:', conversation.id);
+          const messagesResponse = await axios.get(`${API_BASE}/messages/room/${conversation.id}`);
+          
+          if (!messagesResponse.data.success) {
+            console.error('Failed to fetch messages:', messagesResponse.data.message);
+            // Continue without messages rather than failing completely
+            setMessages([]);
+          } else {
+            console.log('Successfully fetched messages:', messagesResponse.data.data.length);
+            setMessages(messagesResponse.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+          // Continue without messages rather than failing completely
+          setMessages([]);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error initializing chat:', error);
-        if (error.response) {
-          console.error('Error response:', error.response.data);
-        }
         setLoading(false);
-        // Show error to user
-        Toast.show({
-          type: 'error',
-          text1: 'Error loading chat',
-          text2: 'Please try again later'
-        });
+        Alert.alert(
+          'Error',
+          'Failed to initialize chat. Please try again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
       }
     };
 
-    // Initialize chat when component mounts
     initializeChat();
 
-    // Set up focus listener to reinitialize chat when screen is focused
-    const unsubscribe = navigation.addListener('focus', () => {
-      initializeChat();
-    });
-
     return () => {
-      isMounted = false;
-      unsubscribe();
       if (socket) {
         socket.off('receive_message');
-        socket.off('messages_read');
-        if (roomIdRef.current) {
-          socket.emit('leave_room', roomIdRef.current);
+        if (conversationId) {
+          socket.emit('leave_room', conversationId);
         }
         socket.disconnect();
       }
@@ -222,47 +243,54 @@ export default function Chat({ route, navigation }) {
   }, []);
 
   const sendMessage = async () => {
-    if (!message.trim() || !socket || !currentUserId) return;
+    if (!message.trim() || !socket || !currentUserId || !conversationId || !receiverId) {
+      console.log('Cannot send message:', {
+        message: message.trim(),
+        socket: !!socket,
+        currentUserId,
+        conversationId,
+        receiverId
+      });
+      return;
+    }
 
     try {
-      const roomId = roomIdRef.current;
-      console.log('Sending message to room:', roomId);
+      console.log('Sending message with data:', {
+        text: message,
+        roomId: conversationId,
+        senderId: currentUserId,
+        receiverId: receiverId
+      });
+
+      const messageData = {
+        text: message,
+        roomId: conversationId,
+        senderId: currentUserId,
+        receiverId: receiverId
+      };
 
       // Save message to database
-      const savedMessage = await axios.post(`${API_BASE}/message`, {
-        text: message,
-        isRead: false,
-        roomId,
-        senderId: currentUserId,
-        receiverId: recipientId
-      });
+      const response = await axios.post(`${API_BASE}/messages`, messageData);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to send message');
+      }
 
-      // Update local state immediately with delivered status
-      const messageWithStatus = {
-        ...savedMessage.data,
-        isDelivered: true,
-        _isLocal: true // Mark as local message
+      // Update local state immediately with the new message
+      const newMessage = {
+        ...response.data.data,
+        status: 'sent',
+        _isLocal: true
       };
       
-      // Add message to state
-      setMessages(prev => [...prev, messageWithStatus]);
+      setMessages(prev => [...prev, newMessage]);
       setMessage('');
 
-      // Emit message with acknowledgment
-      socket.emit('send_message', messageWithStatus, (response) => {
-        if (response && response.success) {
-          // Instead of removing the local flag, update the message with the server response
-          setMessages(prev => prev.map(msg => 
-            msg._isLocal && msg.text === messageWithStatus.text 
-              ? { ...response.data, isDelivered: true }
-              : msg
-          ));
-        } else {
-          console.error('Failed to send message:', response?.error || 'Unknown error');
-        }
-      });
+      // Emit message through socket
+      socket.emit('send_message', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
+      Alert.alert('Error', 'Failed to send message. Please try again.');
     }
   };
 
@@ -283,26 +311,37 @@ export default function Chat({ route, navigation }) {
         <Text style={styles.timestamp}>{displayTime}</Text>
         {isCurrentUser && (
           <Text style={styles.messageStatus}>
-            {item.isRead ? 'Seen' : 'Delivered'}
+            {item.status === 'read' ? 'Seen' : 
+             item.status === 'received' ? 'Delivered' : 
+             'Sent'}
           </Text>
         )}
       </View>
     );
   };
 
-  // Update message read status when messages are viewed
+  // Update message status when messages are viewed
   useEffect(() => {
-    if (socket && roomIdRef.current && messages.length > 0) {
+    if (socket && conversationId && messages.length > 0) {
       const unreadMessages = messages.filter(msg => 
-        !msg.isRead && 
+        msg.status === 'sent' && 
         msg.senderId !== currentUserId
       );
 
       if (unreadMessages.length > 0) {
-        console.log('Marking messages as read:', unreadMessages.map(m => m.id));
-        socket.emit('mark_as_read', {
-          roomId: roomIdRef.current,
-          messageIds: unreadMessages.map(msg => msg.id)
+        console.log('Marking messages as received:', unreadMessages.map(m => m.id));
+        unreadMessages.forEach(msg => {
+          // Update local state first
+          setMessages(prev => prev.map(m => 
+            m.id === msg.id ? { ...m, status: 'received' } : m
+          ));
+          
+          // Send status update to server
+          axios.patch(`${API_BASE}/messages/${msg.id}/status`, {
+            status: 'received'
+          }).catch(error => {
+            console.error('Error updating message status:', error);
+          });
         });
       }
     }
@@ -350,20 +389,6 @@ export default function Chat({ route, navigation }) {
     }
   };
 
-  // Mark chat notifications as read when messages load or change, but only if there are unread ones
-  useEffect(() => {
-    if (messages.length > 0 && markChatNotificationsAsRead && notifications) {
-      const messageIds = messages.map(m => m.id).filter(Boolean);
-      const unreadChatNotifs = notifications.filter(
-        n => n.itemType === 'chat' && !n.isRead && messageIds.includes(n.itemId)
-      );
-      if (unreadChatNotifs.length > 0) {
-        markChatNotificationsAsRead(messageIds);
-      }
-    }
-    // eslint-disable-next-line
-  }, [messages, notifications]);
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -397,7 +422,11 @@ export default function Chat({ route, navigation }) {
               placeholder="Type a message..."
               multiline
             />
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <TouchableOpacity 
+              style={[styles.sendButton, !message.trim() && styles.sendButtonDisabled]} 
+              onPress={sendMessage}
+              disabled={!message.trim()}
+            >
               <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -721,5 +750,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
   },
 });

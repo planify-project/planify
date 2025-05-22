@@ -233,7 +233,7 @@ function SettingsStack() {
         options={{ ...headerOptions, headerTitle: "Privacy Policy" }}
       />
       <Stack.Screen
-        name="Notifications"
+        name="SettingsNotifications"
         component={NotificationScreen}
         options={{ ...headerOptions, headerTitle: "Notifications" }}
       />

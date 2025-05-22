@@ -115,8 +115,9 @@ export default function ServiceDetailScreen({ route, navigation }) {
   const handleChat = () => {
     console.log('Chat button pressed');
     navigation.navigate('Chat', { 
-      senderId: auth.currentUser?.uid, // Assuming auth.currentUser contains the logged-in user's ID
-      receiverId: service.provider.id // Assuming provider.id is the receiver's ID
+      recipientId: service.provider_id,
+      recipientName: service.provider?.name || 'Service Provider',
+      recipientProfilePic: service.provider?.profile_picture || null
     });
   };
 

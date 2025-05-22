@@ -9,17 +9,17 @@ import {
   ActivityIndicator,
   StatusBar,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_BASE } from '../config';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function MessagesScreen({ navigation }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useContext(AuthContext);
-
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchConversations();
@@ -27,55 +27,82 @@ export default function MessagesScreen({ navigation }) {
 
   const fetchConversations = async () => {
     try {
-      const userId = user.uid;
-   console.log( 'userId:', userId );
-   
+      if (!user?.uid) {
+        console.error('No user ID found');
+        setLoading(false);
+        return;
+      }
 
-      const response = await axios.get(`${API_BASE}/conversation/user/${userId}`);
+      console.log('Fetching conversations for user:', user.uid);
+      const response = await axios.get(`${API_BASE}/conversations/user/${user.uid}`);
+      
+      if (!response.data) {
+        throw new Error('No data received from server');
+      }
+
       const conversationsData = response.data;
 
       // Get user details for each conversation
       const conversationsWithUsers = await Promise.all(
         conversationsData.map(async (conv) => {
-          const otherUserId = conv.members.find(id => id !== userId);
-          const userResponse = await axios.get(`${API_BASE}/user/getById/${otherUserId}`);
-          return {
-            ...conv,
-            otherUser: userResponse.data
-          };
+          try {
+            const members = Array.isArray(conv.members) ? conv.members : JSON.parse(conv.members);
+            const otherUserId = members.find(id => id !== user.uid);
+            if (!otherUserId) return null;
+
+            const userResponse = await axios.get(`${API_BASE}/users/${otherUserId}`);
+            return {
+              ...conv,
+              otherUser: userResponse.data
+            };
+          } catch (error) {
+            console.error('Error fetching user details:', error);
+            return null;
+          }
         })
       );
 
-      setConversations(conversationsWithUsers);
+      // Filter out any null conversations
+      const validConversations = conversationsWithUsers.filter(conv => conv !== null);
+      setConversations(validConversations);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      Alert.alert(
+        'Error',
+        'Failed to load conversations. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const renderConversationItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.conversationItem}
-      onPress={() => navigation.navigate('Chat', {
-        recipientId: item.otherUser.id,
-        recipientName: item.otherUser.name,
-        recipientProfilePic: item.otherUser.profilePic
-      })}
-    >
-      <Image
-        source={{ uri: item.otherUser.profilePic || 'https://via.placeholder.com/50' }}
-        style={styles.avatar}
-      />
-      <View style={styles.conversationInfo}>
-        <Text style={styles.userName}>{item.otherUser.name}</Text>
-        <Text style={styles.lastMessage} numberOfLines={1}>
-          {item.lastMessage || 'Start a conversation'}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color="#ccc" />
-    </TouchableOpacity>
-  );
+  const renderConversationItem = ({ item }) => {
+    if (!item.otherUser) return null;
+
+    return (
+      <TouchableOpacity
+        style={styles.conversationItem}
+        onPress={() => navigation.navigate('Chat', {
+          recipientId: item.otherUser.id,
+          recipientName: item.otherUser.name || 'Unknown User',
+          recipientProfilePic: item.otherUser.profilePic
+        })}
+      >
+        <Image
+          source={{ uri: item.otherUser.profilePic || 'https://via.placeholder.com/50' }}
+          style={styles.avatar}
+        />
+        <View style={styles.conversationInfo}>
+          <Text style={styles.userName}>{item.otherUser.name || 'Unknown User'}</Text>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {item.lastMessage || 'Start a conversation'}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="#ccc" />
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -106,7 +133,6 @@ export default function MessagesScreen({ navigation }) {
           <Text style={styles.emptySubtext}>
             Start chatting with other users to see your conversations here
           </Text>
-        
         </View>
       )}
     </View>

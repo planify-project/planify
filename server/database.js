@@ -145,45 +145,49 @@ Payment.belongsTo(Event, { foreignKey: 'event_id' });
 Service.hasMany(Payment, { foreignKey: 'service_id' });
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
 
-Conversation.hasMany(Message, { foreignKey: 'ConversationId' });
-Message.belongsTo(Conversation, { foreignKey: 'ConversationId' });
+// Message and Conversation associations
+User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages', onDelete: 'CASCADE' });
+User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages', onDelete: 'CASCADE' });
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+Message.belongsTo(Conversation, { foreignKey: 'roomId', as: 'conversation', onDelete: 'CASCADE' });
+Conversation.hasMany(Message, { foreignKey: 'roomId', as: 'messages' });
 
-User.belongsToMany(Conversation, { through: 'UserConversations', foreignKey: 'userId' });
-Conversation.belongsToMany(User, { through: 'UserConversations', foreignKey: 'ConversationId' });
-
-User.hasMany(Review, { foreignKey: 'reviewer_id' });
-Review.belongsTo(User, { foreignKey: 'reviewer_id' });
-
-Event.hasMany(Review, { foreignKey: 'event_id' });
-Review.belongsTo(Event, { foreignKey: 'event_id' });
-
-// Define relationships for the Message model
-
-User.hasMany(Message, { foreignKey: 'senderId' });
-Message.belongsTo(User, { foreignKey: 'senderId' });
+// User and Conversation associations
+User.belongsToMany(Conversation, { 
+    through: 'UserConversations', 
+    foreignKey: 'userId',
+    as: 'conversations'
+});
+Conversation.belongsToMany(User, { 
+    through: 'UserConversations', 
+    foreignKey: 'conversationId',
+    as: 'participants'
+});
 
 // Sync database with retry logic
-const syncWithRetry = async (retries = 3) => {
+const syncWithRetry = async () => {
     try {
-        // First sync the User model separately to handle the JSON column
-        await User.sync({ alter: true });
-        console.log('User model synchronized successfully.');
-
-        // Then sync all other models
+        // First sync the Conversation model
+        await Conversation.sync({ alter: true });
+        console.log('Conversation model synchronized successfully');
+        
+        // Then sync the Message model
+        await Message.sync({ alter: true });
+        console.log('Message model synchronized successfully');
+        
+        // Finally sync all other models
         await sequelize.sync({ alter: true });
-        // Import and run the event spaces seeder
-        // const seedEventSpaces = require('./seeds/eventSpaces');
-        // await seedEventSpaces();
-        // console.log('Event spaces seeded successfully!');
-        console.log('All models were synchronized successfully.');
+        console.log('All models synchronized successfully');
     } catch (error) {
-        if (retries > 0 && (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_LOCK_DEADLOCK')) {
-            console.log(`Deadlock detected, retrying... (${retries} attempts remaining)`);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            return syncWithRetry(retries - 1);
+        console.error('Error synchronizing database:', error);
+        if (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_JSON_USED_AS_KEY') {
+            console.log('Retrying sync without alter...');
+            await sequelize.sync({ force: false });
+            console.log('Database synchronized successfully without alter');
+        } else {
+            throw error;
         }
-        console.error('Error during database sync:', error);
-        process.exit(1);
     }
 };
 
