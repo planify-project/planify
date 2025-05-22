@@ -97,6 +97,12 @@ export default function AddServiceScreen({ navigation }) {
       return;
     }
 
+    // Validate image
+    if (!image) {
+      Alert.alert('Error', 'Please select an image for your service');
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -107,16 +113,15 @@ export default function AddServiceScreen({ navigation }) {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('price', priceNum.toString());
-      formData.append('serviceType', serviceType);
+      formData.append('service_type', serviceType);
       formData.append('provider_id', user.id);
       
-      if (image) {
-        formData.append('image', {
-          uri: image.uri,
-          type: 'image/jpeg',
-          name: 'photo.jpg'
-        });
-      }
+      // Add image to formData
+      formData.append('image', {
+        uri: image.uri,
+        type: 'image/jpeg',
+        name: 'photo.jpg'
+      });
 
       // Get the Firebase ID token
       const token = await Auth.currentUser.getIdToken();
@@ -125,8 +130,9 @@ export default function AddServiceScreen({ navigation }) {
         title,
         description,
         price: priceNum,
-        serviceType,
-        provider_id: user.id
+        service_type: serviceType,
+        provider_id: user.id,
+        image: image.uri
       });
 
       const response = await api.post('/services', formData, {
@@ -139,12 +145,12 @@ export default function AddServiceScreen({ navigation }) {
       console.log('Service creation response:', response.data);
 
       if (response.data.success) {
-      Alert.alert('Success', 'Service created successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('AllServices')
-        }
-      ]);
+        Alert.alert('Success', 'Service created successfully', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('AllServices')
+          }
+        ]);
       } else {
         throw new Error(response.data.message || 'Failed to create service');
       }

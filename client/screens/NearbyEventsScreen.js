@@ -1,4 +1,3 @@
-// screens/PopularEventsScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions
 } from 'react-native';
+import * as Location from 'expo-location';
 import axios from 'axios';
 import { API_BASE } from '../config';
 import EventCard from '../components/EventCard';
@@ -20,19 +20,38 @@ function normalize(size) {
   return Math.round(scale * size);
 }
 
-export default function PopularEventsScreen({ navigation }) {
+export default function NearbyEventsScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [location, setLocation] = useState(null);
 
-  const fetchPopularEvents = async () => {
+  const fetchNearbyEvents = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Fetching popular events from:', `${API_BASE}/events/popular`);
-      const response = await axios.get(`${API_BASE}/events/popular`);
-      
+
+      // Get user's location
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Location permission denied');
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      setLocation(location);
+
+      // Fetch nearby events
+      const response = await axios.get(`${API_BASE}/events/nearby`, {
+        params: {
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
+          radius: 50
+        }
+      });
+
       const formattedEvents = response.data.map(event => ({
         id: event.id || event._id,
         title: event.name,
@@ -49,23 +68,21 @@ export default function PopularEventsScreen({ navigation }) {
         maxParticipants: event.maxParticipants,
         available_spots: event.available_spots,
         budget: event.budget,
-        attendees_count: event.attendees_count,
         latitude: event.latitude,
         longitude: event.longitude,
       }));
 
-      console.log('Formatted popular events:', formattedEvents);
       setEvents(formattedEvents);
     } catch (err) {
-      console.error('Error fetching popular events:', err);
-      setError('Unable to load popular events');
+      console.error('Error fetching nearby events:', err);
+      setError('Unable to load nearby events');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPopularEvents();
+    fetchNearbyEvents();
   }, []);
 
   const renderEventCard = ({ item }) => (
@@ -87,7 +104,7 @@ export default function PopularEventsScreen({ navigation }) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchPopularEvents}>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchNearbyEvents}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -103,12 +120,12 @@ export default function PopularEventsScreen({ navigation }) {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Popular Events</Text>
+        <Text style={styles.title}>Nearby Events</Text>
       </View>
 
       {events.length === 0 ? (
         <View style={[styles.container, styles.centered]}>
-          <Text style={styles.noEventsText}>No popular events found</Text>
+          <Text style={styles.noEventsText}>No nearby events found</Text>
         </View>
       ) : (
         <FlatList
@@ -173,4 +190,4 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-});
+}); 

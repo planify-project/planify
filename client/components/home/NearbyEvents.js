@@ -104,7 +104,7 @@ const NearbyEvents = ({ navigation }) => {
     <>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Nearby Events</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
+        <TouchableOpacity onPress={() => navigation.navigate('NearbyEvents')}>
           <Text style={styles.seeAllText}>See all</Text>
         </TouchableOpacity>
       </View>

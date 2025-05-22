@@ -35,6 +35,9 @@ router.get('/:id', eventsController.getEventById);
 // POST /api/events
 router.post('/', eventsController.createEvent);
 
+// POST /api/events/register
+router.post('/register', eventsController.registerForEvent);
+
 // PUT /api/events/:id
 router.put('/:id', eventsController.updateEvent);
 

@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useStripe, CardField } from '@stripe/stripe-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { API_BASE } from '../config';
-import axios from 'axios';
+import { getAuth } from 'firebase/auth';
+import api from '../configs/api';
 
 const PaymentScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { confirmPayment } = useStripe();
   const [loading, setLoading] = useState(false);
-  const { amount, eventId } = route.params;
+  const { amount, eventId, serviceId, registrationData } = route.params;
+  const auth = getAuth();
 
   const handlePayment = async () => {
     try {
@@ -18,19 +19,23 @@ const PaymentScreen = () => {
       console.log('Starting payment process...');
       console.log('Amount:', amount);
       console.log('Event ID:', eventId);
+      console.log('Service ID:', serviceId);
+      
+      // Get user's database ID
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      if (!userResponse.data.success) {
+        throw new Error('Failed to get user data');
+      }
+      const dbUserId = userResponse.data.data.id;
       
       // Create payment intent
       console.log('Creating payment intent...');
-      const response = await axios.post(`${API_BASE}/payment`, {
-        amount: amount, // Send amount in dollars
+      const response = await api.post('/payment', {
+        amount: amount,
         currency: 'usd',
-        eventId: eventId
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        timeout: 15000 // 15 second timeout
+        eventId: eventId,
+        serviceId: serviceId,
+        userId: dbUserId
       });
 
       console.log('Payment intent response:', response.data);
@@ -38,7 +43,7 @@ const PaymentScreen = () => {
       
       if (error) {
         console.error('Payment intent error:', error);
-        Alert.alert('Error', error.message);
+        Alert.alert('Error', error);
         return;
       }
 
@@ -59,7 +64,23 @@ const PaymentScreen = () => {
         navigation.navigate('PaymentFailure', { message: confirmError.message });
       } else {
         console.log('Payment successful!');
-        navigation.navigate('PaymentSuccess');
+        
+        // If this is an event registration, complete the registration
+        if (eventId && registrationData) {
+          try {
+            // Register the user for the event
+            await api.post('/events/register', {
+              eventId,
+              userId: dbUserId,
+              ...registrationData
+            });
+          } catch (error) {
+            console.error('Error completing registration:', error);
+            Alert.alert('Warning', 'Payment successful but registration failed. Please contact support.');
+          }
+        }
+        
+        navigation.navigate('PaymentSuccess', { eventId });
       }
     } catch (err) {
       console.error('Payment error details:', {
@@ -78,7 +99,7 @@ const PaymentScreen = () => {
       } else if (err.response?.status === 500) {
         Alert.alert('Error', 'Server error. Please try again later.');
       } else {
-        Alert.alert('Error', err.response?.data?.message || err.message || 'An error occurred during payment.');
+        Alert.alert('Error', err.response?.data?.error || err.message || 'An error occurred during payment.');
       }
     } finally {
       setLoading(false);

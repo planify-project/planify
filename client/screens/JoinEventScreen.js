@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function JoinEventScreen({ route, navigation }) {
@@ -12,13 +12,35 @@ export default function JoinEventScreen({ route, navigation }) {
   const [scale] = useState(new Animated.Value(0));
 
   const handleConfirm = () => {
-    // Reset form fields
-    setAttendees(1);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setShowModal(false);
-    navigation.navigate('Home');
+    // Validate required fields
+    if (!name || !email || !phone) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    // Check if event is paid
+    const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+    if (price > 0) {
+      // Navigate to payment screen
+      navigation.navigate('Payment', {
+        amount: price * attendees,
+        eventId: event.id,
+        registrationData: {
+          name,
+          email,
+          phone,
+          attendees
+        }
+      });
+    } else {
+      // For free events, show success modal
+      setShowModal(true);
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true
+      }).start();
+    }
   };
 
   return (
@@ -90,15 +112,7 @@ export default function JoinEventScreen({ route, navigation }) {
 
       <TouchableOpacity 
         style={styles.confirmButton}
-        onPress={() => {
-          // Handle registration confirmation
-          setShowModal(true);
-          Animated.spring(scale, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true
-          }).start();
-        }}
+        onPress={handleConfirm}
       >
         <Text style={styles.confirmButtonText}>Confirm Registration</Text>
       </TouchableOpacity>
@@ -139,7 +153,16 @@ export default function JoinEventScreen({ route, navigation }) {
 
             <TouchableOpacity 
               style={styles.doneButton}
-              onPress={handleConfirm}
+              onPress={() => {
+                // Reset form fields
+                setAttendees(1);
+                setName('');
+                setEmail('');
+                setPhone('');
+                setShowModal(false);
+                // Navigate back to the event details screen
+                navigation.goBack();
+              }}
             >
               <Text style={styles.doneButtonText}>Done</Text>
             </TouchableOpacity>

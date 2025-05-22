@@ -1,5 +1,5 @@
 const db = require('../database');
-const { Event, User } = db;
+const { Event, User, EventGuest } = db;
 const { Op } = require('sequelize');
 
 // GET /api/events?page=1&limit=10
@@ -662,5 +662,64 @@ exports.getEventTypes = async (req, res) => {
     res.json({ types: types.map(t => t.type).filter(Boolean) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch event types', details: error.message });
+  }
+};
+
+exports.registerForEvent = async (req, res) => {
+  try {
+    const { eventId, userId, name, email, phone, attendees } = req.body;
+
+    // Validate required fields
+    if (!eventId || !userId || !name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Check if event exists
+    const event = await Event.findByPk(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Create event guest record
+    const eventGuest = await EventGuest.create({
+      event_id: eventId,
+      user_id: userId,
+      email: email,
+      rsvp_status: 'accepted'
+    });
+
+    // Update event attendees count
+    await event.update({
+      attendees_count: (event.attendees_count || 0) + attendees,
+      available_spots: (event.available_spots || 0) - attendees
+    });
+
+    res.status(201).json({
+      success: true,
+      data: eventGuest,
+      message: 'Successfully registered for event'
+    });
+  } catch (error) {
+    console.error('Error registering for event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to register for event',
+      error: error.message
+    });
   }
 };

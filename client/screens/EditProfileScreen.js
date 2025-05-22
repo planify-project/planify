@@ -5,18 +5,18 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Image,
-  Dimensions,
+  ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Auth } from '../configs/firebase_config';
 import { updateProfile } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import axios from 'axios';
+import api from '../configs/api';
 
 const { width } = Dimensions.get('window');
 const scale = width / 375;
@@ -43,7 +43,7 @@ export default function EditProfileScreen({ navigation }) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.1, // Very low quality to reduce size
+        quality: 0.8,
       });
 
       if (!result.canceled) {
@@ -78,7 +78,7 @@ export default function EditProfileScreen({ navigation }) {
 
       // Update user in database
       try {
-        await axios.put(`${API_BASE}/users/${user.uid}`, {
+        await api.put(`/users/${user.uid}`, {
           name: newName,
           ...(newPhotoURL && { photoURL: newPhotoURL })
         });
@@ -112,18 +112,22 @@ export default function EditProfileScreen({ navigation }) {
             <Ionicons name="camera" size={normalize(20)} color="#fff" />
           </View>
         </TouchableOpacity>
+        <Text style={styles.avatarText}>Tap to change photo</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter your name"
-            placeholderTextColor="#999"
-          />
+          <View style={styles.inputWrapper}>
+            <Ionicons name="person-outline" size={normalize(20)} color="#5D5FEE" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Enter your name"
+              placeholderTextColor="#999"
+            />
+          </View>
         </View>
 
         <TouchableOpacity
@@ -134,7 +138,10 @@ export default function EditProfileScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Update Profile</Text>
+            <>
+              <Ionicons name="save-outline" size={normalize(20)} color="#fff" />
+              <Text style={styles.buttonText}>Save Changes</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -145,18 +152,26 @@ export default function EditProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#fff',
-    padding: normalize(20),
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    padding: normalize(24),
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: normalize(24),
+    borderBottomRightRadius: normalize(24),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: normalize(15),
+    marginBottom: normalize(12),
   },
   avatar: {
     width: normalize(120),
@@ -183,32 +198,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  avatarText: {
+    fontSize: normalize(14),
+    color: '#666',
+    marginTop: normalize(8),
   },
   form: {
-    padding: normalize(20),
+    padding: normalize(24),
   },
   inputContainer: {
-    marginBottom: normalize(20),
+    marginBottom: normalize(24),
   },
   label: {
     fontSize: normalize(16),
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
     marginBottom: normalize(8),
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: normalize(8),
-    padding: normalize(12),
+    borderRadius: normalize(12),
+    paddingHorizontal: normalize(16),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  inputIcon: {
+    marginRight: normalize(12),
+  },
+  input: {
+    flex: 1,
     fontSize: normalize(16),
-    borderWidth: 1,
-    borderColor: '#ddd',
+    paddingVertical: normalize(14),
+    color: '#333',
   },
   button: {
-    backgroundColor: '#5D5FEE',
-    borderRadius: normalize(8),
-    padding: normalize(16),
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5D5FEE',
+    borderRadius: normalize(12),
+    padding: normalize(16),
+    shadowColor: '#5D5FEE',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   buttonDisabled: {
     opacity: 0.7,
@@ -217,5 +271,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: normalize(16),
     fontWeight: '600',
+    marginLeft: normalize(8),
   },
 }); 

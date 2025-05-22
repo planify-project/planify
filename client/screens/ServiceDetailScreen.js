@@ -260,7 +260,8 @@ export default function ServiceDetailScreen({ route, navigation }) {
         name: 'Payment',
         params: {
           amount: service.price,
-          eventId: null // or the appropriate event ID if needed
+          eventId: null,
+          serviceId: service.id
         }
       })
     );

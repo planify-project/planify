@@ -5,6 +5,7 @@ import { normalize } from '../utils/scaling';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUrl } from '../configs/url';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
@@ -51,9 +52,17 @@ const AllServicesScreen = ({ navigation }) => {
     }
   };
 
+  // Use useFocusEffect to refresh services when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadServices();
+    }, [])
+  );
+
   const renderServiceItem = ({ item }) => {
     console.log('Rendering service item:', item);
-    const imageUrl = getImageUrl(item.image_url);
+    // Get the image URL from the correct field
+    const imageUrl = item.imageUrl ? `http://192.168.132.126:3000${item.imageUrl}` : null;
     console.log('Service card image URL:', imageUrl);
     
     return (

@@ -1,12 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const PaymentSuccessScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { eventId } = route.params || {};
 
   const handleReturnHome = () => {
-    navigation.goBack();
+    if (eventId) {
+      // Navigate back to the event detail screen
+      navigation.navigate('EventDetail', { event: { id: eventId } });
+    } else {
+      navigation.goBack();
+    }
   };
 
   return (

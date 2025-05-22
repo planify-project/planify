@@ -4,8 +4,10 @@
     "slug": "planify",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,21 +20,23 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/LOGOLOGO.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.planify.app"
     },
     "web": {
-      "favicon": "./assets/LOGOLOGO.png"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-location"
     ],
-    "newArchEnabled": true
-  },
-  "extra": {
-    "STRIPE_PUBLISHABLE_KEY": "pk_test_51RO4rZCFiC25gcQ1k4TPSl46TGeLsebDfDuM2SXgE3bY0vukSGyW6tPztYv0c7LpxMekAirZtOygmId1ZRvpevvG007hrcgTw0",
-    "API_URL": "http://192.168.152.126:3000"
+    "newArchEnabled": true,
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      },
+      "API_URL": "http://192.168.132.126:3000"
+    }
   }
 } 

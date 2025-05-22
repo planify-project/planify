@@ -82,7 +82,7 @@ class ServicesController {
           'description', 
           'price', 
           'service_type', 
-          'image_url', 
+          'imageUrl', 
           'provider_id', 
           'location',
           'is_active',
@@ -92,6 +92,7 @@ class ServicesController {
       });
 
       console.log(`Found ${services.length} services`);
+      console.log('First service data:', services[0]?.toJSON());
       res.status(200).json(services);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -173,13 +174,13 @@ class ServicesController {
       }
 
       // Get image URL from uploaded file
-      const image_url = req.file ? `/uploads/services/${req.file.filename}` : null;
+      const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
 
       console.log('Creating service with data:', {
         title,
         description,
         price,
-        image_url,
+        imageUrl,
         service_type,
         location,
         provider_id
@@ -189,7 +190,7 @@ class ServicesController {
         title,
         description,
         price,
-        image_url,
+        imageUrl,
         service_type: service_type || 'general',
         location,
         provider_id,

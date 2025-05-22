@@ -1,25 +1,25 @@
 {
   "development": {
     "username": "root",
-    "password": null,
-    "database": "planify_db",
-    "host": "192.168.152.126",
+    "password": "Sgdkkt123",
+    "database": "planify",
+    "host": "192.168.132.126",
     "dialect": "mysql",
     "logging": false
   },
   "test": {
     "username": "root",
-    "password": null,
-    "database": "planify_db_test",
-    "host": "192.168.152.126",
+    "password": "Sgdkkt123",
+    "database": "planify",
+    "host": "192.168.132.126",
     "dialect": "mysql",
     "logging": false
   },
   "production": {
     "username": "root",
-    "password": null,
-    "database": "planify_db_prod",
-    "host": "192.168.152.126",
+    "password": "Sgdkkt123",
+    "database": "planify",
+    "host": "192.168.132.126",
     "dialect": "mysql",
     "logging": false
   }

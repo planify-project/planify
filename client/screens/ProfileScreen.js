@@ -14,6 +14,7 @@ import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
 import { getAuth, signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../configs/api';
 
 const { width } = Dimensions.get('window');
 
@@ -22,6 +23,8 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
   const auth = getAuth();
+  const [servicesCount, setServicesCount] = useState(0);
+  const [bookingsCount, setBookingsCount] = useState(0);
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -32,8 +35,45 @@ const ProfileScreen = ({ navigation }) => {
         photoURL: currentUser.photoURL,
       });
     }
-    setLoading(false);
+    fetchUserServicesCount();
+    fetchUserBookingsCount();
   }, []);
+
+  const fetchUserServicesCount = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/services/provider/${auth.currentUser.uid}`);
+      setServicesCount(response.data.length);
+    } catch (error) {
+      console.error('Error fetching services count:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserBookingsCount = async () => {
+    try {
+      // First get the user's database ID
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      if (!userResponse.data.success) {
+        throw new Error('Failed to get user data');
+      }
+      const dbUserId = userResponse.data.data.id;
+
+      // Fetch bookings where user is the client
+      const clientBookingsResponse = await api.get(`/bookings/user/${dbUserId}`);
+      const clientBookings = clientBookingsResponse.data.data || [];
+
+      // Fetch bookings where user is the service provider
+      const providerBookingsResponse = await api.get(`/bookings/provider/${dbUserId}`);
+      const providerBookings = providerBookingsResponse.data.data || [];
+
+      // Set total bookings count
+      setBookingsCount(clientBookings.length + providerBookings.length);
+    } catch (error) {
+      console.error('Error fetching bookings count:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -77,11 +117,11 @@ const ProfileScreen = ({ navigation }) => {
 
       <View style={styles.statsContainer}>
         <View style={[styles.statBox, { backgroundColor: theme.card }]}>
-          <Text style={[styles.statNumber, { color: theme.primary }]}>0</Text>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>{servicesCount}</Text>
           <Text style={[styles.statLabel, { color: theme.text }]}>Services</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: theme.card }]}>
-          <Text style={[styles.statNumber, { color: theme.primary }]}>0</Text>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>{bookingsCount}</Text>
           <Text style={[styles.statLabel, { color: theme.text }]}>Bookings</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: theme.card }]}>
@@ -130,30 +170,10 @@ const ProfileScreen = ({ navigation }) => {
 
       <View style={styles.menuContainer}>
         <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('MyServices')}
-        >
-          <Text style={[styles.menuText, { color: theme.text }]}>My Services</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('MyBookings')}
-        >
-          <Text style={[styles.menuText, { color: theme.text }]}>My Bookings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('Settings')}
-        >
-          <Text style={[styles.menuText, { color: theme.text }]}>Settings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.signOutButton, { backgroundColor: theme.error }]}
+          style={[styles.signOutButton, { backgroundColor: '#FF3B30' }]}
           onPress={handleSignOut}
         >
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
@@ -247,20 +267,21 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     padding: normalize(16),
-  },
-  menuText: {
-    fontSize: normalize(16),
+    marginTop: normalize(20),
   },
   signOutButton: {
-    padding: normalize(16),
-    borderRadius: normalize(8),
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: normalize(16),
+    justifyContent: 'center',
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    backgroundColor: '#FF3B30',
   },
   signOutText: {
     color: '#fff',
     fontSize: normalize(16),
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginLeft: normalize(8),
   },
 });
 

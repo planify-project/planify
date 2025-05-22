@@ -202,21 +202,6 @@ export default function EventDetailScreen({ route }) {
           <Ionicons name="calendar-outline" size={20} color="#fff" />
           <Text style={styles.actionButtonText}>Join Event</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#5D5FEE' }]}
-          onPress={() => {
-            // Extract numeric value from event.price (e.g., '20 DT' -> 20)
-            const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
-            navigation.push('Payment', { 
-              amount: price,
-              eventId: event.id 
-            });
-          }}
-        >
-          <Ionicons name="card-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Pay & Join</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

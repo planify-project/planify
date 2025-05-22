@@ -5,6 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
 import { SocketProvider } from './context/SocketContext';
+import { NotificationProvider, useNotifications } from './context/NotificationContext';
+import Toast from './components/Toast';
 
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -49,6 +51,7 @@ import PaymentFailureScreen from './screens/PaymentFailureScreen';
 import FullScreenMap from './screens/FullScreenMap';
 import MyServicesScreen from './screens/MyServicesScreen';
 import ServicesScreen from './screens/ServicesScreen';
+import NearbyEventsScreen from './screens/NearbyEventsScreen';
 
 import { AuthProvider, AuthContext, useAuth } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -96,6 +99,17 @@ function HomeStack() {
           ),
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#22223B',
+        }}
+      />
+      <Stack.Screen
+        name="NearbyEvents"
+        component={NearbyEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Nearby Events",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
       <Stack.Screen
@@ -449,6 +463,7 @@ function MainTabs() {
 
 const AppContent = () => {
   const { user } = useAuth();
+  const { toast, hideToast } = useNotifications();
 
   useEffect(() => {
     if (user) {
@@ -492,7 +507,7 @@ const AppContent = () => {
         <Stack.Screen 
           name="PaymentFailure" 
           component={PaymentFailureScreen}
-          options={{ 
+          options={{
             headerShown: true,
             headerTitle: "Payment Failed",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
@@ -500,180 +515,6 @@ const AppContent = () => {
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
         />
-        <Stack.Screen 
-          name="EventDetail" 
-          component={EventDetailScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Event Details",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="Chat" 
-          component={ChatScreen}
-          options={{ 
-            headerShown: true,
-            headerTitle: "Chat",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="AllEvents" 
-          component={AllEventsScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "All Events",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="JoinEvent" 
-          component={JoinEventWrapper}
-          options={{
-            headerShown: true,
-            headerTitle: "Join Event",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="EditProfile" 
-          component={EditProfileScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Edit Profile",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="AllServices" 
-          component={AllServicesScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "My Services",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="AddService" 
-          component={AddServiceScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Add Service",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="ServiceDetail" 
-          component={ServiceDetailScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Service Details",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="EditService" 
-          component={EditServiceScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Edit Service",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen 
-          name="Notifications" 
-          component={NotificationScreen}
-          options={{
-            title: 'Notifications',
-            headerStyle: {
-              backgroundColor: '#f4511e',
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-};
-
-// Main App Component
-export default function App() {
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      if (!state.isConnected) {
-        console.warn('No internet connection. Some features may be limited.');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
-      <ThemeProvider>
-        <SocketProvider>
-          <AuthProvider>
-            <WishlistProvider>
-              <NavigationContainer>
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="Root" component={MainTabs} />
-                  <Stack.Screen name="Auth" component={AuthNavigator} />
-                    <Stack.Screen 
-                      name="Payment" 
-                      component={PaymentScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen 
-                      name="PaymentSuccess" 
-                      component={PaymentSuccessScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment Success",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen 
-                      name="PaymentFailure" 
-                      component={PaymentFailureScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment Failed",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
                   <Stack.Screen 
                     name="EventDetail" 
                     component={EventDetailScreen}
@@ -737,10 +578,108 @@ export default function App() {
                       headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                     }}
                   />
+        <Stack.Screen 
+          name="Chat" 
+          component={ChatScreen}
+          options={{ 
+            headerShown: true,
+            headerTitle: "Chat",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="AllServices" 
+          component={AllServicesScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "All Services",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="AddService" 
+          component={AddServiceScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Add Service",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="ServiceDetail" 
+          component={ServiceDetailScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Service Details",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="EditService" 
+          component={EditServiceScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Edit Service",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen 
+          name="Notifications" 
+          component={NotificationScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Notifications",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
                 </Stack.Navigator>
+      <Toast
+        visible={toast.visible}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
               </NavigationContainer>
+  );
+};
+
+// Main App Component
+export default function App() {
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (!state.isConnected) {
+        console.warn('No internet connection. Some features may be limited.');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+        <ThemeProvider>
+          <SocketProvider>
+            <NotificationProvider>
+              <AuthProvider>
+                <WishlistProvider>
+                  <AppContent />
             </WishlistProvider>
           </AuthProvider>
+            </NotificationProvider>
         </SocketProvider>
       </ThemeProvider>
       </StripeProvider>
