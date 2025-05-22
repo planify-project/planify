@@ -95,16 +95,6 @@ export default function EventSpaceBookingModal({ visible, onClose, onConfirm, lo
             </TouchableOpacity>
           </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Phone Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your phone number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
           <ScrollView style={styles.formContainer}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
               <View style={styles.inputGroup}>
@@ -308,6 +298,7 @@ const styles = StyleSheet.create({
   },
   dateIcon: {
     marginLeft: normalize(8),
+  },
   cancelButton: {
     backgroundColor: '#f0f0f0',
   },
@@ -337,6 +328,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8D8FF3',
     borderRadius: normalize(16),
     padding: normalize(16),
+  },
   calendar: {
     borderRadius: normalize(8),
     marginBottom: normalize(8),
@@ -362,4 +354,110 @@ const styles = StyleSheet.create({
     fontSize: normalize(12),
     color: '#444',
   },
+  confirmButtonText: {
+    color: 'white',
+    fontSize: normalize(17),
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  spaceInfoContainer: {
+    backgroundColor: 'rgba(141, 143, 243, 0.08)',
+    borderRadius: normalize(16),
+    padding: normalize(16),
+    marginBottom: normalize(24),
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  spaceImage: {
+    width: normalize(60),
+    height: normalize(60),
+    borderRadius: normalize(12),
+    marginRight: normalize(12),
+  },
+  spaceInfoText: {
+    flex: 1,
+  },
+  spaceName: {
+    fontSize: normalize(16),
+    fontWeight: '600',
+    color: '#2A2A3C',
+    marginBottom: normalize(4),
+  },
+  spacePrice: {
+    fontSize: normalize(14),
+    color: '#8D8FF3',
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(141, 143, 243, 0.15)',
+    marginVertical: normalize(20),
+  },
+  bookingSummary: {
+    backgroundColor: 'rgba(141, 143, 243, 0.08)',
+    borderRadius: normalize(16),
+    padding: normalize(16),
+    marginTop: normalize(16),
+    marginBottom: normalize(20),
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: normalize(8),
+  },
+  summaryLabel: {
+    fontSize: normalize(14),
+    color: '#4A4A65',
+  },
+  summaryValue: {
+    fontSize: normalize(14),
+    color: '#2A2A3C',
+    fontWeight: '600',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: normalize(8),
+    paddingTop: normalize(8),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(141, 143, 243, 0.2)',
+  },
+  totalLabel: {
+    fontSize: normalize(16),
+    color: '#2A2A3C',
+    fontWeight: '600',
+  },
+  totalValue: {
+    fontSize: normalize(18),
+    color: '#8D8FF3',
+    fontWeight: '700',
+  },
+  errorText: {
+    color: '#FF3B5E',
+    fontSize: normalize(14),
+    marginTop: normalize(4),
+    marginLeft: normalize(4),
+  },
+  loadingIndicator: {
+    marginRight: normalize(8),
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarIcon: {
+    position: 'absolute',
+    right: normalize(14),
+    color: '#8D8FF3',
+  },
+  phoneIcon: {
+    position: 'absolute',
+    left: normalize(14),
+    top: normalize(14),
+    color: '#8D8FF3',
+  },
+  inputWithIcon: {
+    paddingLeft: normalize(40),
+  }
 });

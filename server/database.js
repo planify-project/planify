@@ -164,11 +164,11 @@ Review.belongsTo(Event, { foreignKey: 'event_id' });
 const syncWithRetry = async (retries = 3) => {
     try {
         // First sync the User model separately to handle the JSON column
-        await User.sync({ alter: true });
+        await User.sync({ force: true });
         console.log('User model synchronized successfully.');
 
     // Then sync all other models
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: true });
     console.log('All models were synchronized successfully.');
 
         // Import and run the event spaces seeder
@@ -187,7 +187,7 @@ const syncWithRetry = async (retries = 3) => {
 };
 
 // Run the sync
-syncWithRetry();
+// syncWithRetry();
 
 // Export all models and sequelize instance
 module.exports = {
