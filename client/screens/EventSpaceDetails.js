@@ -1,18 +1,186 @@
-import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { normalize } from '../utils/scaling';
 import { getAuth } from 'firebase/auth';
 import api from '../configs/api';
 import EventSpaceBookingModal from '../components/EventSpaceBookingModal';
+import { Calendar } from 'react-native-calendars';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, push, onValue } from 'firebase/database';
 
 const { width } = Dimensions.get('window');
+
+const ScheduleTooltip = ({ visible, availability }) => {
+  if (!visible) return null;
+
+  return (
+    <View style={styles.tooltipContainer}>
+      <View style={styles.tooltipArrow} />
+      <View style={styles.tooltipContent}>
+        <Calendar
+          markedDates={availability}
+          minDate={new Date().toISOString().split('T')[0]}
+          theme={{
+            todayTextColor: '#5D5FEE',
+            arrowColor: '#5D5FEE',
+            textMonthFontSize: normalize(14),
+            textDayHeaderFontSize: normalize(12),
+            textDayFontSize: normalize(12),
+            'stylesheet.calendar.header': {
+              dayTextAtIndex0: {
+                color: '#FF3B30'
+              },
+              dayTextAtIndex6: {
+                color: '#FF3B30'
+              }
+            }
+          }}
+          style={styles.tooltipCalendar}
+          hideExtraDays={true}
+          disableAllTouchEvents={true}
+        />
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
+            <Text style={styles.legendText}>Available</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#FF3B30' }]} />
+            <Text style={styles.legendText}>Unavailable</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function EventSpaceDetails({ route, navigation }) {
   const { space } = route.params;
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [availability, setAvailability] = useState({});
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [showScheduleTooltip, setShowScheduleTooltip] = useState(false);
   const auth = getAuth();
+
+  // Initialize Firebase Realtime Database
+  const db = getDatabase();
+  const notificationsRef = ref(db, 'notifications');
+
+  useEffect(() => {
+    fetchAvailability();
+    // Listen for real-time notifications
+    const unsubscribe = onValue(notificationsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Handle new notifications
+        Object.values(data).forEach(notification => {
+          if (notification.type === 'BOOKING_STATUS_UPDATE' && 
+              notification.bookingId === currentBookingId) {
+            handleBookingStatusUpdate(notification);
+          }
+        });
+      }
+    });
+
+    return () => {
+      // Cleanup subscription
+      unsubscribe();
+    };
+  }, []);
+
+  const fetchAvailability = async () => {
+    setLoadingAvailability(true);
+    try {
+      const today = new Date();
+      const thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+
+      // Format dates to YYYY-MM-DD
+      const startDate = today.toISOString().split('T')[0];
+      const endDate = thirtyDaysLater.toISOString().split('T')[0];
+
+      const response = await api.get(`/event-spaces/${space.id}/availability`, {
+        params: {
+          startDate,
+          endDate
+        }
+      });
+
+      if (response?.data?.success) {
+        const markedDates = {};
+        Object.entries(response.data.data).forEach(([date, info]) => {
+          markedDates[date] = {
+            marked: true,
+            dotColor: info.available ? '#4CAF50' : '#FF3B30',
+            disabled: !info.available,
+            price: info.price,
+            amenities: info.amenities
+          };
+        });
+        setAvailability(markedDates);
+      } else {
+        // If no availability data, set all dates as available
+        const defaultAvailability = {};
+        let currentDate = new Date(today);
+        while (currentDate <= thirtyDaysLater) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          defaultAvailability[dateStr] = {
+            marked: true,
+            dotColor: '#4CAF50',
+            disabled: false,
+            price: space.price
+          };
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        setAvailability(defaultAvailability);
+      }
+    } catch (error) {
+      // If API fails, set all dates as available
+      const defaultAvailability = {};
+      const today = new Date();
+      const thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+      
+      let currentDate = new Date(today);
+      while (currentDate <= thirtyDaysLater) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        defaultAvailability[dateStr] = {
+          marked: true,
+          dotColor: '#4CAF50',
+          disabled: false,
+          price: space.price
+        };
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      setAvailability(defaultAvailability);
+    } finally {
+      setLoadingAvailability(false);
+    }
+  };
+
+  useEffect(() => {
+    if (space?.id) {
+      fetchAvailability();
+    }
+  }, [space?.id]);
+
+  const handleBookingStatusUpdate = (notification) => {
+    if (notification.status === 'approved') {
+      Alert.alert(
+        'Booking Approved',
+        'Your booking request has been approved!',
+        [{ text: 'OK' }]
+      );
+    } else if (notification.status === 'rejected') {
+      Alert.alert(
+        'Booking Rejected',
+        'Your booking request has been rejected.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   const handleBooking = async (bookingData) => {
     if (!auth.currentUser) {
@@ -20,42 +188,76 @@ export default function EventSpaceDetails({ route, navigation }) {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-
+      // Get user ID from Firebase UID
       const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
-      if (!userResponse.data.success) {
-        throw new Error('Failed to get user data');
+
+      if (!userResponse?.data?.success) {
+        Alert.alert('Error', userResponse?.data?.message || 'Unable to verify user account');
+        return;
       }
 
       const dbUserId = userResponse.data.data.id;
 
+      // Parse the date string from the modal into a Date object
+      const bookingDate = new Date(bookingData.date);
+
+      // Prepare booking data
       const bookingPayload = {
         userId: dbUserId,
         eventSpaceId: space.id,
-        startDate: bookingData.startDate.toISOString(),
-        endDate: bookingData.endDate.toISOString(),
+        // Use the parsed Date object for start and end dates
+        startDate: bookingDate.toISOString(),
+        endDate: bookingDate.toISOString(),
         phoneNumber: bookingData.phoneNumber,
-        status: 'pending'
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        totalPrice: space.price,
+        numberOfGuests: bookingData.numberOfGuests || 1,
+        specialRequests: bookingData.specialRequests || ''
       };
 
+      // Submit booking
       const response = await api.post('/event-spaces/bookings', bookingPayload);
 
-      if (response.data.success) {
+      if (response?.data?.success) {
+        const bookingId = response.data.data.id;
+
+        // Create notification for admin
+        const notificationData = {
+          type: 'NEW_BOOKING_REQUEST',
+          title: 'New Booking Request',
+          message: `New booking request for ${space.name} from ${bookingDate.toLocaleDateString()} to ${bookingDate.toLocaleDateString()}`,
+          bookingId: bookingId,
+          eventSpaceId: space.id,
+          userId: dbUserId,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          userEmail: auth.currentUser.email,
+          spaceName: space.name,
+          price: space.price
+        };
+
+        // Send notification
+        try {
+          await api.post('/notifications/admin', notificationData);
+        } catch (notificationError) {
+          // Log notification error but continue
+          console.error('Notification failed:', notificationError);
+        }
+
         Alert.alert(
           'Success',
-          'Your booking request has been sent successfully!',
+          'Your booking request has been sent successfully! The admin will review it shortly.',
           [{ text: 'OK', onPress: () => setShowBookingModal(false) }]
         );
       } else {
-        throw new Error(response.data.message || 'Failed to create booking');
+        Alert.alert('Error', response?.data?.message || 'Failed to submit booking request');
       }
     } catch (error) {
-      console.error('Booking error:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || error.message || 'Failed to create booking. Please try again.'
-      );
+      console.error('Booking submission error:', error);
+      Alert.alert('Error', 'An error occurred while submitting your booking request. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -106,15 +308,54 @@ export default function EventSpaceDetails({ route, navigation }) {
           </View>
         </View>
 
-        {/* Availability */}
+        {/* Availability Calendar */}
         <View style={styles.availabilityContainer}>
-          <Text style={styles.sectionTitle}>Availability</Text>
-          {space.availability && Object.entries(space.availability).map(([day, hours]) => (
-            <View key={day} style={styles.availabilityRow}>
-              <Text style={styles.dayText}>{day}</Text>
-              <Text style={styles.hoursText}>{hours}</Text>
+          <View style={styles.sectionTitleContainer}>
+            <TouchableOpacity
+              onPress={() => setShowScheduleTooltip(!showScheduleTooltip)}
+              style={styles.titleButton}
+            >
+              <Text style={styles.sectionTitle}>Availability</Text>
+              <Ionicons 
+                name={showScheduleTooltip ? "chevron-up" : "chevron-down"} 
+                size={normalize(20)} 
+                color="#5D5FEE" 
+                style={styles.titleIcon}
+              />
+            </TouchableOpacity>
+            <ScheduleTooltip 
+              visible={showScheduleTooltip} 
+              availability={availability}
+            />
+          </View>
+          {loadingAvailability ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#5D5FEE" />
+              <Text style={styles.loadingText}>Restoring availability... Please wait while we reload the schedule. The calendar will soon display the available and unavailable days again.</Text>
             </View>
-          ))}
+          ) : (
+            <>
+              <Calendar
+                markedDates={availability}
+                minDate={new Date().toISOString().split('T')[0]}
+                theme={{
+                  todayTextColor: '#5D5FEE',
+                  arrowColor: '#5D5FEE',
+                }}
+                style={styles.calendar}
+              />
+              <View style={styles.legendContainer}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
+                  <Text style={styles.legendText}>Available</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#FF3B30' }]} />
+                  <Text style={styles.legendText}>Unavailable</Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Gallery */}
@@ -134,10 +375,15 @@ export default function EventSpaceDetails({ route, navigation }) {
 
       {/* Book Button */}
       <TouchableOpacity 
-        style={styles.bookButton}
+        style={[styles.bookButton, loading && styles.bookButtonDisabled]}
         onPress={() => setShowBookingModal(true)}
+        disabled={loading}
       >
-        <Text style={styles.bookButtonText}>Book This Space</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.bookButtonText}>Book This Space</Text>
+        )}
       </TouchableOpacity>
 
       <EventSpaceBookingModal
@@ -435,7 +681,85 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2A2A3C',
     marginBottom: normalize(16),
-    letterSpacing: 0.2,
+    transition: 'color 0.2s ease',
+    '&:hover': {
+      color: '#5D5FEE',
+    },
+  },
+  sectionTitleContainer: {
+    position: 'relative',
+    marginBottom: normalize(16),
+  },
+  titleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: normalize(8),
+  },
+  titleIcon: {
+    marginLeft: normalize(8),
+  },
+  tooltipContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    backgroundColor: '#fff',
+    borderRadius: normalize(8),
+    padding: normalize(12),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    marginTop: normalize(8),
+  },
+  tooltipArrow: {
+    position: 'absolute',
+    top: -8,
+    left: 20,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#fff',
+  },
+  tooltipContent: {
+    padding: normalize(8),
+  },
+  tooltipCalendar: {
+    borderRadius: normalize(8),
+    marginBottom: normalize(8),
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: normalize(20),
+    marginTop: normalize(8),
+    paddingTop: normalize(8),
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: normalize(8),
+    height: normalize(8),
+    borderRadius: normalize(4),
+    marginRight: normalize(4),
+  },
+  legendText: {
+    fontSize: normalize(12),
+    color: '#666',
   },
   amenitiesContainer: {
     marginBottom: normalize(28),
@@ -464,22 +788,23 @@ const styles = StyleSheet.create({
   availabilityContainer: {
     marginBottom: normalize(28),
   },
-  availabilityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: normalize(12),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(141, 143, 243, 0.1)',
+  calendar: {
+    borderRadius: 10,
+    marginBottom: 16,
   },
-  dayText: {
-    fontSize: normalize(15),
-    color: '#2A2A3C',
-    fontWeight: '600',
+  loadingContainer: {
+    padding: normalize(20),
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: normalize(8),
+    marginVertical: normalize(10),
   },
-  hoursText: {
-    fontSize: normalize(15),
-    color: '#4A4A65',
-    fontWeight: '500',
+  loadingText: {
+    marginTop: normalize(10),
+    fontSize: normalize(14),
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: normalize(20),
   },
   galleryContainer: {
     marginBottom: normalize(28),
@@ -501,11 +826,10 @@ const styles = StyleSheet.create({
     borderRadius: normalize(16),
     paddingVertical: normalize(18),
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#8D8FF3',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+  },
+  bookButtonDisabled: {
+    backgroundColor: '#A5A6F6',
+    opacity: 0.7,
   },
   bookButtonText: {
     color: '#fff',

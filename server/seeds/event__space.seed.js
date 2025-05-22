@@ -1,51 +1,59 @@
 const { faker } = require('@faker-js/faker');
-const { Sequelize } = require('sequelize');
-const EventSpaceModel = require('../models/eventSpace');
+const mongoose = require('mongoose');
+const EventSpace = require('../models/eventSpace');
 
-// DB connection
-const sequelize = new Sequelize('planify', 'root', 'root', {
-  host: 'localhost',
-  dialect: 'mysql'
+const generateTunisianEventSpace = () => ({
+  name: faker.helpers.arrayElement([
+    'Dar El Bey',
+    'Espace Côte Bleue',
+    'Villa Jasmin',
+    'Jardin Andalou',
+    'Salle Afrah Carthage',
+  ]),
+  description: faker.helpers.arrayElement([
+    'A beautiful traditional Tunisian venue perfect for intimate events.',
+    'Stunning modern event space with sea views.',
+    'Elegant villa surrounded by a lush garden.',
+    'Charming space with Andalusian architecture.',
+    'Spacious hall ideal for large celebrations.',
+    'Historic site offering a unique event experience.',
+  ]),
+  location: faker.helpers.arrayElement([
+    'Medina of Tunis',
+    'Sidi Bou Said',
+    'Hammamet',
+    'Sousse',
+    'Djerba',
+    'Gammarth',
+    'La Marsa',
+  ]),
+  price: faker.helpers.arrayElement([800, 1200, 1500, 2000, 3000, 5000, 7000]), // Prices in DT
+  amenities: {
+    pool: faker.datatype.boolean(),
+    wifi: faker.datatype.boolean(),
+    parking: faker.datatype.boolean(),
+    catering: faker.datatype.boolean(),
+    beach_access: faker.datatype.boolean(),
+  },
+  images: [
+    'https://via.placeholder.com/400x300?text=Event+Space+Image+1',
+    'https://via.placeholder.com/400x300?text=Event+Space+Image+2',
+    'https://via.placeholder.com/400x300?text=Event+Space+Image+3',
+  ],
 });
 
-const EventSpace = EventSpaceModel(sequelize, Sequelize.DataTypes);
-
-async function seedEventSpaces() {
+const seedEventSpaces = async (numEventSpaces = 10) => {
   try {
-    await sequelize.authenticate();
-    console.log('✅ Connected to database');
+    await EventSpace.deleteMany({});
+    console.log('Existing event spaces cleared.');
 
-    const eventSpaces = [];
+    const eventSpaces = Array.from({ length: numEventSpaces }, () => generateTunisianEventSpace());
+    await EventSpace.insertMany(eventSpaces);
 
-    for (let i = 0; i < 100; i++) {
-      const createdAt = faker.date.between({ from: '2023-01-01', to: new Date() });
-      const updatedAt = faker.date.between({ from: createdAt, to: new Date() });
-
-      eventSpaces.push({
-        name: faker.company.name(),
-        description: faker.lorem.paragraph(),
-        location: `${faker.location.city()}, ${faker.location.country()}`,
-        capacity: faker.number.int({ min: 20, max: 500 }),
-        price: faker.commerce.price({ min: 500, max: 5000 }),
-        amenities: faker.helpers.arrayElements(['WiFi', 'Parking', 'Restrooms', 'Projector', 'Sound System'], 3),
-        images: [faker.image.url(), faker.image.url()],
-        availability: {
-          days: ['Monday', 'Wednesday', 'Friday'],
-          hours: '09:00-18:00'
-        },
-        isActive: faker.datatype.boolean(),
-        createdAt,
-        updatedAt
-      });
-    }
-
-    await EventSpace.bulkCreate(eventSpaces);
-    console.log('🎉 100 event spaces seeded successfully');
-  } catch (err) {
-    console.error('❌ Seeding failed:', err);
-  } finally {
-    await sequelize.close();
+    console.log(`${numEventSpaces} Tunisian event spaces seeded successfully.`);
+  } catch (error) {
+    console.error('Error seeding event spaces:', error);
   }
-}
+};
 
-seedEventSpaces();
+module.exports = seedEventSpaces;

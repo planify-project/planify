@@ -26,21 +26,13 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const { config } = error;
-    
-    if (!config || !config.retry) {
-      return Promise.reject(error);
-    }
-
-    config.retry -= 1;
-    if (config.retry === 0) {
-      return Promise.reject(error);
-    }
-
-    // Delay before retrying
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return api(config);
+  (error) => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      message: error.message,
+      url: error.config?.url
+    });
+    return Promise.reject(error);
   }
 );
 

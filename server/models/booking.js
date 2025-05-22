@@ -9,7 +9,11 @@ module.exports = (sequelize) => {
     },
     serviceId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'services',
+        key: 'id'
+      }
     },
     userId: {
       type: DataTypes.UUID,
@@ -35,6 +39,7 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
       defaultValue: 'pending'
     }
+    
   }, {
     tableName: 'bookings',
     timestamps: true,

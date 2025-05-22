@@ -32,14 +32,46 @@ export const AuthProvider = ({ children }) => {
 
     // Monitor authentication state changes
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                try {
+                    // Get the Firebase token
+                    const token = await currentUser.getIdToken();
+                    
+                    // Try to get or create the user in our database
+                    const response = await axios.post(`${API_BASE}/users/firebase`, {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName || currentUser.email.split('@')[0]
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.data.success) {
+                        // Store both Firebase user and our database user
+                        setUser({
+                            ...currentUser,
+                            dbUser: response.data.data
+                        });
+                    } else {
+                        console.error('Failed to create/fetch user in database:', response.data);
+                        setUser(currentUser);
+                    }
+                } catch (error) {
+                    console.error('Error syncing user with database:', error);
+                    setUser(currentUser);
+                }
+            } else {
+                setUser(null);
+            }
             setLoading(false);
         });
         return unsubscribe;
     }, []);
 
-    // Register a new user and send data to backend
+    // Register a new user
     const register = async (email, password, name) => {
         try {
              const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
@@ -55,7 +87,7 @@ export const AuthProvider = ({ children }) => {
  
             });
         } catch (error) {
-            console.error('Registration Error:', error.message);
+            console.error('Registration Error:', error);
             throw error;
         }
     };
@@ -84,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     // Log in an existing user and send data to backend
     const login = async (email, password, name) => {
         try {
+            // Sign in with Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const id = userCredential.user.uid;
              // Send user data to backend

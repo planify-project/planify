@@ -109,18 +109,10 @@ exports.createEvent = async (req, res) => {
 
     console.log('Event created:', event);
 
-    res.status(201).json({
-      success: true,
-      data: event,
-      message: 'Event created successfully'
-    });
-
+    res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
-    console.error('Error creating event:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error('❌ Error creating event:', error.stack || error); // 👈 خليها تبين stack trace
+    res.status(500).json({ message: 'Failed to create event', error: error.message });
   }
 };
 

@@ -34,7 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure CORS
 app.use(cors({
-  origin: '*',
+  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
@@ -193,11 +193,10 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = '192.168.132.68';
 
 const startServer = async () => {
   try {
-
     // Start server
     server.listen(PORT, HOST, () => {
       const urls = [
