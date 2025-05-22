@@ -81,13 +81,13 @@ export default function EventSpaceScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {/* Create Event Button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.createEventButton}
         onPress={() => navigation.navigate('CreateEvent')}
       >
         <Ionicons name="add-circle-outline" size={24} color="#fff" />
         <Text style={styles.createEventText}>Create Event</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>

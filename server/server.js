@@ -203,7 +203,7 @@ const startServer = async () => {
       const urls = [
         `http://localhost:${PORT}`,
         `http://${HOST}:${PORT}`,
-        `http://192.168.1.164:${PORT}`
+        `http://192.168.132.232:${PORT}`
       ];
       
       console.log('\nServer running on:');

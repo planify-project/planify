@@ -6,11 +6,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
@@ -18,6 +18,7 @@ import api from '../configs/api';
 import { normalize } from '../utils/scaling';
 import { Auth } from '../configs/firebase_config';
 import { Ionicons } from '@expo/vector-icons';
+import CustomAlert from '../components/CustomAlert';
 
 export default function AddServiceScreen({ navigation }) {
   const [title, setTitle] = useState('');
@@ -27,10 +28,27 @@ export default function AddServiceScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'error'
+  });
+  const [serviceTypes] = useState([
+    { id: 'general', label: 'General' },
+    { id: 'cleaning', label: 'Cleaning' },
+    { id: 'repair', label: 'Repair' },
+    { id: 'delivery', label: 'Delivery' },
+  ]);
 
   useEffect(() => {
     if (!Auth.currentUser) {
-      Alert.alert('Error', 'You must be logged in to create a service');
+      setAlertConfig({
+        title: 'Authentication Required',
+        message: 'You must be logged in to create a service',
+        type: 'error'
+      });
+      setAlertVisible(true);
       navigation.goBack();
     }
   }, []);
@@ -39,7 +57,12 @@ export default function AddServiceScreen({ navigation }) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      setAlertConfig({
+        title: 'Permission Required',
+        message: 'Sorry, we need camera roll permissions to make this work!',
+        type: 'error'
+      });
+      setAlertVisible(true);
       return;
     }
 
@@ -53,7 +76,7 @@ export default function AddServiceScreen({ navigation }) {
     if (!result.canceled) {
       setImage({
         uri: result.assets[0].uri,
-      type: 'image/jpeg',
+        type: 'image/jpeg',
         name: 'photo.jpg'
       });
     }
@@ -67,7 +90,7 @@ export default function AddServiceScreen({ navigation }) {
         email: Auth.currentUser.email,
         displayName: Auth.currentUser.displayName
       }, {
-          headers: {
+        headers: {
           'Authorization': `Bearer ${token}`
         }
       });
@@ -80,20 +103,35 @@ export default function AddServiceScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (!Auth.currentUser) {
-      Alert.alert('Error', 'You must be logged in to create a service');
+      setAlertConfig({
+        title: 'Authentication Required',
+        message: 'You must be logged in to create a service',
+        type: 'error'
+      });
+      setAlertVisible(true);
       return;
     }
 
     // Validate required fields
     if (!title || !description || !price) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      setAlertConfig({
+        title: 'Required Fields Missing',
+        message: 'Please fill in all required fields',
+        type: 'error'
+      });
+      setAlertVisible(true);
       return;
     }
 
     // Validate price is a valid number
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid price');
+      setAlertConfig({
+        title: 'Invalid Price',
+        message: 'Please enter a valid price greater than 0',
+        type: 'error'
+      });
+      setAlertVisible(true);
       return;
     }
 
@@ -139,21 +177,24 @@ export default function AddServiceScreen({ navigation }) {
       console.log('Service creation response:', response.data);
 
       if (response.data.success) {
-      Alert.alert('Success', 'Service created successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('AllServices')
-        }
-      ]);
+        setAlertConfig({
+          title: 'Success',
+          message: 'Service created successfully!',
+          type: 'success'
+        });
+        setAlertVisible(true);
+        // Navigation will be handled in the alert button press
       } else {
         throw new Error(response.data.message || 'Failed to create service');
       }
     } catch (error) {
       console.error('Error creating service:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || error.message || 'Failed to create service. Please try again.'
-      );
+      setAlertConfig({
+        title: 'Error',
+        message: error.response?.data?.message || error.message || 'Failed to create service. Please try again.',
+        type: 'error'
+      });
+      setAlertVisible(true);
     } finally {
       setLoading(false);
     }
@@ -164,89 +205,148 @@ export default function AddServiceScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: theme.background }]}
     >
-      <ScrollView style={styles.scrollView}>
-        {/* Header */}
-        <View style={styles.header}>
+      <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} />
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Image Upload Section - Featured at the top */}
+        <View style={styles.imageContainer}>
           <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            style={styles.imageSection} 
+            onPress={pickImage}
           >
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
+            {image ? (
+              <>
+                <Image source={{ uri: image.uri }} style={styles.previewImage} />
+                <View style={styles.imageOverlay}>
+                  <Ionicons name="camera" size={24} color="#fff" />
+                  <Text style={styles.imageOverlayText}>Change Image</Text>
+                </View>
+              </>
+            ) : (
+              <View style={[styles.imagePlaceholder, { backgroundColor: theme.card }]}>
+                <Ionicons name="images-outline" size={50} color={theme.primary} />
+                <Text style={[styles.imagePlaceholderText, { color: theme.text }]}>
+                  Add Service Image
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Create Service</Text>
         </View>
 
         {/* Form Section */}
-      <View style={styles.form}>
+        <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>Title</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Enter service title"
-          placeholderTextColor={theme.textSecondary}
-        />
+            <Text style={[styles.label, { color: theme.text }]}>
+              <Ionicons name="bookmark-outline" size={16} color={theme.primary} style={styles.inputIcon} />
+              Service Title
+            </Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="What service are you offering?"
+              placeholderTextColor={theme.textSecondary}
+            />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea, { backgroundColor: theme.card, color: theme.text }]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Enter service description"
-          placeholderTextColor={theme.textSecondary}
-          multiline
-          numberOfLines={4}
-        />
+            <Text style={[styles.label, { color: theme.text }]}>
+              <Ionicons name="document-text-outline" size={16} color={theme.primary} style={styles.inputIcon} />
+              Description
+            </Text>
+            <TextInput
+              style={[styles.input, styles.textArea, { backgroundColor: theme.card, color: theme.text }]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Describe your service in detail..."
+              placeholderTextColor={theme.textSecondary}
+              multiline
+              numberOfLines={4}
+            />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>Price ($)</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
-          value={price}
-          onChangeText={setPrice}
-          placeholder="Enter price"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-        />
+            <Text style={[styles.label, { color: theme.text }]}>
+              <Ionicons name="pricetag-outline" size={16} color={theme.primary} style={styles.inputIcon} />
+              Price ($)
+            </Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+              value={price}
+              onChangeText={setPrice}
+              placeholder="How much does your service cost?"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+            />
           </View>
 
-          {/* Image Upload Section - Moved below the form */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>Service Image</Text>
-        <TouchableOpacity 
-              style={styles.imageSection} 
-          onPress={pickImage}
-        >
-              {image ? (
-                <Image source={{ uri: image.uri }} style={styles.previewImage} />
-              ) : (
-                <View style={[styles.imagePlaceholder, { backgroundColor: theme.card }]}>
-                  <Ionicons name="camera-outline" size={40} color={theme.primary} />
-                  <Text style={[styles.imagePlaceholderText, { color: theme.text }]}>
-                    Add Service Image
+            <Text style={[styles.label, { color: theme.text }]}>
+              <Ionicons name="options-outline" size={16} color={theme.primary} style={styles.inputIcon} />
+              Service Type
+            </Text>
+            <View style={styles.serviceTypeContainer}>
+              {serviceTypes.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={[
+                    styles.serviceTypeButton,
+                    serviceType === type.id && { 
+                      backgroundColor: theme.primary,
+                      borderColor: theme.primary 
+                    }
+                  ]}
+                  onPress={() => setServiceType(type.id)}
+                >
+                  <Text 
+                    style={[
+                      styles.serviceTypeText, 
+                      serviceType === type.id && { color: '#fff' }
+                    ]}
+                  >
+                    {type.label}
                   </Text>
-                </View>
-              )}
-        </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: theme.primary }]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Create Service</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: theme.primary }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="add-circle-outline" size={20} color="#fff" style={styles.buttonIcon} />
+                <Text style={styles.submitButtonText}>Create Service</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        close={() => setAlertVisible(false)}
+        buttons={[
+          {
+            text: 'OK',
+            onPress: () => {
+              setAlertVisible(false);
+              if (alertConfig.type === 'success') {
+                navigation.navigate('AllServices');
+              }
+            },
+            style: alertConfig.type === 'success' ? 'success' : 'primary'
+          }
+        ]}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -258,33 +358,45 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: normalize(16),
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backButton: {
-    padding: normalize(8),
-  },
-  headerTitle: {
-    fontSize: normalize(20),
-    fontWeight: 'bold',
-    marginLeft: normalize(16),
+  imageContainer: {
+    marginTop: normalize(24),
+    paddingHorizontal: normalize(16),
   },
   imageSection: {
-    padding: normalize(16),
+    borderRadius: normalize(16),
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   previewImage: {
     width: '100%',
-    height: normalize(200),
-    borderRadius: normalize(12),
+    height: normalize(220),
+    borderRadius: normalize(16),
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: normalize(10),
+  },
+  imageOverlayText: {
+    color: '#fff',
+    marginLeft: normalize(8),
+    fontSize: normalize(14),
+    fontWeight: '600',
   },
   imagePlaceholder: {
     width: '100%',
-    height: normalize(200),
-    borderRadius: normalize(12),
+    height: normalize(220),
+    borderRadius: normalize(16),
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -292,40 +404,80 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   imagePlaceholderText: {
-    marginTop: normalize(8),
+    marginTop: normalize(12),
     fontSize: normalize(16),
+    fontWeight: '500',
   },
   form: {
     padding: normalize(16),
+    marginTop: normalize(8),
   },
   inputGroup: {
-    marginBottom: normalize(16),
+    marginBottom: normalize(20),
+  },
+  inputIcon: {
+    marginRight: normalize(6),
   },
   label: {
-    fontSize: normalize(14),
+    fontSize: normalize(16),
     marginBottom: normalize(8),
-    fontWeight: 'bold',
+    fontWeight: '600',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
-    borderRadius: normalize(8),
-    padding: normalize(12),
+    borderRadius: normalize(12),
+    padding: normalize(14),
     fontSize: normalize(16),
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   textArea: {
-    height: normalize(100),
+    height: normalize(120),
     textAlignVertical: 'top',
   },
+  serviceTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: normalize(8),
+  },
+  serviceTypeButton: {
+    paddingVertical: normalize(8),
+    paddingHorizontal: normalize(16),
+    borderRadius: normalize(20),
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginRight: normalize(10),
+    marginBottom: normalize(10),
+  },
+  serviceTypeText: {
+    fontSize: normalize(14),
+    fontWeight: '500',
+  },
   submitButton: {
-    borderRadius: normalize(8),
+    borderRadius: normalize(12),
     padding: normalize(16),
     alignItems: 'center',
     marginTop: normalize(16),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  buttonIcon: {
+    marginRight: normalize(8),
   },
   submitButtonText: {
     color: '#fff',
     fontSize: normalize(16),
     fontWeight: 'bold',
   },
-}); 
+});

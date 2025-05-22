@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 // import { API_URL } from '../config';
 import { API_BASE } from '../config';
+import CustomAlert from '../components/CustomAlert';
 
 const API_ENDPOINT = `${API_BASE}/reviews/event`;
 
@@ -16,6 +17,12 @@ export default function ReviewScreen({ route, navigation }) {
   const [comment, setComment] = useState('');
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'error'
+  });
 
   useEffect(() => {
     // Test the API connection first
@@ -31,12 +38,12 @@ export default function ReviewScreen({ route, navigation }) {
       console.log('API test response:', response.data);
     } catch (error) {
       console.error('API test error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        headers: error.response?.headers,
+      setAlertConfig({
+        title: 'Connection Error',
+        message: 'Unable to connect to the server. Please try again later.',
+        type: 'error'
       });
+      setAlertVisible(true);
     }
   };
 
@@ -50,29 +57,67 @@ export default function ReviewScreen({ route, navigation }) {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      Alert.alert('Error', 'Failed to load reviews');
+      setAlertConfig({
+        title: 'Error',
+        message: 'Failed to load reviews. Please try again later.',
+        type: 'error'
+      });
+      setAlertVisible(true);
       setLoading(false);
     }
   };
 
   const handleRating = (value) => setRating(value);
 
-  const handleSubmit = async () => {
-    if (!title || !comment || rating === 0) {
-      Alert.alert('Error', 'Please fill in all fields and provide a rating');
-      return;
+  const validateReview = () => {
+    if (rating === 0) {
+      setAlertConfig({
+        title: 'Rating Required',
+        message: 'Please select a rating for your review.',
+        type: 'error'
+      });
+      setAlertVisible(true);
+      return false;
     }
+    if (!title.trim()) {
+      setAlertConfig({
+        title: 'Title Required',
+        message: 'Please enter a title for your review.',
+        type: 'error'
+      });
+      setAlertVisible(true);
+      return false;
+    }
+    if (!comment.trim()) {
+      setAlertConfig({
+        title: 'Comment Required',
+        message: 'Please write your review comment.',
+        type: 'error'
+      });
+      setAlertVisible(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateReview()) return;
 
     try {
       const response = await axios.post(`${API_BASE}/reviews/event`, {
-        event_id: event.id, // Use the numeric ID
+        event_id: event.id,
         rating,
         title,
         comment
       });
 
       if (response.status === 201) {
-        Alert.alert('Success', 'Review submitted successfully');
+        setAlertConfig({
+          title: 'Success',
+          message: 'Your review has been submitted successfully!',
+          type: 'success'
+        });
+        setAlertVisible(true);
         setTitle('');
         setComment('');
         setRating(0);
@@ -80,7 +125,12 @@ export default function ReviewScreen({ route, navigation }) {
       }
     } catch (error) {
       console.error('Error submitting review:', error);
-      Alert.alert('Error', 'Failed to submit review');
+      setAlertConfig({
+        title: 'Error',
+        message: 'Failed to submit review. Please try again later.',
+        type: 'error'
+      });
+      setAlertVisible(true);
     }
   };
 
@@ -155,135 +205,329 @@ export default function ReviewScreen({ route, navigation }) {
           </View>
         ))
       )}
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        close={() => setAlertVisible(false)}
+        buttons={[
+          {
+            text: 'OK',
+            onPress: () => setAlertVisible(false),
+            style: alertConfig.type === 'success' ? 'success' : 'primary'
+          }
+        ]}
+      />
     </ScrollView>
   );
 }
 
+// const styles = StyleSheet.create({
+//   container: {
+//     padding: 20,
+//     backgroundColor: '#F7F8FA',
+//     minHeight: '100%',
+//   },
+//   header: {
+//     fontSize: 26,
+//     fontWeight: '700',
+//     marginBottom: 8,
+//     color: '#22223B',
+//     letterSpacing: 0.5,
+//   },
+//   subHeader: {
+//     fontSize: 16,
+//     color: '#4A4E69',
+//     marginBottom: 18,
+//     fontWeight: '500',
+//   },
+//   starsContainer: {
+//     flexDirection: 'row',
+//     marginBottom: 24,
+//     alignSelf: 'flex-start',
+//   },
+//   input: {
+//     borderWidth: 1.5,
+//     borderColor: '#6C6FD1',
+//     backgroundColor: '#F0F4FF',
+//     borderRadius: 14,
+//     padding: 16,
+//     marginBottom: 14,
+//     fontSize: 15,
+//     shadowColor: '#000',
+//     shadowOpacity: 0.04,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowRadius: 6,
+//     elevation: 2,
+//   },
+//   textArea: {
+//     height: 110,
+//     textAlignVertical: 'top',
+//     borderWidth: 1.5,
+//     borderColor: '#6C6FD1',
+//     backgroundColor: '#F0F4FF',
+//   },
+//   addPhotoContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 22,
+//   },
+//   photoButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     backgroundColor: '#EEF2FB',
+//     paddingVertical: 8,
+//     paddingHorizontal: 14,
+//     borderRadius: 8,
+//     marginRight: 10,
+//   },
+//   photoText: {
+//     color: '#6C6FD1',
+//     fontWeight: '600',
+//     marginLeft: 6,
+//     fontSize: 15,
+//   },
+//   optionalText: {
+//     color: '#A0A3BD',
+//     fontSize: 13,
+//     fontStyle: 'italic',
+//   },
+//   submitButton: {
+//     backgroundColor: '#6C6FD1',
+//     paddingVertical: 16,
+//     borderRadius: 30,
+//     alignItems: 'center',
+//     marginBottom: 32,
+//     shadowColor: '#6C6FD1',
+//     shadowOpacity: 0.18,
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowRadius: 12,
+//     elevation: 3,
+//   },
+//   submitText: {
+//     color: '#fff',
+//     fontWeight: '700',
+//     fontSize: 17,
+//     letterSpacing: 0.5,
+//   },
+//   sectionTitle: {
+//     fontSize: 19,
+//     fontWeight: '700',
+//     marginBottom: 18,
+//     color: '#22223B',
+//     marginTop: 10,
+//   },
+//   reviewCard: {
+//     flexDirection: 'row',
+//     marginBottom: 22,
+//     backgroundColor: '#fff',
+//     borderRadius: 16,
+//     padding: 16,
+//     shadowColor: '#000',
+//     shadowOpacity: 0.06,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowRadius: 8,
+//     elevation: 2,
+//   },
+//   avatar: {
+//     backgroundColor: '#6C6FD1',
+//     width: 44,
+//     height: 44,
+//     borderRadius: 22,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     marginRight: 14,
+//     shadowColor: '#6C6FD1',
+//     shadowOpacity: 0.12,
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowRadius: 6,
+//     elevation: 2,
+//   },
+//   avatarText: {
+//     color: '#fff',
+//     fontWeight: 'bold',
+//     fontSize: 20,
+//   },
+//   reviewContent: {
+//     flex: 1,
+//   },
+//   reviewHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 2,
+//   },
+//   reviewer: {
+//     fontWeight: '600',
+//     color: '#22223B',
+//     fontSize: 15,
+//   },
+//   date: {
+//     fontSize: 12,
+//     color: '#A0A3BD',
+//     fontWeight: '500',
+//   },
+//   starRow: {
+//     flexDirection: 'row',
+//     marginVertical: 4,
+//   },
+//   reviewTitle: {
+//     fontWeight: '700',
+//     marginBottom: 2,
+//     color: '#4A4E69',
+//     fontSize: 15,
+//   },
+//   reviewText: {
+//     color: '#333',
+//     marginBottom: 5,
+//     fontSize: 14,
+//     lineHeight: 20,
+//   },
+//   loadingText: {
+//     textAlign: 'center',
+//     color: '#A0A3BD',
+//     marginTop: 24,
+//     fontSize: 15,
+//   },
+//   noReviewsText: {
+//     textAlign: 'center',
+//     color: '#A0A3BD',
+//     marginTop: 24,
+//     fontSize: 15,
+//   },
+// });
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#F7F8FA',
+    padding: 24,
+    backgroundColor: '#F8F9FF',
     minHeight: '100%',
   },
   header: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
-    color: '#22223B',
-    letterSpacing: 0.5,
+    color: '#2A2A3C',
+    letterSpacing: -0.5,
   },
   subHeader: {
     fontSize: 16,
-    color: '#4A4E69',
-    marginBottom: 18,
+    color: '#4A4A65',
+    marginBottom: 20,
     fontWeight: '500',
   },
   starsContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 28,
     alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 215, 0, 0.08)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
   },
   input: {
     borderWidth: 1.5,
-    borderColor: '#6C6FD1',
-    backgroundColor: '#F0F4FF',
-    borderRadius: 14,
+    borderColor: 'rgba(108, 111, 209, 0.25)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 14,
-    fontSize: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
+    marginBottom: 16,
+    fontSize: 16,
+    shadowColor: '#6C6FD1',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
     elevation: 2,
+    color: '#2A2A3C',
   },
   textArea: {
-    height: 110,
+    height: 120,
     textAlignVertical: 'top',
-    borderWidth: 1.5,
-    borderColor: '#6C6FD1',
-    backgroundColor: '#F0F4FF',
+    paddingTop: 16,
+    marginBottom: 24,
   },
   addPhotoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 22,
+    marginBottom: 28,
   },
   photoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF2FB',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    marginRight: 10,
+    backgroundColor: 'rgba(108, 111, 209, 0.08)',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    marginRight: 12,
   },
   photoText: {
     color: '#6C6FD1',
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 8,
     fontSize: 15,
   },
   optionalText: {
-    color: '#A0A3BD',
-    fontSize: 13,
+    color: '#8A8BB3',
+    fontSize: 14,
     fontStyle: 'italic',
   },
   submitButton: {
     backgroundColor: '#6C6FD1',
-    paddingVertical: 16,
-    borderRadius: 30,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
     shadowColor: '#6C6FD1',
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
-    elevation: 3,
+    elevation: 4,
   },
   submitText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 17,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   sectionTitle: {
-    fontSize: 19,
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 18,
-    color: '#22223B',
-    marginTop: 10,
+    marginBottom: 20,
+    color: '#2A2A3C',
+    marginTop: 12,
+    letterSpacing: -0.3,
   },
   reviewCard: {
     flexDirection: 'row',
-    marginBottom: 22,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#6C6FD1',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 3,
   },
   avatar: {
     backgroundColor: '#6C6FD1',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 16,
     shadowColor: '#6C6FD1',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 3,
   },
   avatarText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 22,
   },
   reviewContent: {
     flex: 1,
@@ -291,44 +535,159 @@ const styles = StyleSheet.create({
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 4,
+    alignItems: 'center',
   },
   reviewer: {
-    fontWeight: '600',
-    color: '#22223B',
-    fontSize: 15,
+    fontWeight: '700',
+    color: '#2A2A3C',
+    fontSize: 16,
   },
   date: {
-    fontSize: 12,
-    color: '#A0A3BD',
+    fontSize: 13,
+    color: '#8A8BB3',
     fontWeight: '500',
   },
   starRow: {
     flexDirection: 'row',
-    marginVertical: 4,
+    marginVertical: 6,
   },
   reviewTitle: {
     fontWeight: '700',
-    marginBottom: 2,
-    color: '#4A4E69',
-    fontSize: 15,
+    marginTop: 4,
+    marginBottom: 6,
+    color: '#4A4A65',
+    fontSize: 16,
   },
   reviewText: {
-    color: '#333',
+    color: '#4A4A65',
     marginBottom: 5,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
   },
   loadingText: {
     textAlign: 'center',
-    color: '#A0A3BD',
-    marginTop: 24,
-    fontSize: 15,
+    color: '#8A8BB3',
+    marginTop: 30,
+    fontSize: 16,
+    fontWeight: '500',
   },
   noReviewsText: {
     textAlign: 'center',
-    color: '#A0A3BD',
-    marginTop: 24,
+    color: '#8A8BB3',
+    marginTop: 30,
+    fontSize: 16,
+    fontWeight: '500',
+    backgroundColor: 'rgba(108, 111, 209, 0.05)',
+    padding: 20,
+    borderRadius: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(108, 111, 209, 0.1)',
+    marginVertical: 24,
+  },
+  formSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 30,
+    shadowColor: '#6C6FD1',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2A2A3C',
+    marginBottom: 16,
+  },
+  labelText: {
     fontSize: 15,
+    fontWeight: '600',
+    color: '#4A4A65',
+    marginBottom: 8,
+  },
+  ratingValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#6C6FD1',
+    marginLeft: 12,
+  },
+  reviewsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#6C6FD1',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  reviewCount: {
+    fontSize: 14,
+    color: '#8A8BB3',
+    fontWeight: '500',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(108, 111, 209, 0.08)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  filterText: {
+    color: '#6C6FD1',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  starIcon: {
+    marginRight: 6,
+  },
+  ratingText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFB800',
+    marginLeft: 8,
+  },
+  photoPreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  photoPreviewContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  inputFocused: {
+    borderColor: '#6C6FD1',
+    shadowColor: '#6C6FD1',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+  },
+  characterCount: {
+    fontSize: 12,
+    color: '#8A8BB3',
+    textAlign: 'right',
+    marginTop: -12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#FF3B5E',
+    fontSize: 14,
+    marginTop: 4,
+    marginBottom: 8,
   },
 });
