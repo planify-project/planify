@@ -34,7 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure CORS
 app.use(cors({
-  origin: '*',
+  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
@@ -190,30 +190,14 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = '192.168.132.68';
 
 const startServer = async () => {
   try {
-
     // Start server
     server.listen(PORT, HOST, () => {
-      const urls = [
-        `http://localhost:${PORT}`,
-        `http://${HOST}:${PORT}`,
-        `http://192.168.1.166:${PORT}`
-      ];
-      
-      console.log('\nServer running on:');
-      urls.forEach(url => {
-        console.log(`\n${url}:`);
-        console.log(`  - Test endpoint: ${url}/test`);
-        console.log(`  - Health check: ${url}/health`);
-        console.log(`  - Socket.IO: ${url}/socket.io/`);
-      });
-      console.log('\nSocket.IO Configuration:');
-      console.log('  - Transports: websocket');
-      console.log('  - Path: /socket.io/');
-      console.log('  - CORS: enabled for all origins');
+      console.log(`Server running at http://${HOST}:${PORT}`);
+      console.log(`Local access: http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

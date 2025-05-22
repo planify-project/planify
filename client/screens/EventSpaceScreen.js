@@ -12,6 +12,7 @@ import { fetchEventSpaces } from '../configs/EventSpaceAPI';
 import EventSpaceCard from '../components/eventSpace/EventSpaceCard';
 import SearchBar from '../components/common/SearchBar';
 import { normalize } from '../utils/scaling';
+import CreateEventSpaceModal from '../components/CreateEventSpaceModal';
 
 export default function EventSpaceScreen({ navigation }) {
   const [spaces, setSpaces] = useState([]);
@@ -19,6 +20,7 @@ export default function EventSpaceScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
   const loadEventSpaces = async () => {
     try {
@@ -58,6 +60,12 @@ export default function EventSpaceScreen({ navigation }) {
     loadEventSpaces();
   };
 
+  const handleEventSpaceCreated = (newSpace) => {
+    console.log('New event space created:', newSpace);
+    setSpaces(prevSpaces => [newSpace, ...prevSpaces]);
+    setIsCreateModalVisible(false);
+  };
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerContainer}>
@@ -79,11 +87,22 @@ export default function EventSpaceScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <SearchBar
-        placeholder="Search event spaces..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+      <View style={styles.headerContainer}>
+        <SearchBar
+          placeholder="Search event spaces..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          containerStyle={styles.searchBar}
+        />
+      </View>
+      
+      <TouchableOpacity 
+        style={styles.createButton}
+        onPress={() => setIsCreateModalVisible(true)}
+      >
+        <Text style={styles.createButtonText}>Create New Space</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={spaces}
         keyExtractor={(item) => item.id?.toString()}
@@ -96,9 +115,16 @@ export default function EventSpaceScreen({ navigation }) {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        ListEmptyComponent={
+        ListEmptyComponent={!loading && !error && (
           <Text style={styles.emptyText}>No event spaces available</Text>
-        }
+        )}
+        contentContainerStyle={spaces.length === 0 ? styles.emptyListContainer : null}
+      />
+
+      <CreateEventSpaceModal
+        visible={isCreateModalVisible}
+        onClose={() => setIsCreateModalVisible(false)}
+        onSuccess={handleEventSpaceCreated}
       />
     </View>
   );
@@ -143,5 +169,35 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: normalize(16),
     marginTop: normalize(20)
-  }
+  },
+  emptyListContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerContainer: {
+    marginBottom: normalize(12),
+  },
+  searchBar: {
+    width: '100%',
+  },
+  createButton: {
+    backgroundColor: '#5D5FEE',
+    paddingHorizontal: normalize(20),
+    paddingVertical: normalize(14),
+    borderRadius: normalize(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+    marginBottom: normalize(16),
+  },
+  createButtonText: {
+    color: '#FFFFFF',
+    fontSize: normalize(16),
+    fontWeight: '600',
+  },
 });

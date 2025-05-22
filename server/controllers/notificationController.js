@@ -1,7 +1,6 @@
 const { Notification, Booking, Service, User } = require('../database');
 
-// Get all notifications for a user
-const getUserNotifications = async (req, res) => {
+const getNotificationsByUser = async (req, res) => {
   try {
     const userId = req.params.userId;
     console.log('1. Getting notifications for user:', userId);
@@ -74,8 +73,7 @@ const getUserNotifications = async (req, res) => {
   }
 };
 
-// Mark notification as read
-const markNotificationAsRead = async (req, res) => {
+const getNotificationById = async (req, res) => {
   try {
     const notification = await Notification.findByPk(req.params.id, {
       include: [
@@ -132,8 +130,7 @@ const createNotification = async (req, res) => {
   }
 };
 
-// Mark all notifications as read for a user
-const markAllNotificationsAsRead = async (req, res) => {
+const updateNotification = async (req, res) => {
   try {
     const notification = await Notification.findByPk(req.params.id);
     if (!notification) {
@@ -154,7 +151,6 @@ const markAllNotificationsAsRead = async (req, res) => {
   }
 };
 
-// Delete a notification
 const deleteNotification = async (req, res) => {
   try {
     const { notificationId } = req.params;
@@ -323,9 +319,10 @@ const dismissNotification = async (req, res) => {
 };
 
 module.exports = {
-  getUserNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
+  getNotificationsByUser,
+  getNotificationById,
+  createNotification,
+  updateNotification,
   deleteNotification,
   markAsRead,
   createTestNotification,
