@@ -208,6 +208,9 @@ export default function ServiceDetailScreen({ route, navigation }) {
 
       const response = await api.post('/bookings', bookingPayload);
 
+      console.log('Booking response:', response.data);
+
+      console.log('Booking response received:', response.data);
       if (response.data.success) {
         if (socket) {
           socket.emit('newBooking', {

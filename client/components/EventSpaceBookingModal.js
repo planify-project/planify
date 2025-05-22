@@ -1,154 +1,204 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Calendar } from 'react-native-calendars';
 import { normalize } from '../utils/scaling';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomAlert from './CustomAlert';
+import api from '../configs/api';
 
-export default function EventSpaceBookingModal({ 
-  visible, 
-  onClose, 
-  onConfirm, 
-  loading,
-  space
-}) {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: '',
+export default function EventSpaceBookingModal({ visible, onClose, onConfirm, loading, space }) {
+  const [formData, setFormData] = useState({
+    eventType: '',
+    eventDate: new Date(),
+    numberOfPeople: '',
+    phoneNumber: '',
     message: '',
-    type: 'info'
   });
 
-  const handleConfirm = () => {
-    if (!phoneNumber || !startDate || !endDate) {
-      setAlertConfig({
-        title: 'Missing Information',
-        message: 'Please fill in all required fields',
-        type: 'error'
-      });
-      setAlertVisible(true);
-      return;
-    }
+  const [bookedDates, setBookedDates] = useState({});
+  const eventTypes = [
+    { label: 'Select Event Type', value: '' },
+    { label: 'Wedding', value: 'wedding' },
+    { label: 'Birthday', value: 'birthday' },
+    { label: 'Conference', value: 'conference' },
+    { label: 'Corporate Event', value: 'corporate' },
+    { label: 'Graduation', value: 'graduation' },
+    { label: 'Anniversary', value: 'anniversary' },
+    { label: 'Other', value: 'other' },
+  ];
 
-    if (startDate >= endDate) {
-      setAlertConfig({
-        title: 'Invalid Dates',
-        message: 'End date must be after start date',
-        type: 'error'
-      });
-      setAlertVisible(true);
-      return;
+  useEffect(() => {
+    if (visible && space?.id) fetchBookedDates();
+  }, [visible, space?.id]);
+
+  const fetchBookedDates = async () => {
+    try {
+      const response = await api.get(`/event-spaces/${space.id}/bookings`);
+      if (response?.data?.success) {
+        const marked = {};
+        response.data.data.forEach((booking) => {
+          if (booking.status === 'confirmed') {
+            const dateStr = new Date(booking.date).toISOString().split('T')[0];
+            marked[dateStr] = {
+              marked: true,
+              dotColor: '#FF3B30',
+              disabled: true,
+              selected: false,
+            };
+          }
+        });
+        setBookedDates(marked);
+      }
+    } catch (error) {
+      console.error('Error fetching booked dates:', error);
     }
+  };
+
+  const handleDateSelect = (day) => {
+    setFormData({ ...formData, eventDate: new Date(day.timestamp) });
+  };
+
+  const handleSubmit = () => {
+    if (!formData.eventType)
+      return Alert.alert('Error', 'Please select an event type');
+    if (!formData.numberOfPeople)
+      return Alert.alert('Error', 'Please select number of guests');
+    if (!formData.phoneNumber)
+      return Alert.alert('Error', 'Please enter your phone number');
 
     onConfirm({
-      phoneNumber,
-      startDate,
-      endDate
+      ...formData,
+      date: formData.eventDate.toISOString().split('T')[0],
     });
   };
 
   return (
-    <>
-      <Modal
-        visible={visible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={onClose}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Book Event Space</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Book {space?.name}</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Phone Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your phone number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
+          <ScrollView style={styles.formContainer}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Event Type</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={formData.eventType}
+                    onValueChange={(val) => setFormData({ ...formData, eventType: val })}
+                    style={styles.picker}
+                  >
+                    {eventTypes.map((type) => (
+                      <Picker.Item key={type.value} label={type.label} value={type.value} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
 
-            <View style={styles.dateContainer}>
-              <Text style={styles.label}>Start Date</Text>
-              <TouchableOpacity 
-                style={styles.dateButton}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Text>{startDate.toLocaleDateString()}</Text>
-              </TouchableOpacity>
-              {showStartDatePicker && (
-                <DateTimePicker
-                  value={startDate}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowStartDatePicker(false);
-                    if (selectedDate) {
-                      setStartDate(selectedDate);
-                    }
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Event Date</Text>
+                <Calendar
+                  onDayPress={handleDateSelect}
+                  markedDates={{
+                    ...bookedDates,
+                    [formData.eventDate.toISOString().split('T')[0]]: {
+                      selected: true,
+                      selectedColor: '#5D5FEE',
+                    },
                   }}
-                  minimumDate={new Date()}
+                  minDate={new Date().toISOString().split('T')[0]}
+                  theme={{ todayTextColor: '#5D5FEE', arrowColor: '#5D5FEE' }}
+                  style={styles.calendar}
                 />
-              )}
-            </View>
+                <View style={styles.legendContainer}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#5D5FEE' }]} />
+                    <Text style={styles.legendText}>Selected</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#FF3B30' }]} />
+                    <Text style={styles.legendText}>Booked</Text>
+                  </View>
+                </View>
+              </View>
 
-            <View style={styles.dateContainer}>
-              <Text style={styles.label}>End Date</Text>
-              <TouchableOpacity 
-                style={styles.dateButton}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Text>{endDate.toLocaleDateString()}</Text>
-              </TouchableOpacity>
-              {showEndDatePicker && (
-                <DateTimePicker
-                  value={endDate}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowEndDatePicker(false);
-                    if (selectedDate) {
-                      setEndDate(selectedDate);
-                    }
-                  }}
-                  minimumDate={startDate}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Number of People</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={formData.numberOfPeople}
+                    onValueChange={(val) => setFormData({ ...formData, numberOfPeople: val })}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select number of guests" value="" />
+                    {[...Array(10)].map((_, i) => {
+                      const num = (i + 1) * 10;
+                      return <Picker.Item key={num} label={`${num} guests`} value={String(num)} />;
+                    })}
+                    <Picker.Item label="100+ guests" value="100+" />
+                  </Picker>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your phone number"
+                  keyboardType="phone-pad"
+                  value={formData.phoneNumber}
+                  onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
                 />
-              )}
-            </View>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.confirmButton, loading && styles.disabledButton]}
-              onPress={handleConfirm}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Message</Text>
+                <TextInput
+                  style={[styles.input, styles.messageInput]}
+                  placeholder="Any special requests or additional information"
+                  multiline
+                  numberOfLines={4}
+                  value={formData.message}
+                  onChangeText={(text) => setFormData({ ...formData, message: text })}
+                />
+              </View>
+            </KeyboardAvoidingView>
+          </ScrollView>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
+              <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.submitButton]}
+              onPress={handleSubmit}
               disabled={loading}
             >
-              <Text style={styles.confirmButtonText}>
-                {loading ? 'Processing...' : 'Confirm Booking'}
+              <Text style={styles.buttonText}>
+                {loading ? 'Submitting...' : 'Submit Booking'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={() => setAlertVisible(false)}
-      />
-    </>
+      </View>
+    </Modal>
   );
 }
 
@@ -160,55 +210,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: normalize(24),
-    padding: normalize(24),
+    backgroundColor: '#fff',
+    borderRadius: normalize(16),
     width: '90%',
-    maxWidth: 420,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
+    maxHeight: '85%',
+    padding: normalize(20),
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: normalize(24),
-    paddingBottom: normalize(16),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(141, 143, 243, 0.15)',
-  },
-  modalTitle: {
-    fontSize: normalize(22),
-    fontWeight: '700',
-    color: '#2A2A3C',
-    letterSpacing: -0.3,
-  },
-  closeButton: {
-    width: normalize(36),
-    height: normalize(36),
-    borderRadius: normalize(18),
-    backgroundColor: 'rgba(141, 143, 243, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputContainer: {
     marginBottom: normalize(20),
   },
+  modalTitle: {
+    fontSize: normalize(20),
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  closeButton: {
+    padding: normalize(5),
+  },
+  closeButtonText: {
+    fontSize: normalize(24),
+    color: '#666',
+  },
+  formContainer: {
+    maxHeight: '70%',
+  },
+  inputGroup: {
+    marginBottom: normalize(16),
+  },
   label: {
-    fontSize: normalize(15),
-    fontWeight: '600',
-    color: '#4A4A65',
+    fontSize: normalize(14),
+    color: '#666',
     marginBottom: normalize(8),
-    letterSpacing: 0.2,
   },
   input: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(141, 143, 243, 0.2)',
-    borderRadius: normalize(14),
-    padding: normalize(14),
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: normalize(8),
+    padding: normalize(12),
     fontSize: normalize(16),
     backgroundColor: '#FAFBFF',
     color: '#2A2A3C',
@@ -223,6 +264,23 @@ const styles = StyleSheet.create({
   },
   dateContainer: {
     marginBottom: normalize(20),
+    backgroundColor: '#f8f8f8',
+  },
+  messageInput: {
+    height: normalize(100),
+    textAlignVertical: 'top',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: normalize(20),
+  },
+  button: {
+    flex: 1,
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    alignItems: 'center',
+    marginHorizontal: normalize(8),
   },
   dateButton: {
     borderWidth: 1.5,
@@ -241,20 +299,60 @@ const styles = StyleSheet.create({
   dateIcon: {
     marginLeft: normalize(8),
   },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  cancelButtonText: {
+    color: '#333',
+  },
+  submitButton: {
+    backgroundColor: '#5D5FEE',
+  },
+  buttonText: {
+    fontSize: normalize(16),
+    fontWeight: '600',
+    color: '#fff',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: normalize(8),
+    backgroundColor: '#f8f8f8',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: normalize(50),
+    width: '100%',
+  },
   confirmButton: {
     backgroundColor: '#8D8FF3',
     borderRadius: normalize(16),
     padding: normalize(16),
-    alignItems: 'center',
-    marginTop: normalize(16),
-    elevation: 4,
-    shadowColor: '#8D8FF3',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
   },
-  disabledButton: {
-    opacity: 0.7,
+  calendar: {
+    borderRadius: normalize(8),
+    marginBottom: normalize(8),
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: normalize(8),
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: normalize(5),
+  },
+  legendDot: {
+    width: normalize(10),
+    height: normalize(10),
+    borderRadius: 5,
+    marginRight: normalize(4),
+  },
+  legendText: {
+    fontSize: normalize(12),
+    color: '#444',
   },
   confirmButtonText: {
     color: 'white',
@@ -361,5 +459,5 @@ const styles = StyleSheet.create({
   },
   inputWithIcon: {
     paddingLeft: normalize(40),
-  },
+  }
 });

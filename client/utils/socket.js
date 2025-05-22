@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 import { SOCKET_URL, SOCKET_CONFIG } from '../config';
+import NetInfo from '@react-native-community/netinfo';
 
 let socket = null;
 
@@ -25,6 +26,11 @@ export const initializeSocket = (userId) => {
 
   socket.on('disconnect', () => {
     console.log('Socket disconnected');
+  });
+
+  // Add error handler
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
   });
 
   return socket;

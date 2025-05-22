@@ -35,4 +35,6 @@ router.patch('/:notificationId/read', notificationController.markAsRead);
 // Dismiss notification
 router.put('/:notificationId/dismiss', notificationController.dismissNotification);
 
+
+
 module.exports = router;

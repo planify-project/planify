@@ -29,10 +29,18 @@ exports.getUserById = async (req, res) => {
 exports.createUserFromFirebase = async (req, res) => {
   try {
     const { uid, email, displayName } = req.body;
+    console.log('Creating/updating user from Firebase:', { uid, email, displayName });
 
-    // Check if user already exists
-    let user = await User.findOne({ where: { email } });
+    if (!uid || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Firebase UID and email are required'
+      });
+    }
 
+    // Check if user already exists by Firebase UID
+    let user = await User.findOne({ where: { firebase_uid: uid } });
+    
     if (!user) {
       // Create new user with a dummy password
       user = await User.create({
@@ -43,16 +51,19 @@ exports.createUserFromFirebase = async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    console.log('User created/updated successfully:', user.id);
+    
+    return res.json({
       success: true,
       data: user
     });
   } catch (error) {
-    console.error('Error creating user from Firebase:', error);
-    res.status(500).json({
+    console.error('Error creating/updating user from Firebase:', error);
+    return res.status(500).json({ 
       success: false,
-      error: 'Failed to create user',
-      details: error.message
+      error: 'Failed to create/update user', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

@@ -23,7 +23,7 @@ const AdminAuthRoutes = require('./routes/adminAuth.routes');
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
-
+ 
 // Configure CORS
 app.use(cors({
   origin: '*',
@@ -42,7 +42,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes that need raw body parsing for Stripe webhooks
 app.use('/api/webhook', express.raw({type: 'application/json'}));
-
+// Configure CORS
+app.use(cors({
+  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+}));
+ 
 // Test endpoint
 app.get('/test', (req, res) => {
   res.json({ 
@@ -196,7 +203,7 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = '192.168.132.68';
 
 const startServer = async () => {
   try {
