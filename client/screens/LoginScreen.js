@@ -9,6 +9,7 @@ import {
   StatusBar,
   StyleSheet,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
@@ -23,6 +24,8 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const navigation = useNavigation();
   const { login, loading } = useContext(AuthContext);
 
@@ -63,13 +66,17 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#F4F6FC' }]}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={[styles.headerText, { color: '#222' }]}>Login</Text>
-      </View>
+      <ImageBackground
+        source={require('../assets/event planner photo.jpg')}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
+      </ImageBackground>
       <View style={styles.authContainer}>
         <View style={styles.illustrationContainer}>
           <Image
-            source={require('../assets/LOGOLOGO.png')}
+            source={require('../assets/PLANIFYY.png')}
             style={styles.illustration}
             resizeMode="contain"
           />
@@ -78,24 +85,34 @@ const LoginScreen = () => {
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: '#222' }]}>EMAIL</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
+            style={[
+              styles.input,
+              emailFocused && styles.inputFocused
+            ]}
             value={email}
             onChangeText={setEmail}
             placeholder="Enter your email"
             placeholderTextColor="#888"
             autoCapitalize="none"
             keyboardType="email-address"
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
           />
         </View>
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: '#222' }]}>PASSWORD</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: '#fff', color: '#222' }]}
+            style={[
+              styles.input,
+              passwordFocused && styles.inputFocused
+            ]}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             placeholder="Enter your password"
             placeholderTextColor="#888"
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
           />
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -109,7 +126,7 @@ const LoginScreen = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={[styles.linkText, { color: '#4f78f1' }]}>
+          <Text style={[styles.linkText, { color: 'grey' }]}>
             Don't have an account? Sign Up
           </Text>
         </TouchableOpacity>
@@ -130,8 +147,13 @@ const styles = StyleSheet.create({
     marginBottom: normalize(20),
   },
   headerText: {
-    fontSize: normalize(28),
+    fontSize: normalize(24),
     fontWeight: 'bold',
+    color: '#222',
+    textShadowColor: 'rgba(255,255,255,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    textAlign: 'center',
   },
   authContainer: {
     width: '90%',
@@ -146,34 +168,58 @@ const styles = StyleSheet.create({
     height: normalize(180),
   },
   welcomeText: {
-    fontSize: normalize(20),
+    fontSize: normalize(17),
     fontWeight: 'bold',
-    marginBottom: normalize(20),
+    color: '#111',
+    marginBottom: normalize(18),
     textAlign: 'center',
+    textShadowColor: 'rgba(255,255,255,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   inputContainer: {
     width: '100%',
     marginBottom: normalize(15),
   },
   inputLabel: {
-    fontSize: normalize(14),
+    fontSize: normalize(13),
+    color: '#222',
+    fontWeight: '600',
     marginBottom: normalize(5),
   },
   input: {
     width: '100%',
     height: normalize(50),
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: normalize(8),
+    borderColor: '#e0e0e0',
+    borderRadius: normalize(12),
     paddingHorizontal: normalize(15),
+    backgroundColor: '#f5f6fa',
+    color: '#222',
+    fontSize: normalize(15),
+    marginBottom: 0,
+    shadowColor: '#e0e0e0',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+  },
+  inputFocused: {
+    backgroundColor: '#e4e7ef',
+    borderColor: '#4f78f1',
   },
   signInButton: {
     width: '100%',
-    height: normalize(50),
-    borderRadius: normalize(8),
+    height: normalize(54),
+    backgroundColor: '#4f78f1',
+    borderRadius: normalize(27),
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: normalize(20),
+    shadowColor: '#4f78f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.13,
+    shadowRadius: 8,
+    elevation: 4,
   },
   signInButtonText: {
     color: '#fff',
@@ -188,5 +234,10 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: normalize(10),
     textAlign: 'center',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.65)',
+    zIndex: 0,
   },
 });

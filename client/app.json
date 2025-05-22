@@ -33,6 +33,6 @@
   },
   "extra": {
     "STRIPE_PUBLISHABLE_KEY": "pk_test_51RO4rZCFiC25gcQ1k4TPSl46TGeLsebDfDuM2SXgE3bY0vukSGyW6tPztYv0c7LpxMekAirZtOygmId1ZRvpevvG007hrcgTw0",
-    "API_URL": "http://192.168.152.126:3000"
+    "API_URL": "http://192.168.1.164:3000"
   }
 } 

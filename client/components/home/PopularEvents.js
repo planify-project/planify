@@ -64,7 +64,7 @@ const PopularEvents = ({ navigation }) => {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Popular Events</Text>
         <View style={{ height: normalize(250), justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#5D5FEE" />
+          <ActivityIndicator size="large" color="#8d8ff3" />
         </View>
       </View>
     );

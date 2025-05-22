@@ -165,6 +165,9 @@ io.engine.on("connection_error", (err) => {
   });
 });
 
+// Make io accessible to routes
+app.set('io', io);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
@@ -200,7 +203,7 @@ const startServer = async () => {
       const urls = [
         `http://localhost:${PORT}`,
         `http://${HOST}:${PORT}`,
-        `http://192.168.1.166:${PORT}`
+        `http://192.168.132.232:${PORT}`
       ];
       
       console.log('\nServer running on:');

@@ -80,7 +80,7 @@ const NearbyEvents = ({ navigation }) => {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Nearby Events</Text>
         <View style={{ height: normalize(250), justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#5D5FEE" />
+          <ActivityIndicator size="large" color="#8d8ff3" />
         </View>
       </View>
     );

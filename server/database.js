@@ -185,7 +185,7 @@ const syncWithRetry = async (retries = 3) => {
 };
 
 // Run the sync
-// syncWithRetry();
+syncWithRetry();
 
 // Export all models and sequelize instance
 module.exports = {

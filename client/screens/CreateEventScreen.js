@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  StatusBar,
+  Dimensions
+} from 'react-native';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_BASE } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from 'firebase/auth';
+import { normalize } from '../utils/scaling';
+import { LinearGradient } from 'expo-linear-gradient';
+import CustomAlert from '../components/CustomAlert';
 
-// Update the axios configuration at the top of the file
+// API configuration
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
@@ -16,7 +31,7 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor for better debugging
+// Request interceptor
 api.interceptors.request.use(
   config => {
     console.log('Making request:', {
@@ -32,7 +47,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add error handling interceptor with better logging
+// Response interceptor
 api.interceptors.response.use(
   response => response,
   error => {
@@ -47,25 +62,7 @@ api.interceptors.response.use(
   }
 );
 
-// // Example of setting an item
-// const setItem = async (key, value) => {
-//   try {
-//     await AsyncStorage.setItem(key, JSON.stringify(value));
-//   } catch (error) {
-//     console.error('Error saving data', error);
-//   }
-// };
-
-// // Example of getting an item
-// const getItem = async (key) => {
-//   try {
-//     const value = await AsyncStorage.getItem(key);
-//     return value ? JSON.parse(value) : null;
-//   } catch (error) {
-//     console.error('Error reading data', error);
-//     return null;
-//   }
-// };
+const { width } = Dimensions.get('window');
 
 export default function CreateEventScreen({ navigation, route }) {
   const [activeTab, setActiveTab] = useState('space');
@@ -76,6 +73,12 @@ export default function CreateEventScreen({ navigation, route }) {
   const [selectedItems, setSelectedItems] = useState({
     venue: null,
     services: [],
+  });
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'error'
   });
 
   const fetchData = async (type) => {
@@ -114,27 +117,27 @@ export default function CreateEventScreen({ navigation, route }) {
         throw new Error(`Invalid data format for ${type}`);
       }
 
-        const formattedData = responseData.map(item => ({
-          id: item.id,
-          name: item.title || item.name,
-          description: item.description || item.title || item.name,
-          price: parseFloat(item.price) || 0,
-          type: item.serviceType || item.type,
-          images: item.imageUrl ? [item.imageUrl] : (item.images || []),
-          location: item.location || '',
-          amenities: item.amenities || {},
-          availability: item.availability || {}
-        }));
+      const formattedData = responseData.map(item => ({
+        id: item.id,
+        name: item.title || item.name,
+        description: item.description || item.title || item.name,
+        price: parseFloat(item.price) || 0,
+        type: item.serviceType || item.type,
+        images: item.imageUrl ? [item.imageUrl] : (item.images || []),
+        location: item.location || '',
+        amenities: item.amenities || {},
+        availability: item.availability || {}
+      }));
 
-        console.log(`Formatted ${type} data:`, formattedData);
+      console.log(`Formatted ${type} data:`, formattedData);
 
-        switch(type) {
-          case 'space':
-            setVenues(formattedData);
-            break;
-          case 'services':
-            setServices(formattedData);
-            break;
+      switch(type) {
+        case 'space':
+          setVenues(formattedData);
+          break;
+        case 'services':
+          setServices(formattedData);
+          break;
       }
     } catch (err) {
       console.error(`Error fetching ${type}:`, {
@@ -161,7 +164,7 @@ export default function CreateEventScreen({ navigation, route }) {
     }
   };
 
-  // Add retry functionality with exponential backoff
+  // Retry functionality with exponential backoff
   const retryWithDelay = async (type) => {
     setError(null);
     const maxRetries = 3;
@@ -205,43 +208,6 @@ export default function CreateEventScreen({ navigation, route }) {
     }
   };
 
-  const renderTableHeader = () => (
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, { flex: 2 }]}>Name</Text>
-      <Text style={[styles.headerCell, { flex: 1 }]}>Price</Text>
-      <Text style={[styles.headerCell, { flex: 1 }]}>Action</Text>
-    </View>
-  );
-
-  const renderTableRow = (item) => {
-    const isSelected = isItemSelected(item);
-
-    return (
-      <TouchableOpacity 
-        key={item.id}
-        style={[styles.tableRow, isSelected && styles.selectedRow]} 
-        onPress={() => handleSelectItem(item)}
-      >
-        <View style={[styles.cell, { flex: 2 }]}>
-          <Text style={styles.cellText}>{item.name}</Text>
-          {item.location && (
-            <Text style={styles.locationText}>{item.location}</Text>
-          )}
-        </View>
-        <View style={[styles.cell, { flex: 1 }]}>
-          <Text style={styles.cellText}>{item.price} DT</Text>
-        </View>
-        <View style={[styles.cell, { flex: 1 }]}>
-          <View style={[styles.selectButton, isSelected && styles.selectedButton]}>
-            <Text style={[styles.selectButtonText, isSelected && styles.selectedButtonText]}>
-              {isSelected ? 'Selected' : 'Select'}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   const isItemSelected = (item) => {
     switch(activeTab) {
       case 'space':
@@ -271,11 +237,60 @@ export default function CreateEventScreen({ navigation, route }) {
     });
   };
 
+  const renderCard = (item) => {
+    const isSelected = isItemSelected(item);
+    const imageUrl = item.images && item.images.length > 0 
+      ? item.images[0] 
+      : 'https://via.placeholder.com/150';
+
+    return (
+      <TouchableOpacity 
+        key={item.id}
+        style={[styles.card, isSelected && styles.selectedCard]} 
+        onPress={() => handleSelectItem(item)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.cardImageContainer}>
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={styles.cardImage} 
+            resizeMode="cover"
+          />
+          {isSelected && (
+            <View style={styles.selectedBadge}>
+              <Feather name="check" size={16} color="#fff" />
+            </View>
+          )}
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
+          {item.location ? (
+            <View style={styles.locationContainer}>
+              <Ionicons name="location-outline" size={14} color="#6B7280" />
+              <Text style={styles.locationText} numberOfLines={1}>{item.location}</Text>
+            </View>
+          ) : null}
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceText}>{item.price} DT</Text>
+            <TouchableOpacity 
+              style={[styles.selectButton, isSelected && styles.selectedButton]}
+              onPress={() => handleSelectItem(item)}
+            >
+              <Text style={styles.selectButtonText}>
+                {isSelected ? 'Selected' : 'Select'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007bff" />
+          <ActivityIndicator size="large" color="#8D8FF3" />
           <Text style={styles.loadingText}>Loading {activeTab}...</Text>
         </View>
       );
@@ -284,6 +299,7 @@ export default function CreateEventScreen({ navigation, route }) {
     if (error) {
       return (
         <View style={styles.errorContainer}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={50} color="#FF3B30" />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity 
             style={styles.retryButton} 
@@ -296,10 +312,21 @@ export default function CreateEventScreen({ navigation, route }) {
     }
 
     const data = getCurrentData();
-    return data.length > 0 ? (
-      data.map((item) => renderTableRow(item))
-    ) : (
-      <Text style={styles.noDataText}>No {activeTab} available</Text>
+    
+    if (data.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons name="calendar-blank-outline" size={70} color="#8D8FF3" />
+          <Text style={styles.emptyText}>No {activeTab} available</Text>
+          <Text style={styles.emptySubText}>Try again later or continue without {activeTab}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.cardsContainer}>
+        {data.map(item => renderCard(item))}
+      </View>
     );
   };
 
@@ -312,14 +339,24 @@ export default function CreateEventScreen({ navigation, route }) {
       const currentUser = auth.currentUser;
       
       if (!currentUser) {
-        Alert.alert('Error', 'You must be logged in to create an event');
+        setAlertConfig({
+          title: 'Authentication Required',
+          message: 'You must be logged in to create an event. Please sign in to continue.',
+          type: 'error'
+        });
+        setAlertVisible(true);
         navigation.navigate('Auth');
         return;
       }
 
       // Validate required fields from route params
       if (!route.params?.eventName || !route.params?.date) {
-        Alert.alert('Error', 'Event name and date are required');
+        setAlertConfig({
+          title: 'Required Information Missing',
+          message: 'Event name and date are required to create an event.',
+          type: 'error'
+        });
+        setAlertVisible(true);
         return;
       }
 
@@ -385,6 +422,12 @@ export default function CreateEventScreen({ navigation, route }) {
       const response = await api.post('/events', eventData);
 
       if (response.data.success) {
+        setAlertConfig({
+          title: 'Success',
+          message: 'Your event has been created successfully!',
+          type: 'success'
+        });
+        setAlertVisible(true);
         navigation.navigate('Schedule', {
           refresh: true,
           newEvent: response.data.data,
@@ -395,197 +438,380 @@ export default function CreateEventScreen({ navigation, route }) {
       }
     } catch (error) {
       console.error('Error creating event:', error.response?.data || error.message);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || error.message || 'Failed to create event. Please try again.'
-      );
+      setAlertConfig({
+        title: 'Error',
+        message: error.response?.data?.message || error.message || 'Failed to create event. Please try again.',
+        type: 'error'
+      });
+      setAlertVisible(true);
     } finally {
       setLoading(false);
     }
   };
 
+  const getSelectedSummary = () => {
+    const venue = selectedItems.venue ? 1 : 0;
+    const services = selectedItems.services.length;
+    
+    if (venue === 0 && services === 0) {
+      return 'No items selected';
+    }
+    
+    const parts = [];
+    if (venue > 0) parts.push(`${venue} venue`);
+    if (services > 0) parts.push(`${services} service${services > 1 ? 's' : ''}`);
+    
+    return parts.join(', ');
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FF" />
+      
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Create Event</Text>
+        <Text style={styles.headerSubtitle}>
+          {route.params?.eventName || 'New Event'} • {route.params?.date ? new Date(route.params.date).toLocaleDateString() : 'No date'}
+        </Text>
+      </View>
+      
       {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity 
-          onPress={() => setActiveTab('space')} 
-          style={[styles.tabButton, activeTab === 'space' && styles.activeTab]}
+      <View style={styles.tabsContainer}>
+        <LinearGradient
+          colors={['#F5F7FF', '#FFFFFF']}
+          style={styles.tabsGradient}
         >
-          <Text style={activeTab === 'space' ? styles.activeTabText : styles.tabText}>Event space (Optional)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => setActiveTab('services')} 
-          style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}
-        >
-          <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>Services (Optional)</Text>
-        </TouchableOpacity>
+          <View style={styles.tabs}>
+            <TouchableOpacity 
+              onPress={() => setActiveTab('space')} 
+              style={[styles.tabButton, activeTab === 'space' && styles.activeTab]}
+            >
+              <Ionicons 
+                name={activeTab === 'space' ? "business" : "business-outline"} 
+                size={20} 
+                color={activeTab === 'space' ? "#FFFFFF" : "#7C7C7C"} 
+              />
+              <Text style={activeTab === 'space' ? styles.activeTabText : styles.tabText}>
+                Event Space
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setActiveTab('services')} 
+              style={[styles.tabButton, activeTab === 'services' && styles.activeTab]}
+            >
+              <Ionicons 
+                name={activeTab === 'services' ? "restaurant" : "restaurant-outline"} 
+                size={20} 
+                color={activeTab === 'services' ? "#FFFFFF" : "#7C7C7C"} 
+              />
+              <Text style={activeTab === 'services' ? styles.activeTabText : styles.tabText}>
+                Services
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {renderTableHeader()}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {renderContent()}
       </ScrollView>
 
-      {/* Done Button */}
-      <TouchableOpacity 
-        style={styles.doneButton}
-        onPress={handleDone}
-      >
-        <Text style={styles.doneButtonText}>Done</Text>
-      </TouchableOpacity>
-    </View>
+      {/* Bottom Bar with Summary */}
+      <View style={styles.bottomBar}>
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryLabel}>Selected:</Text>
+          <Text style={styles.summaryText}>{getSelectedSummary()}</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.doneButton}
+          onPress={handleDone}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={styles.doneButtonText}>Done</Text>
+              <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" style={styles.doneButtonIcon} />
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        close={() => setAlertVisible(false)}
+        buttons={[
+          {
+            text: 'OK',
+            onPress: () => {
+              setAlertVisible(false);
+              if (alertConfig.type === 'success') {
+                // Additional navigation or cleanup if needed
+              }
+            },
+            style: alertConfig.type === 'success' ? 'success' : 'primary'
+          }
+        ]}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#F3F4F8'
+    backgroundColor: '#F5F7FF',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#F5F7FF',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  tabsContainer: {
+    backgroundColor: '#F5F7FF',
+  },
+  tabsGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    padding: 15,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 12,
+    padding: 5,
+    shadowColor: '#8D8FF3',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3
+    shadowRadius: 8,
+    elevation: 3,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 5,
-    borderRadius: 8
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 8,
   },
   activeTab: {
-    backgroundColor: '#4f78f1'
+    backgroundColor: '#8D8FF3',
   },
   tabText: {
     color: '#7C7C7C',
-    fontSize: 15,
-    fontWeight: '500'
+    fontSize: 14,
+    fontWeight: '500',
   },
   activeTabText: {
     color: '#FFFFFF',
-    fontWeight: '600'
+    fontSize: 14,
+    fontWeight: '600',
   },
   scrollContainer: {
-    padding: 15
+    padding: 20,
+    paddingBottom: 100,
   },
-  tableHeader: {
+  cardsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: (width - 50) / 2,
     backgroundColor: '#FFFFFF',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 2,
+    borderRadius: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  headerCell: {
+  selectedCard: {
+    borderWidth: 2,
+    borderColor: '#8D8FF3',
+  },
+  cardImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 120,
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#8D8FF3',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardContent: {
+    padding: 12,
+  },
+  cardTitle: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#1E1E1E',
-    fontSize: 15
+    color: '#1A1A1A',
+    marginBottom: 4,
   },
-  tableRow: {
+  locationContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  selectedRow: {
-    backgroundColor: '#F0F8FF'
+  locationText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+    flex: 1,
   },
-  cell: {
-    padding: 5,
-    justifyContent: 'center'
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  cellText: {
-    fontSize: 15,
-    color: '#1E1E1E'
+  priceText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1A1A1A',
   },
   selectButton: {
-    backgroundColor: '#4f78f1',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center'
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: '#F3F4F6',
   },
   selectedButton: {
-    backgroundColor: '#4CAF50'
+    backgroundColor: '#E0E7FF',
   },
   selectButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600'
-  },
-  doneButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: '#4f78f1',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4
-  },
-  doneButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600'
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8D8FF3',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6B7280',
   },
   errorContainer: {
-    padding: 20,
-    alignItems: 'center'
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
     color: '#FF3B30',
     textAlign: 'center',
-    marginBottom: 10
+    marginVertical: 12,
+    fontSize: 14,
   },
   retryButton: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8D8FF3',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8
+    borderRadius: 8,
+    marginTop: 8,
   },
   retryButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600'
+    fontWeight: '600',
+    fontSize: 14,
   },
-  noDataText: {
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#6B7280',
     textAlign: 'center',
-    color: '#7C7C7C',
-    marginTop: 20,
-    fontSize: 16
   },
-  locationText: {
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  summaryContainer: {
+    flex: 1,
+  },
+  summaryLabel: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  summaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  doneButton: {
+    backgroundColor: '#8D8FF3',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  doneButtonIcon: {
+    marginLeft: 4,
   },
 });

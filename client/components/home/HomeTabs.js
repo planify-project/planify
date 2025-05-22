@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     borderRadius: normalize(20),
   },
   activeTab: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
   },
   tabText: {
     fontSize: normalize(14),
