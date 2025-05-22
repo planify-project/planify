@@ -155,7 +155,7 @@ export default function ScheduleScreen({ navigation, route }) {
             <View style={styles.eventItem}>
               <TouchableOpacity 
                 style={styles.eventInfo}
-                onPress={() => navigation.navigate('EventDetails', { event: item })}
+                onPress={() => navigation.navigate('EventDetail', { event: item })}
               >
                 <Text style={styles.eventTitle}>{item.name}</Text>
                 <Text style={styles.eventDate}>

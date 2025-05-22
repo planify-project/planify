@@ -18,7 +18,7 @@ export default function JoinEventScreen({ route, navigation }) {
     setEmail('');
     setPhone('');
     setShowModal(false);
-    navigation.navigate('Home');
+    navigation.navigate('Root', { screen: 'Home' });
   };
 
   return (

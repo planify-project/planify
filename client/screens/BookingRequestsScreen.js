@@ -124,10 +124,8 @@ export default function BookingRequestsScreen() {
   const handleChatPress = (booking) => {
     console.log('Chat button pressed for booking:', booking);
     navigation.navigate('Chat', {
-      serviceId: booking.serviceId,
-      serviceProviderId: booking.service?.provider_id,
-      serviceProviderName: booking.service?.provider?.name || 'Service Provider',
-      serviceProviderImage: booking.service?.provider?.image_url
+      senderId: auth.currentUser?.uid, // Assuming auth.currentUser contains the logged-in user's ID
+      receiverId: booking.service?.provider_id // Assuming provider_id is the receiver's ID
     });
   };
 
@@ -292,4 +290,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-}); 
+});

@@ -9,16 +9,12 @@ import LocationPickerModal from '../components/home/LocationPickerModal';
 import PopularEvents from '../components/home/PopularEvents';
 import NearbyEvents from '../components/home/NearbyEvents';
 import CreateEventButton from '../components/home/CreateEventButton';
-// import { popularEvents } from '../constants/mockData';
 import { normalize } from '../utils/scaling';
-import AllEventsScreen from './AllEventsScreen';
 import axios from 'axios';
 import { API_BASE } from '../config'; // Make sure this points to your backend
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
-import { getImageUrl } from '../configs/url';
-import api from '../configs/api';
+
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -152,6 +148,7 @@ export default function HomeScreen() {
         onLocationPress={() => setModalVisible(true)}
         onNotificationPress={() => navigation.navigate('Notifications')}
         onAgentPress={() => navigation.navigate('AgentList')}
+        onMessagePress={() => navigation.navigate('Messages')}
       />
 
       <LocationPickerModal

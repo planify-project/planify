@@ -19,6 +19,8 @@ const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
 const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+const messageRoutes = require('./routes/message.routes');
+const conversationRouter = require('./routes/conversation.routes');
 
 // Create Express app and HTTP server
 const app = express();
@@ -42,7 +44,7 @@ app.use(cors({
 
 // Test endpoint
 app.get('/test', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'ok',
     message: 'Server is running',
     timestamp: new Date().toISOString()
@@ -81,12 +83,115 @@ io.on('connection', (socket) => {
     socket.join(roomName);
     console.log(`Socket ${socket.id} joined room: ${roomName}`);
   }
+  socket.on("join_room", (roomId, callback) => {
+    try {
+      console.log('Attempting to join room:', roomId);
+      
+      // Validate roomId format
+      const [userId1, userId2] = roomId.split('-').sort();
+      if (!userId1 || !userId2) {
+        console.error('Invalid roomId format:', roomId);
+        if (callback) {
+          callback({ success: false, error: 'Invalid room ID format' });
+        }
+        return;
+      }
+
+      socket.join(roomId);
+      console.log(`User ${socket.id} joined room ${roomId}`);
+      
+      if (callback) {
+        callback({ success: true });
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      if (callback) {
+        callback({ success: false, error: error.message });
+      }
+    }
+  });
+
+
+socket.on("leave_room", (roomId, callback) => {
+try {
+socket.leave(roomId);
+console.log(`User ${socket.id} left room ${roomId}`);
+if (callback) {
+  callback({ success: true });
+}
+} catch (error) {
+console.error('Error leaving room:', error);
+if (callback) {
+  callback({ success: false, error: error.message });
+}
+}
+});
+
+socket.on("send_message", (data, callback) => {
+try {
+console.log('Received message to send:', {
+  roomId: data.roomId,
+  senderId: data.senderId,
+  text: data.text
+});
+
+// Validate the data
+if (!data.roomId || !data.senderId) {
+  console.error('Invalid message data:', data);
+  if (callback) {
+    callback({ success: false, error: 'Invalid message data' });
+  }
+  return;
+}
+
+// Emit to the room
+io.in(data.roomId).emit("receive_message", {
+  ...data,
+  timestamp: new Date().toISOString(),
+});
+
+console.log('Message sent successfully to room:', data.roomId);
+
+if (callback) {
+  callback({ success: true });
+}
+} catch (error) {
+console.error('Error sending message:', error);
+if (callback) {
+  callback({ success: false, error: error.message });
+}
+}
+});
+
+socket.on("mark_as_read", (data, callback) => {
+try {
+io.in(data.roomId).emit("messages_read", {
+  messageIds: data.messageIds,
+  timestamp: new Date().toISOString(),
+});
+if (callback) {
+  callback({ success: true });
+}
+} catch (error) {
+console.error('Error marking messages as read:', error);
+if (callback) {
+  callback({ success: false, error: error.message });
+}
+}
+});
+
+
+socket.on("join_user_room", (userId) => {
+const roomName = `user_${userId}`;
+socket.join(roomName);
+console.log(`User ${userId} joined personal room: ${roomName}`);
+});
 
   // Handle new booking notifications
   socket.on('newBooking', (data) => {
     console.log('New booking notification:', data);
     const { providerId, bookingId, customerId, customerName, message } = data;
-    
+
     // Emit to provider's room
     io.to(`user_${providerId}`).emit('newBooking', {
       notification: {
@@ -100,6 +205,7 @@ io.on('connection', (socket) => {
         createdAt: new Date().toISOString(),
         is_read: false
       }
+      
     });
 
     // Also emit to customer's room for confirmation
@@ -120,7 +226,7 @@ io.on('connection', (socket) => {
   socket.on('bookingResponse', (data) => {
     console.log('Booking response:', data);
     const { customerId, bookingId, status, message } = data;
-    
+
     // Emit to customer's room
     io.to(`user_${customerId}`).emit('bookingResponse', {
       notification: {
@@ -155,6 +261,7 @@ io.on('connection', (socket) => {
   });
 });
 
+
 // Debug middleware for Socket.IO
 io.engine.on("connection_error", (err) => {
   console.log('Connection Error:', {
@@ -164,6 +271,7 @@ io.engine.on("connection_error", (err) => {
     context: err.context
   });
 });
+
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -176,7 +284,9 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
-app.use('/api/authadmin',AdminAuthRoutes)
+app.use('/api/authadmin', AdminAuthRoutes);
+app.use('/api/message', messageRoutes);
+app.use('/api/conversation', conversationRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -202,7 +312,7 @@ const startServer = async () => {
         `http://${HOST}:${PORT}`,
         `http://192.168.1.166:${PORT}`
       ];
-      
+
       console.log('\nServer running on:');
       urls.forEach(url => {
         console.log(`\n${url}:`);

@@ -61,6 +61,8 @@ const AuditLog = require('./models/auditLog')(sequelize, DataTypes);
 const Admin = require('./models/admin')(sequelize, DataTypes);
 const Agent = require('./models/Agent')(sequelize, DataTypes);
 const EventSpace = require('./models/eventSpace')(sequelize, DataTypes);
+const Conversation = require('./models/conversation.model.js')(sequelize,DataTypes);
+
 
 // Associations
 
@@ -79,7 +81,7 @@ User.hasMany(EventGuest, { foreignKey: 'user_id', as: 'guestEvents' });
 EventGuest.belongsTo(User, { foreignKey: 'user_id', as: 'guest' });
 
 User.hasMany(Service, { foreignKey: 'provider_id', as: 'services' });
-Service.belongsTo(User, { foreignKey: 'provider_id', as: 'provider' }); 
+Service.belongsTo(User, { foreignKey: 'provider_id', as: 'provider' });
 
 // Service and ServiceCategory relationships
 Service.belongsTo(ServiceCategory, { foreignKey: 'category_id' });
@@ -90,8 +92,8 @@ Event.belongsToMany(Service, { through: EventService, foreignKey: 'event_id', ot
 Service.belongsToMany(Event, { through: EventService, foreignKey: 'service_id', otherKey: 'event_id' });
 
 User.hasMany(Booking, { foreignKey: 'userId' });
-Booking.belongsTo(User, { foreignKey: 'userId' }); 
-Service.hasMany(Booking, { foreignKey: 'serviceId' }); 
+Booking.belongsTo(User, { foreignKey: 'userId' });
+Service.hasMany(Booking, { foreignKey: 'serviceId' });
 Booking.belongsTo(Service, { foreignKey: 'serviceId' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
@@ -104,15 +106,6 @@ Wishlist.belongsTo(User, { foreignKey: 'user_id' });
 Wishlist.hasMany(WishlistItem, { foreignKey: 'wishlist_id' });
 WishlistItem.belongsTo(Wishlist, { foreignKey: 'wishlist_id' });
 
-// Message associations
-User.hasMany(Message, { foreignKey: 'from_user_id', as: 'sentMessages' });
-User.hasMany(Message, { foreignKey: 'to_user_id', as: 'receivedMessages' });
-Message.belongsTo(User, { foreignKey: 'from_user_id', as: 'sender' });
-Message.belongsTo(User, { foreignKey: 'to_user_id', as: 'recipient' });
-Message.belongsTo(Service, { foreignKey: 'service_id' });
-Service.hasMany(Message, { foreignKey: 'service_id' });
-Message.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
-Event.hasMany(Message, { foreignKey: 'event_id' });
 
 // User and Review relationships
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
@@ -139,24 +132,35 @@ Offer.belongsTo(User, { foreignKey: 'provider_id' });
 // User and Notification relationships
 User.hasMany(Notification, { foreignKey: 'user_id' });
 Notification.belongsTo(User, { foreignKey: 'user_id' });
- 
+
 Notification.belongsTo(Booking, { foreignKey: 'booking_id' });
 Booking.hasMany(Notification, { foreignKey: 'booking_id' });
 
-Admin.hasMany(AuditLog, { foreignKey: 'admin_id' }); 
+Admin.hasMany(AuditLog, { foreignKey: 'admin_id' });
 AuditLog.belongsTo(Admin, { foreignKey: 'admin_id' });
- 
+
 Event.hasMany(Payment, { foreignKey: 'event_id' });
 Payment.belongsTo(Event, { foreignKey: 'event_id' });
 
-Service.hasMany(Payment, { foreignKey: 'service_id' }); 
+Service.hasMany(Payment, { foreignKey: 'service_id' });
 Payment.belongsTo(Service, { foreignKey: 'service_id' });
+
+Conversation.hasMany(Message, { foreignKey: 'ConversationId' });
+Message.belongsTo(Conversation, { foreignKey: 'ConversationId' });
+
+User.belongsToMany(Conversation, { through: 'UserConversations', foreignKey: 'userId' });
+Conversation.belongsToMany(User, { through: 'UserConversations', foreignKey: 'ConversationId' });
 
 User.hasMany(Review, { foreignKey: 'reviewer_id' });
 Review.belongsTo(User, { foreignKey: 'reviewer_id' });
 
 Event.hasMany(Review, { foreignKey: 'event_id' });
 Review.belongsTo(Event, { foreignKey: 'event_id' });
+
+// Define relationships for the Message model
+
+User.hasMany(Message, { foreignKey: 'senderId' });
+Message.belongsTo(User, { foreignKey: 'senderId' });
 
 // Sync database with retry logic
 const syncWithRetry = async (retries = 3) => {
@@ -165,14 +169,13 @@ const syncWithRetry = async (retries = 3) => {
         await User.sync({ alter: true });
         console.log('User model synchronized successfully.');
 
-    // Then sync all other models
-    await sequelize.sync({ alter: true });
-    console.log('All models were synchronized successfully.');
-
+        // Then sync all other models
+        await sequelize.sync({ alter: true });
         // Import and run the event spaces seeder
-        const seedEventSpaces = require('./seeds/eventSpaces');
-        await seedEventSpaces();
-        console.log('Event spaces seeded successfully!');
+        // const seedEventSpaces = require('./seeds/eventSpaces');
+        // await seedEventSpaces();
+        // console.log('Event spaces seeded successfully!');
+        console.log('All models were synchronized successfully.');
     } catch (error) {
         if (retries > 0 && (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_LOCK_DEADLOCK')) {
             console.log(`Deadlock detected, retrying... (${retries} attempts remaining)`);
@@ -212,5 +215,6 @@ module.exports = {
     AuditLog,
     Admin,
     Agent,
-    EventSpace
+    EventSpace,
+    Conversation
 };

@@ -9,7 +9,8 @@ const HomeHeader = ({
   city, 
   errorMsg, 
   onLocationPress, 
-  onNotificationPress
+  onNotificationPress,
+  onMessagePress // Add the onMessagePress handler
 }) => {
   const { notifications } = useSocket();
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -43,6 +44,12 @@ const HomeHeader = ({
               </Text>
             </View>
           )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.notificationBtn}
+          onPress={onMessagePress} // Add a handler for the message button
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
     </View>

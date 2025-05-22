@@ -5,14 +5,14 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js", 
-    "dev": "nodemon server.js",
     "seed": "node seeders/index.js",
     "seed:publicEvents": "node seeds/publicEvents.js",
     "seed:users": "node seeds/users.js",
     "seed:events": "node seeds/events.js",
     "seed:services": "node seeds/services.js",
     "seed:eventSpaces": "node seeds/event__space.seed.js",
-    "seed:payments": "node seeds/payments.js"
+    "seed:payments": "node seeds/payments.js",
+    "seed:messages": "node seeds/message.js"
   },
   "dependencies": {
     "@faker-js/faker": "^9.8.0",

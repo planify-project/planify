@@ -114,27 +114,10 @@ export default function ServiceDetailScreen({ route, navigation }) {
 
   const handleChat = () => {
     console.log('Chat button pressed');
-    // navigation.dispatch(
-    //   CommonActions.navigate({
-    //     name: 'Root',
-    //     params: {
-    //       screen: 'AllEvents',
-    //       params: {
-    //         serviceId: service.id,
-    //         serviceProviderId: service.provider.id,
-    //         serviceProviderName: service.provider.name,
-    //         serviceProviderImage: service.provider.image_url
-    //       }
-    //     }
-    //   })
-    // );
     navigation.navigate('Chat', { 
-      serviceId: service.id,
-      serviceProviderId: service.provider.id,
-      serviceProviderName: service.provider.name,
-      serviceProviderImage: service.provider.image_url
+      senderId: auth.currentUser?.uid, // Assuming auth.currentUser contains the logged-in user's ID
+      receiverId: service.provider.id // Assuming provider.id is the receiver's ID
     });
-
   };
 
   const handleBooking = async () => {
