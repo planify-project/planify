@@ -170,39 +170,28 @@ export default function EventDetailScreen({ route }) {
           />
         </View>
 
-        {/* Write Review Button */}
-        <TouchableOpacity 
-          style={[styles.joinBtn, { backgroundColor: '#fff', marginHorizontal: normalize(20), marginTop: normalize(20), marginBottom: normalize(20), borderWidth: 1, borderColor: '#6C6FD1' }]}
-          onPress={() => {
-            console.log("😍😍😍😍😍",event);
-            navigation.navigate('Review', { event })}}
-        >
-          <Text style={[styles.joinBtnText, { color: '#6C6FD1' }]}>Write a Review</Text>
-        </TouchableOpacity>
+        {/* Bottom Spacer */}
+        <View style={styles.bottomSpacer} />
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
-            onPress={() => navigation.navigate('JoinEvent', { event })}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Join Event</Text>
-          </TouchableOpacity>
+        {/* Action Buttons Container */}
+        <View style={styles.actionButtonsContainer}>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+              onPress={() => navigation.navigate('JoinEvent', { event })}
+            >
+              <Ionicons name="calendar-outline" size={20} color="#fff" />
+              <Text style={styles.actionButtonText}>Join Event</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
-            onPress={() => {
-              // Extract numeric value from event.price (e.g., '20 DT' -> 20)
-              const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
-              navigation.push('Payment', { 
-                amount: price,
-                eventId: event.id 
-              });
-            }}
-          >
-            <Ionicons name="card-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Pay & Join</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: '#6C6FD1' }]}
+              onPress={() => navigation.navigate('Review', { event })}
+            >
+              <Ionicons name="star-outline" size={20} color="#fff" />
+              <Text style={styles.actionButtonText}>Write a Review</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -337,13 +326,32 @@ const styles = StyleSheet.create({
     borderRadius: normalize(8),
     marginRight: normalize(8),
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: normalize(16),
+  bottomSpacer: {
+    height: normalize(60),
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    paddingTop: normalize(12),
+    paddingBottom: normalize(20),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: normalize(16),
   },
   actionButton: {
     flexDirection: 'row',
@@ -356,6 +364,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
+    minWidth: normalize(140),
   },
   actionButtonText: {
     color: '#fff',

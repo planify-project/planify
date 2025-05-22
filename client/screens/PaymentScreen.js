@@ -134,8 +134,8 @@ const PaymentScreen = () => {
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    // Navigate back to event detail screen
-    navigation.navigate('EventDetail', { event: { id: eventId } });
+    // Navigate back to the previous screen
+    navigation.goBack();
   };
 
   return (
