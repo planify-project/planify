@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUrl } from '../configs/url';
 import { useFocusEffect } from '@react-navigation/native';
+import { getAuth } from 'firebase/auth';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
@@ -34,9 +36,19 @@ const AllServicesScreen = ({ navigation }) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const auth = getAuth();
 
   useEffect(() => {
     loadServices();
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
+        }
+      }
+    })();
   }, []);
 
   const loadServices = async () => {
@@ -59,17 +71,106 @@ const AllServicesScreen = ({ navigation }) => {
     }, [])
   );
 
+  const handleCreateService = () => {
+    if (!auth.currentUser) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigation.navigate('AddService');
+  };
+
+  const pickImage = async (serviceId) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        // Update the service image in the local state
+        setServices(prevServices => 
+          prevServices.map(service => 
+            service.id === serviceId 
+              ? { ...service, imageUrl: result.assets[0].uri }
+              : service
+          )
+        );
+
+        // Here you would typically upload the image to your server
+        // and update the service with the new image URL
+        const formData = new FormData();
+        formData.append('image', {
+          uri: result.assets[0].uri,
+          type: 'image/jpeg',
+          name: 'photo.jpg'
+        });
+
+        const token = await auth.currentUser.getIdToken();
+        await api.put(`/services/${serviceId}/image`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error picking/uploading image:', error);
+      Alert.alert('Error', 'Failed to update service image. Please try again.');
+    }
+  };
+
+  const renderAuthModal = () => (
+    <Modal
+      visible={showAuthModal}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowAuthModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+          <View style={styles.modalIconContainer}>
+            <Ionicons name="lock-closed" size={40} color={theme.primary} />
+          </View>
+          <Text style={[styles.modalTitle, { color: theme.text }]}>
+            Authentication Required
+          </Text>
+          <Text style={[styles.modalMessage, { color: theme.textSecondary }]}>
+            You must be logged in to create a service. Would you like to sign in?
+          </Text>
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton, { borderColor: theme.border }]}
+              onPress={() => setShowAuthModal(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.signInButton, { backgroundColor: theme.primary }]}
+              onPress={() => {
+                setShowAuthModal(false);
+                navigation.navigate('Auth');
+              }}
+            >
+              <Text style={[styles.modalButtonText, styles.signInButtonText]}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   const renderServiceItem = ({ item }) => {
-    console.log('Rendering service item:', item);
-    // Get the image URL from the correct field
-    const imageUrl = item.imageUrl ? `http://192.168.1.189:3000${item.imageUrl}` : null;
-    console.log('Service card image URL:', imageUrl);
+    const imageUrl = item.imageUrl ? getImageUrl(item.imageUrl) : null;
+    const isProvider = auth.currentUser && item.provider_id === auth.currentUser.uid;
     
     return (
       <TouchableOpacity
         style={[styles.serviceCard, { backgroundColor: theme.card }]}
         onPress={() => navigation.navigate('ServiceDetails', { service: item })}
       >
+        <View style={styles.imageContainer}>
         <Image
           source={{ uri: imageUrl || 'https://picsum.photos/300/300' }}
           style={styles.serviceImage}
@@ -82,6 +183,16 @@ const AllServicesScreen = ({ navigation }) => {
             });
           }}
         />
+          {isProvider && (
+            <TouchableOpacity 
+              style={styles.imageOverlay}
+              onPress={() => pickImage(item.id)}
+            >
+              <Ionicons name="camera" size={24} color="#fff" />
+              <Text style={styles.imageOverlayText}>Change Image</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.serviceInfo}>
           <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={1}>
             {item.title}
@@ -116,9 +227,10 @@ const AllServicesScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {renderAuthModal()}
       <TouchableOpacity
         style={[styles.createButton, { backgroundColor: theme.primary }]}
-        onPress={() => navigation.navigate('AddService')}
+        onPress={handleCreateService}
       >
         <Ionicons name="add-circle-outline" size={24} color="#fff" style={styles.createButtonIcon} />
         <Text style={styles.createButtonText}>Create New Service</Text>
@@ -134,94 +246,6 @@ const AllServicesScreen = ({ navigation }) => {
     </View>
   );
 };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: normalize(16)
-//   },
-//   listContainer: {
-//     padding: normalize(8)
-//   },
-//   serviceCard: {
-//     flex: 1,
-//     margin: normalize(8),
-//     width: tileSize - normalize(16),
-//     borderRadius: normalize(12),
-//     overflow: 'hidden',
-//     elevation: 3,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.25,
-//     shadowRadius: 3.84
-//   },
-//   serviceImage: {
-//     width: '100%',
-//     height: tileSize - normalize(16),
-//     resizeMode: 'cover'
-//   },
-//   serviceInfo: {
-//     padding: normalize(12)
-//   },
-//   serviceTitle: {
-//     fontSize: normalize(16),
-//     fontWeight: 'bold',
-//     marginBottom: normalize(4)
-//   },
-//   servicePrice: {
-//     fontSize: normalize(14),
-//     fontWeight: 'bold'
-//   },
-//   emptyContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 20,
-//   },
-//   emptyText: {
-//     fontSize: 18,
-//     marginBottom: 20,
-//     textAlign: 'center',
-//   },
-//   createButton: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     padding: normalize(12),
-//     borderRadius: normalize(8),
-//     marginVertical: normalize(16),
-//     marginHorizontal: normalize(16),
-//   },
-//   createButtonIcon: {
-//     marginRight: normalize(8),
-//   },
-//   createButtonText: {
-//     color: '#fff',
-//     fontSize: normalize(16),
-//     fontWeight: 'bold',
-//   },
-//   loadingText: {
-//     fontSize: 16,
-//     textAlign: 'center',
-//     marginTop: 20,
-//   },
-//   errorText: {
-//     fontSize: 16,
-//     textAlign: 'center',
-//     marginTop: 20,
-//     marginBottom: 10,
-//   },
-//   retryButton: {
-//     padding: 10,
-//     borderRadius: 8,
-//     alignSelf: 'center',
-//   },
-//   retryButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-// });
 
 const styles = StyleSheet.create({
   container: {
@@ -445,6 +469,92 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 24,
     elevation: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    borderRadius: normalize(20),
+    padding: normalize(24),
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalIconContainer: {
+    width: normalize(80),
+    height: normalize(80),
+    borderRadius: normalize(40),
+    backgroundColor: 'rgba(0, 149, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: normalize(16),
+  },
+  modalTitle: {
+    fontSize: normalize(20),
+    fontWeight: '700',
+    marginBottom: normalize(12),
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: normalize(16),
+    textAlign: 'center',
+    marginBottom: normalize(24),
+    lineHeight: normalize(22),
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: normalize(12),
+    borderRadius: normalize(12),
+    alignItems: 'center',
+    marginHorizontal: normalize(6),
+  },
+  cancelButton: {
+    borderWidth: 1,
+  },
+  signInButton: {
+    backgroundColor: '#0095FF',
+  },
+  modalButtonText: {
+    fontSize: normalize(16),
+    fontWeight: '600',
+  },
+  signInButtonText: {
+    color: '#FFFFFF',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: tileSize - normalize(24),
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: normalize(8),
+    opacity: 0,
+  },
+  imageOverlayText: {
+    color: '#fff',
+    marginLeft: normalize(8),
+    fontSize: normalize(14),
+    fontWeight: '600',
   },
 });
 

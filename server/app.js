@@ -23,7 +23,6 @@ const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
  const AdminAuthRoutes = require('./routes/adminAuth.routes');
 const bookingRoutes = require('./routes/booking.routes.js');
 
- 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
@@ -239,7 +238,7 @@ server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
     `http://127.0.0.1:${PORT}`,
-    `http://192.168.1.189:${PORT}`
+    `http://192.168.234.126:${PORT}`
   ];
   
   console.log('\nServer running on:');
@@ -253,8 +252,10 @@ server.listen(PORT, HOST, () => {
   console.log('  - Transports: websocket, polling');
   console.log('  - Path: /socket.io/');
   console.log('  - CORS: enabled for all origins');
-  console.log(`Server running at http://192.168.1.189:${PORT}`);
+  console.log(`Server running at http://192.168.234.126:${PORT}`);
 });
+
+module.exports = app;
 
 
 

@@ -145,22 +145,13 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const { title, description, price, service_type, location } = req.body;
+      const { title, description, price, provider_id } = req.body;
       
       // Validate required fields
-      if (!type || !description || !price) {
+      if (!title || !description || !price) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields'
-        });
-      }
-
-      // Get user ID from request body or query
-      const provider_id = req.body.provider_id || req.query.provider_id;
-      if (!provider_id) {
-        return res.status(400).json({
-          success: false,
-          message: 'Provider ID is required'
         });
       }
 
@@ -177,22 +168,18 @@ class ServicesController {
       const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
 
       console.log('Creating service with data:', {
-        type,
+        title,
         description,
         price,
         imageUrl,
-        service_type,
-        location,
         provider_id
       });
 
       const service = await Service.create({
-        type,
+        title,
         description,
         price,
         imageUrl,
-        service_type: service_type || 'general',
-        location,
         provider_id,
         is_active: true
       });

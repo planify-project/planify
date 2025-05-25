@@ -129,21 +129,9 @@ const ProfileScreen = () => {
 
     } catch (error) {
       console.error('Error fetching user data:', error);
-      let errorMessage = 'Failed to load profile data. ';
-      
-      if (error.response?.status === 404) {
-        errorMessage += 'User profile not found. Please try logging out and back in.';
-      } else if (error.response?.status === 401) {
-        errorMessage += 'Please log in again.';
-      } else if (error.message === 'No authenticated user found') {
-        errorMessage = 'Please log in to view your profile.';
-      } else {
-        errorMessage += 'Please try again.';
-      }
-
       setAlertConfig({
         title: 'Error',
-        message: errorMessage,
+        message: 'Failed to load profile data. Please try again.',
         type: 'error'
       });
       setAlertVisible(true);

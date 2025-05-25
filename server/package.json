@@ -11,7 +11,7 @@
     "seed:users": "node seeds/users.js",
     "seed:events": "node seeds/events.js",
     "seed:services": "node seeds/services.js",
-    "seed:eventSpaces": "node seeds/event__space.seed.js",
+    "seed:eventSpaces": "node seed/event__space.seed.js",
     "seed:payments": "node seeds/payments.js"
   },
   "dependencies": {

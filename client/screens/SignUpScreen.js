@@ -114,20 +114,12 @@ const name=username
           />
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={styles.googleButton}>
-          <Image source={require('../assets/google-logo.png')} style={styles.logo} />
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.facebookButton}>
-          <Image source={require('../assets/facebook-logo.png')} style={styles.logo} />
-          <Text style={styles.facebookButtonText}>Continue with Facebook</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.signInButton} onPress={handleSignUp}>
           <Text style={styles.signInButtonText}>Sign up</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.createAccountButton} onPress={() => navigation.navigate('Login')}>
-  <Text style={styles.createAccountText}>Already have an account? Log in</Text>
-</TouchableOpacity>
+          <Text style={styles.createAccountText}>Already have an account? Log in</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -205,48 +197,6 @@ const styles = StyleSheet.create({
   inputFocused: {
     backgroundColor: '#e4e7ef', // slightly darker grey when focused
     borderColor: '#4f78f1', // optional: highlight border
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Center the content horizontally
-    width: '90%', // Adjust width to make it consistent with inputs
-    height: normalize(50),
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: normalize(25), // Fully rounded corners
-    backgroundColor: '#fff',
-    marginBottom: normalize(15),
-    alignSelf: 'center', // Center the button horizontally
-  },
-  googleButtonText: {
-    color: '#555',
-    fontSize: normalize(16),
-    fontWeight: '600',
-    marginLeft: normalize(10),
-  },
-  facebookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Center the content horizontally
-    width: '90%', // Adjust width to make it consistent with inputs
-    height: normalize(50),
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: normalize(25), // Fully rounded corners
-    backgroundColor: '#fff',
-    marginBottom: normalize(15),
-    alignSelf: 'center', // Center the button horizontally
-  },
-  facebookButtonText: {
-    color: '#555',
-    fontSize: normalize(16),
-    fontWeight: '600',
-    marginLeft: normalize(10),
-  },
-  logo: {
-    width: normalize(20),
-    height: normalize(20),
   },
   signInButton: {
     width: '100%',

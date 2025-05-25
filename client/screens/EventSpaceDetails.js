@@ -8,6 +8,7 @@ import EventSpaceBookingModal from '../components/EventSpaceBookingModal';
 import { Calendar } from 'react-native-calendars';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { API_BASE, SOCKET_URL } from '../config';
 
 const { width } = Dimensions.get('window');
 
@@ -62,6 +63,7 @@ export default function EventSpaceDetails({ route, navigation }) {
   const [availability, setAvailability] = useState({});
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [showScheduleTooltip, setShowScheduleTooltip] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
   const auth = getAuth();
 
   // Initialize Firebase Realtime Database
@@ -69,6 +71,7 @@ export default function EventSpaceDetails({ route, navigation }) {
   const notificationsRef = ref(db, 'notifications');
 
   useEffect(() => {
+    checkIfCreator();
     fetchAvailability();
     // Listen for real-time notifications
     const unsubscribe = onValue(notificationsRef, (snapshot) => {
@@ -89,6 +92,24 @@ export default function EventSpaceDetails({ route, navigation }) {
       unsubscribe();
     };
   }, []);
+
+  const checkIfCreator = async () => {
+    try {
+      if (!auth.currentUser) {
+        setIsCreator(false);
+        return;
+      }
+
+      const userResponse = await api.get(`/users/firebase/${auth.currentUser.uid}`);
+      if (userResponse?.data?.success) {
+        const dbUserId = userResponse.data.data.id;
+        setIsCreator(space.provider_id === dbUserId);
+      }
+    } catch (error) {
+      console.error('Error checking creator status:', error);
+      setIsCreator(false);
+    }
+  };
 
   const fetchAvailability = async () => {
     setLoadingAvailability(true);
@@ -137,6 +158,7 @@ export default function EventSpaceDetails({ route, navigation }) {
         setAvailability(defaultAvailability);
       }
     } catch (error) {
+      console.error('Error fetching availability:', error);
       // If API fails, set all dates as available
       const defaultAvailability = {};
       const today = new Date();
@@ -263,14 +285,77 @@ export default function EventSpaceDetails({ route, navigation }) {
     }
   };
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    // Remove any leading /uploads/ if it exists
+    const cleanPath = imagePath.replace(/^\/uploads\//, '');
+    // Use the base URL without /api for static files
+    return `${SOCKET_URL}/uploads/${cleanPath}`;
+  };
+
+  const handleDelete = async () => {
+    Alert.alert(
+      'Delete Event Space',
+      'Are you sure you want to delete this event space? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const response = await api.delete(`/event-spaces/${space.id}`);
+              if (response?.data?.success) {
+                Alert.alert('Success', 'Event space deleted successfully');
+                navigation.goBack();
+              } else {
+                Alert.alert('Error', 'Failed to delete event space');
+              }
+            } catch (error) {
+              console.error('Error deleting event space:', error);
+              Alert.alert('Error', 'Failed to delete event space');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleEdit = () => {
+    navigation.navigate('EditEventSpace', { space });
+  };
+
   return (
     <ScrollView style={styles.container}>
       {/* Main Image */}
       <View style={styles.imageContainer}>
         <Image 
-          source={{ uri: space.images?.[0] || 'https://via.placeholder.com/400x300' }} 
+          source={{ uri: getImageUrl(space.images?.[0]) || 'https://via.placeholder.com/400x300' }} 
           style={styles.mainImage} 
         />
+        {isCreator && (
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.editButton]} 
+              onPress={handleEdit}
+            >
+              <Ionicons name="pencil" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.deleteButton]} 
+              onPress={handleDelete}
+            >
+              <Ionicons name="trash" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Space Info */}
@@ -373,18 +458,20 @@ export default function EventSpaceDetails({ route, navigation }) {
         </View>
       </View>
 
-      {/* Book Button */}
-      <TouchableOpacity 
-        style={[styles.bookButton, loading && styles.bookButtonDisabled]}
-        onPress={() => setShowBookingModal(true)}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.bookButtonText}>Book This Space</Text>
-        )}
-      </TouchableOpacity>
+      {/* Book Button - Only show if not the creator */}
+      {!isCreator && (
+        <TouchableOpacity 
+          style={[styles.bookButton, loading && styles.bookButtonDisabled]}
+          onPress={() => setShowBookingModal(true)}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.bookButtonText}>Book This Space</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       <EventSpaceBookingModal
         visible={showBookingModal}
@@ -414,130 +501,6 @@ function formatAmenityName(amenity) {
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#F6F7FB',
-//   },
-//   imageContainer: {
-//     width: '100%',
-//     height: normalize(250),
-//   },
-//   mainImage: {
-//     width: '100%',
-//     height: '100%',
-//     resizeMode: 'cover',
-//   },
-//   infoContainer: {
-//     padding: normalize(16),
-//     backgroundColor: '#fff',
-//   },
-//   spaceTitle: {
-//     fontSize: normalize(24),
-//     fontWeight: 'bold',
-//     color: '#222',
-//     marginBottom: normalize(8),
-//   },
-//   locationContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: normalize(8),
-//   },
-//   locationText: {
-//     fontSize: normalize(16),
-//     color: '#666',
-//     marginLeft: normalize(4),
-//   },
-//   priceContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'baseline',
-//     marginBottom: normalize(16),
-//   },
-//   price: {
-//     fontSize: normalize(24),
-//     fontWeight: 'bold',
-//     color: '#8d8ff3',
-//   },
-//   perText: {
-//     fontSize: normalize(14),
-//     color: '#666',
-//     marginLeft: normalize(4),
-//   },
-//   description: {
-//     fontSize: normalize(16),
-//     color: '#666',
-//     lineHeight: normalize(24),
-//     marginBottom: normalize(24),
-//   },
-//   sectionTitle: {
-//     fontSize: normalize(18),
-//     fontWeight: '600',
-//     color: '#222',
-//     marginBottom: normalize(16),
-//   },
-//   amenitiesContainer: {
-//     marginBottom: normalize(24),
-//   },
-//   amenitiesList: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//     gap: normalize(16),
-//   },
-//   amenityItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#F6F7FB',
-//     padding: normalize(8),
-//     borderRadius: normalize(8),
-//     minWidth: normalize(100),
-//   },
-//   amenityText: {
-//     marginLeft: normalize(8),
-//     fontSize: normalize(14),
-//     color: '#666',
-//   },
-//   availabilityContainer: {
-//     marginBottom: normalize(24),
-//   },
-//   availabilityRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     paddingVertical: normalize(8),
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#eee',
-//   },
-//   dayText: {
-//     fontSize: normalize(14),
-//     color: '#222',
-//     fontWeight: '500',
-//   },
-//   hoursText: {
-//     fontSize: normalize(14),
-//     color: '#666',
-//   },
-//   galleryContainer: {
-//     marginBottom: normalize(24),
-//   },
-//   galleryImage: {
-//     width: normalize(200),
-//     height: normalize(150),
-//     borderRadius: normalize(8),
-//     marginRight: normalize(8),
-//   },
-//   bookButton: {
-//     backgroundColor: '#8d8ff3',
-//     margin: normalize(16),
-//     borderRadius: normalize(12),
-//     paddingVertical: normalize(16),
-//     alignItems: 'center',
-//   },
-//   bookButtonText: {
-//     color: '#fff',
-//     fontSize: normalize(18),
-//     fontWeight: '600',
-//   },
-// }); 
 
 const styles = StyleSheet.create({
   container: {
@@ -1007,5 +970,30 @@ const styles = StyleSheet.create({
     fontSize: normalize(18),
     color: '#8D8FF3',
     fontWeight: '700',
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    top: normalize(16),
+    right: normalize(16),
+    flexDirection: 'row',
+    gap: normalize(8),
+  },
+  actionButton: {
+    width: normalize(44),
+    height: normalize(44),
+    borderRadius: normalize(22),
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  editButton: {
+    backgroundColor: '#4CAF50',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
   },
 });

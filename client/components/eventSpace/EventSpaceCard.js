@@ -2,14 +2,22 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { normalize } from '../../utils/scaling';
 import { FontAwesome } from '@expo/vector-icons';
+import { API_BASE, SOCKET_URL } from '../../config';
 
 const EventSpaceCard = ({ space, onPress }) => {
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    const cleanPath = imagePath.replace(/^\/uploads\//, '');
+    return `${SOCKET_URL}/uploads/${cleanPath}`;
+  };
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.imageContainer}>
         {space.images && space.images.length > 0 ? (
           <Image
-            source={{ uri: space.images[0] }}
+            source={{ uri: getImageUrl(space.images[0]) }}
             style={styles.image}
           />
         ) : (

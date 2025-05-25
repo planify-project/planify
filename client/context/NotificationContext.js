@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
+import { useAuth } from './AuthContext';
 import api from '../configs/api';
 
 const NotificationContext = createContext();
@@ -8,6 +9,7 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
   const [toast, setToast] = useState({
     visible: false,
     title: '',
@@ -20,19 +22,11 @@ export const NotificationProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('No authenticated user found');
+      if (!user?.dbUser?.id) {
+        throw new Error('No user data found');
       }
 
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
-      if (!userResponse.data.success || !userResponse.data.data?.id) {
-        throw new Error('Failed to get user data');
-      }
-
-      const dbUserId = userResponse.data.data.id;
-      const response = await api.get(`/notifications/user/${dbUserId}`);
+      const response = await api.get(`/notifications/user/${user.dbUser.id}`);
 
       if (response.data.success) {
         setNotifications(response.data.data);
@@ -85,20 +79,12 @@ export const NotificationProvider = ({ children }) => {
 
   const dismissNotification = async (notificationId) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('No authenticated user found');
+      if (!user?.dbUser?.id) {
+        throw new Error('No user data found');
       }
 
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
-      if (!userResponse.data.success || !userResponse.data.data?.id) {
-        throw new Error('Failed to get user data');
-      }
-
-      const dbUserId = userResponse.data.data.id;
       await api.put(`/notifications/${notificationId}/dismiss`, {
-        userId: dbUserId
+        userId: user.dbUser.id
       });
 
       setNotifications(prev => 
@@ -119,20 +105,12 @@ export const NotificationProvider = ({ children }) => {
 
   const deleteNotification = async (notificationId) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('No authenticated user found');
+      if (!user?.dbUser?.id) {
+        throw new Error('No user data found');
       }
 
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
-      if (!userResponse.data.success || !userResponse.data.data?.id) {
-        throw new Error('Failed to get user data');
-      }
-
-      const dbUserId = userResponse.data.data.id;
       await api.delete(`/notifications/${notificationId}`, {
-        data: { userId: dbUserId }
+        data: { userId: user.dbUser.id }
       });
 
       setNotifications(prev => prev.filter(n => n.id !== notificationId));

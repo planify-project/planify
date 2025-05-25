@@ -24,7 +24,6 @@ export default function AddServiceScreen({ navigation }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [serviceType, setServiceType] = useState('general');
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
@@ -34,12 +33,6 @@ export default function AddServiceScreen({ navigation }) {
     message: '',
     type: 'error'
   });
-  const [serviceTypes] = useState([
-    { id: 'general', label: 'General' },
-    { id: 'cleaning', label: 'Cleaning' },
-    { id: 'repair', label: 'Repair' },
-    { id: 'delivery', label: 'Delivery' },
-  ]);
 
   useEffect(() => {
     if (!Auth.currentUser) {
@@ -151,7 +144,6 @@ export default function AddServiceScreen({ navigation }) {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('price', priceNum.toString());
-      formData.append('service_type', serviceType);
       formData.append('provider_id', user.id);
       
       // Add image to formData
@@ -168,7 +160,6 @@ export default function AddServiceScreen({ navigation }) {
         title,
         description,
         price: priceNum,
-        service_type: serviceType,
         provider_id: user.id,
         image: image.uri
       });
@@ -274,47 +265,16 @@ export default function AddServiceScreen({ navigation }) {
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.text }]}>
               <Ionicons name="pricetag-outline" size={16} color={theme.primary} style={styles.inputIcon} />
-              Price ($)
+              Price
             </Text>
             <TextInput
-              style={[styles.input, { backgroundColor: theme.card, color: theme.text }]}
+              style={[styles.input, { color: theme.text }]}
               value={price}
               onChangeText={setPrice}
-              placeholder="How much does your service cost?"
+              placeholder="Enter price"
               placeholderTextColor={theme.textSecondary}
               keyboardType="numeric"
             />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              <Ionicons name="options-outline" size={16} color={theme.primary} style={styles.inputIcon} />
-              Service Type
-            </Text>
-            <View style={styles.serviceTypeContainer}>
-              {serviceTypes.map((type) => (
-                <TouchableOpacity
-                  key={type.id}
-                  style={[
-                    styles.serviceTypeButton,
-                    serviceType === type.id && { 
-                      backgroundColor: theme.primary,
-                      borderColor: theme.primary 
-                    }
-                  ]}
-                  onPress={() => setServiceType(type.id)}
-                >
-                  <Text 
-                    style={[
-                      styles.serviceTypeText, 
-                      serviceType === type.id && { color: '#fff' }
-                    ]}
-                  >
-                    {type.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           </View>
 
           <TouchableOpacity
@@ -446,24 +406,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: normalize(120),
     textAlignVertical: 'top',
-  },
-  serviceTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: normalize(8),
-  },
-  serviceTypeButton: {
-    paddingVertical: normalize(8),
-    paddingHorizontal: normalize(16),
-    borderRadius: normalize(20),
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginRight: normalize(10),
-    marginBottom: normalize(10),
-  },
-  serviceTypeText: {
-    fontSize: normalize(14),
-    fontWeight: '500',
   },
   submitButton: {
     borderRadius: normalize(12),

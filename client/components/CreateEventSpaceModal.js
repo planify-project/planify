@@ -10,14 +10,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Switch,
   Animated,
   Dimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { normalize } from '../utils/scaling';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { getAuth } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -27,12 +29,13 @@ export default function CreateEventSpaceModal({ visible, onClose, onSuccess }) {
     description: '',
     location: '',
     price: '',
+    capacity: '',
     amenities: {},
     images: [],
   });
-  const [newImageUrl, setNewImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [modalAnimation] = useState(new Animated.Value(0));
+  const auth = getAuth();
 
   React.useEffect(() => {
     if (visible) {
@@ -65,184 +68,276 @@ export default function CreateEventSpaceModal({ visible, onClose, onSuccess }) {
     });
   };
 
-  const handleImageAdd = () => {
-    if (newImageUrl.trim() !== '') {
-      setFormData({ ...formData, images: [...formData.images, newImageUrl.trim()] });
-      setNewImageUrl('');
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, {
+            uri: result.assets[0].uri,
+            type: 'image/jpeg',
+            name: 'photo.jpg'
+          }]
+        }));
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
   const handleImageRemove = (index) => {
-    const newImages = [...formData.images];
-    newImages.splice(index, 1);
-    setFormData({ ...formData, images: newImages });
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.location || !formData.price) {
-      Alert.alert('Validation Error', 'Please fill in name, location, and price.');
-      return;
-    }
-
-    setLoading(true);
     try {
-      const submissionData = {
-        ...formData,
-        price: parseFloat(formData.price),
-      };
+      setLoading(true);
+      const token = await auth.currentUser.getIdToken();
 
-      const response = await api.post('/event-spaces', submissionData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('location', formData.location);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('capacity', formData.capacity || 0);
+      formDataToSend.append('amenities', JSON.stringify(formData.amenities));
+      formDataToSend.append('isActive', 'true');
+      formDataToSend.append('availability', JSON.stringify({}));
 
-      if (response?.data?.success) {
-        Alert.alert('Success', 'Event space created successfully!');
-        onSuccess(response.data.data); // Pass the new event space data
-        onClose();
-        setFormData({
-          name: '',
-          description: '',
-          location: '',
-          price: '',
-          amenities: {},
-          images: [],
+      // Add all images to formData
+      formData.images.forEach((image, index) => {
+        formDataToSend.append('images', {
+          uri: image.uri,
+          type: 'image/jpeg',
+          name: `photo${index}.jpg`
         });
+      });
+
+      const response = await api.post('/event-spaces', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        Alert.alert(
+          'Success',
+          'Event space created successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                onSuccess(response.data.data);
+                onClose();
+              }
+            }
+          ]
+        );
       } else {
-        Alert.alert('Creation Failed', response?.data?.message || 'An error occurred.');
+        throw new Error(response.data.message || 'Failed to create space');
       }
     } catch (error) {
-      console.error('Error creating event space:', error);
-      Alert.alert('Error', 'An error occurred while creating the event space.');
+      console.error('Error creating space:', error);
+      Alert.alert('Error', error.message || 'Failed to create space. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const amenityOptions = ['pool', 'wifi', 'parking', 'catering', 'beach_access'];
-
-  const modalStyle = {
-    transform: [{
-      scale: modalAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.8, 1],
-      }),
-    }],
-    opacity: modalAnimation,
-  };
+  const amenityOptions = [
+    { key: 'pool', label: 'Swimming Pool', icon: 'water-outline' },
+    { key: 'wifi', label: 'WiFi', icon: 'wifi-outline' },
+    { key: 'parking', label: 'Parking', icon: 'car-outline' },
+    { key: 'catering', label: 'Catering', icon: 'restaurant-outline' },
+    { key: 'beach_access', label: 'Beach Access', icon: 'umbrella-outline' },
+  ];
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
       <View style={styles.modalOverlay}>
-        <Animated.View style={[styles.modalContent, modalStyle]}>
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [
+                {
+                  scale: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.9, 1],
+                  }),
+                },
+              ],
+              opacity: modalAnimation,
+            },
+          ]}
+        >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Create New Event Space</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={styles.modalTitle}>Create Event Space</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Ionicons name="close" size={24} color="#666" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.formContainer}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-              {/* Name Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter event space name"
-                  value={formData.name}
-                  onChangeText={(text) => handleInputChange('name', text)}
-                />
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardAvoidingView}
+            >
+              {/* Image Upload Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Photos</Text>
+                <View style={styles.imageGrid}>
+                  {formData.images.map((image, index) => (
+                    <View key={index} style={styles.imageContainer}>
+                      <Image source={{ uri: image.uri }} style={styles.uploadedImage} />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => handleImageRemove(index)}
+                      >
+                        <Ionicons name="close-circle" size={24} color="#FF3B5E" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {formData.images.length < 5 && (
+                    <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+                      <Ionicons name="add-circle-outline" size={32} color="#6C6FD1" />
+                      <Text style={styles.addImageText}>Add Photo</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
 
-              {/* Description Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                  style={[styles.input, styles.messageInput]}
-                  placeholder="Describe the event space"
-                  multiline
-                  numberOfLines={4}
-                  value={formData.description}
-                  onChangeText={(text) => handleInputChange('description', text)}
-                />
-              </View>
+              {/* Basic Information Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Basic Information</Text>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.name}
+                    onChangeText={(value) => handleInputChange('name', value)}
+                    placeholder="Enter space name"
+                    placeholderTextColor="#8A8BB3"
+                  />
+                </View>
 
-              {/* Location Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Location</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter location"
-                  value={formData.location}
-                  onChangeText={(text) => handleInputChange('location', text)}
-                />
-              </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Description</Text>
+                  <TextInput
+                    style={[styles.input, styles.messageInput]}
+                    value={formData.description}
+                    onChangeText={(value) => handleInputChange('description', value)}
+                    placeholder="Describe your event space..."
+                    placeholderTextColor="#8A8BB3"
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
 
-              {/* Price Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Price (per day)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter price in DT"
-                  keyboardType="numeric"
-                  value={formData.price}
-                  onChangeText={(text) => handleInputChange('price', text)}
-                />
-              </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Location</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.location}
+                    onChangeText={(value) => handleInputChange('location', value)}
+                    placeholder="Enter location"
+                    placeholderTextColor="#8A8BB3"
+                  />
+                </View>
 
-              {/* Amenities */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Amenities</Text>
-                {amenityOptions.map(amenity => (
-                  <View key={amenity} style={styles.amenityRow}>
-                    <Text style={styles.amenityText}>{amenity}</Text>
-                    <Switch
-                      value={!!formData.amenities[amenity]}
-                      onValueChange={(value) => handleAmenityChange(amenity, value)}
-                      trackColor={{ false: '#767577', true: '#5D5FEE' }}
-                      thumbColor={formData.amenities[amenity] ? '#fff' : '#f4f3f4'}
+                <View style={styles.row}>
+                  <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                    <Text style={styles.label}>Price</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={formData.price}
+                      onChangeText={(value) => handleInputChange('price', value)}
+                      placeholder="Enter price"
+                      placeholderTextColor="#8A8BB3"
+                      keyboardType="numeric"
                     />
                   </View>
-                ))}
+
+                  <View style={[styles.inputGroup, { flex: 1 }]}>
+                    <Text style={styles.label}>Capacity</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={formData.capacity}
+                      onChangeText={(value) => handleInputChange('capacity', value)}
+                      placeholder="Enter capacity"
+                      placeholderTextColor="#8A8BB3"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
               </View>
 
-              {/* Images Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Images (URLs)</Text>
-                <View style={styles.imageInputContainer}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Paste image URL"
-                    value={newImageUrl}
-                    onChangeText={setNewImageUrl}
-                  />
-                  <TouchableOpacity onPress={handleImageAdd} style={styles.addButton}>
-                    <Ionicons name="add" size={24} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-                {formData.images.map((url, index) => (
-                  <View key={index} style={styles.addedImageRow}>
-                    <Text style={styles.imageUrl} numberOfLines={1}>{url}</Text>
-                    <TouchableOpacity onPress={() => handleImageRemove(index)}>
-                      <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+              {/* Amenities Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Amenities</Text>
+                <View style={styles.amenitiesGrid}>
+                  {amenityOptions.map((amenity) => (
+                    <TouchableOpacity
+                      key={amenity.key}
+                      style={[
+                        styles.amenityButton,
+                        formData.amenities[amenity.key] && styles.amenityButtonActive
+                      ]}
+                      onPress={() => handleAmenityChange(amenity.key, !formData.amenities[amenity.key])}
+                    >
+                      <Ionicons
+                        name={amenity.icon}
+                        size={24}
+                        color={formData.amenities[amenity.key] ? '#FFFFFF' : '#6C6FD1'}
+                      />
+                      <Text
+                        style={[
+                          styles.amenityText,
+                          formData.amenities[amenity.key] && styles.amenityTextActive
+                        ]}
+                      >
+                        {amenity.label}
+                      </Text>
                     </TouchableOpacity>
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
             </KeyboardAvoidingView>
           </ScrollView>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
-              <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
-            </TouchableOpacity>
+          <View style={styles.footer}>
             <TouchableOpacity
-              style={[styles.button, styles.submitButton, loading && styles.buttonDisabled]}
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
               onPress={handleSubmit}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonText}>Create Space</Text>
+                <Text style={styles.submitButtonText}>Create Space</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -260,135 +355,152 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: normalize(20),
     width: width * 0.9,
-    maxHeight: '85%',
-    padding: normalize(20),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    maxHeight: '90%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: normalize(20),
-    paddingBottom: normalize(10),
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F0F0F5',
   },
   modalTitle: {
-    fontSize: normalize(24),
-    fontWeight: 'bold',
-    color: '#222',
+    fontSize: normalize(20),
+    fontWeight: '700',
+    color: '#2A2A3C',
   },
   closeButton: {
-    padding: normalize(5),
+    padding: 5,
   },
   formContainer: {
-    maxHeight: '70%',
-  },
-  inputGroup: {
-    marginBottom: normalize(16),
-  },
-  label: {
-    fontSize: normalize(16),
-    color: '#444',
-    marginBottom: normalize(8),
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: normalize(12),
-    padding: normalize(12),
-    fontSize: normalize(16),
-    color: '#333',
-    backgroundColor: '#f8f8f8',
-  },
-  messageInput: {
-    height: normalize(100),
-    textAlignVertical: 'top',
-  },
-  amenityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: normalize(8),
-    paddingVertical: normalize(8),
-    paddingHorizontal: normalize(12),
-    backgroundColor: '#f8f8f8',
-    borderRadius: normalize(8),
-  },
-  amenityText: {
-    fontSize: normalize(16),
-    color: '#444',
-    textTransform: 'capitalize',
-  },
-  imageInputContainer: {
-    flexDirection: 'row',
-    gap: normalize(10),
-    marginBottom: normalize(10),
-  },
-  addButton: {
-    backgroundColor: '#5D5FEE',
-    width: normalize(44),
-    height: normalize(44),
-    borderRadius: normalize(12),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addedImageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: normalize(8),
-    paddingVertical: normalize(8),
-    paddingHorizontal: normalize(12),
-    backgroundColor: '#f8f8f8',
-    borderRadius: normalize(8),
-  },
-  imageUrl: {
     flex: 1,
-    fontSize: normalize(14),
-    color: '#666',
-    marginRight: normalize(8),
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: normalize(20),
-    gap: normalize(10),
+  keyboardAvoidingView: {
+    flex: 1,
   },
-  button: {
-    paddingVertical: normalize(14),
-    paddingHorizontal: normalize(24),
-    borderRadius: normalize(12),
-    minWidth: normalize(120),
-    alignItems: 'center',
-    justifyContent: 'center',
+  section: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F5',
   },
-  submitButton: {
-    backgroundColor: '#5D5FEE',
-  },
-  cancelButton: {
-    backgroundColor: '#f0f0f0',
-  },
-  buttonText: {
-    color: '#fff',
+  sectionTitle: {
     fontSize: normalize(16),
     fontWeight: '600',
+    color: '#2A2A3C',
+    marginBottom: 15,
   },
-  cancelButtonText: {
-    color: '#666',
+  inputGroup: {
+    marginBottom: 15,
   },
-  buttonDisabled: {
+  label: {
+    fontSize: normalize(14),
+    color: '#8A8BB3',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#F8F9FF',
+    borderRadius: 12,
+    padding: 15,
+    fontSize: normalize(15),
+    color: '#2A2A3C',
+    borderWidth: 1,
+    borderColor: '#E8E9F3',
+  },
+  messageInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  imageContainer: {
+    width: (width * 0.9 - 60) / 3,
+    height: (width * 0.9 - 60) / 3,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+  },
+  addImageButton: {
+    width: (width * 0.9 - 60) / 3,
+    height: (width * 0.9 - 60) / 3,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E8E9F3',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addImageText: {
+    marginTop: 8,
+    fontSize: normalize(12),
+    color: '#8A8BB3',
+  },
+  amenitiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  amenityButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8E9F3',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 10,
+  },
+  amenityButtonActive: {
+    backgroundColor: '#6C6FD1',
+    borderColor: '#6C6FD1',
+  },
+  amenityText: {
+    marginLeft: 8,
+    fontSize: normalize(14),
+    color: '#6C6FD1',
+  },
+  amenityTextActive: {
+    color: '#FFFFFF',
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F5',
+  },
+  submitButton: {
+    backgroundColor: '#6C6FD1',
+    borderRadius: 12,
+    padding: 15,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
     opacity: 0.7,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: normalize(16),
+    fontWeight: '600',
   },
 });
