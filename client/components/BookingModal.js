@@ -38,27 +38,14 @@ export default function BookingModal({
   useEffect(() => {
     if (!visible) {
       setSelectedDate('');
-      setSpace('');
-      setPhone('');
+      setSelectedSpace('');
+      setPhoneNumber('');
       setShowCalendar(false);
       setIsConfirming(false);
       submissionLockRef.current = false;
       lastSubmissionTimeRef.current = 0;
     }
   }, [visible]);
-
-  // Prevent interaction while submitting
-  useEffect(() => {
-    if (isSubmitting) {
-      submissionLockRef.current = true;
-    } else {
-      // Add a small delay before unlocking to prevent rapid re-submissions
-      const timeout = setTimeout(() => {
-        submissionLockRef.current = false;
-      }, SUBMISSION_COOLDOWN);
-      return () => clearTimeout(timeout);
-    }
-  }, [isSubmitting]);
 
   const handleDateSelect = (day) => {
     if (submissionLockRef.current) return;
@@ -75,12 +62,12 @@ export default function BookingModal({
 
   const handleSpaceChange = (text) => {
     if (submissionLockRef.current) return;
-    setSpace(text);
+    setSelectedSpace(text);
   };
 
   const handleConfirm = async () => {
     // Prevent multiple submissions
-    if (submissionLockRef.current || isConfirming || isSubmitting) {
+    if (submissionLockRef.current || isConfirming || loading) {
       console.log('Submission blocked - already in progress');
       return;
     }
@@ -188,7 +175,7 @@ export default function BookingModal({
               style={[
                 styles.button, 
                 { backgroundColor: theme.primary },
-                (submissionLockRef.current || isConfirming || isSubmitting) && styles.buttonDisabled
+                (submissionLockRef.current || isConfirming || loading) && styles.buttonDisabled
               ]}
               onPress={handleConfirm}
               disabled={loading}

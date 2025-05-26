@@ -238,7 +238,7 @@ server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
     `http://${HOST}:${PORT}`,
-    `http://192.168.132.68:${PORT}`
+    `http://192.168.239.61:${PORT}`
   ];
   
   console.log('\nServer running on:');

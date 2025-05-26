@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_BASE } from '../config';
 import { debounce } from 'lodash';
-import EventCard from '../components/EventCard';
 
 // Responsive scaling
 const { width } = Dimensions.get('window');

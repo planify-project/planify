@@ -1,11 +1,11 @@
 // API Configuration
-const API_HOST = '192.168.132.68';
-const API_PORT = '3000';
+export const API_HOST = '192.168.239.61';
+export const API_PORT = '3000';
 
 // Base URLs
-export const API_URL = `http://${API_HOST}:${API_PORT}`;
-export const API_BASE = `${API_URL}/api`;
-export const SOCKET_URL = API_URL;
+export const API_URL = `http://${API_HOST}:${API_PORT}/api`;
+export const API_BASE = API_URL;
+export const SOCKET_URL = `http://${API_HOST}:${API_PORT}`;
 
 // Socket.io Configuration
 export const SOCKET_CONFIG = {

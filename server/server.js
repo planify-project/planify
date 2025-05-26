@@ -34,9 +34,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure CORS
 app.use(cors({
-  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  origin: ['http://192.168.239.61:3000', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -61,8 +61,9 @@ app.get('/health', (req, res) => {
 // Configure Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: ['http://192.168.239.61:3000', 'http://localhost:3000'],
+    methods: ['GET', 'POST'],
+    credentials: true
   },
   transports: ['websocket']
 });
@@ -193,7 +194,7 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '192.168.132.68';
+const HOST = '192.168.239.61';
 
 const startServer = async () => {
   try {
@@ -202,7 +203,7 @@ const startServer = async () => {
       const urls = [
         `http://localhost:${PORT}`,
         `http://${HOST}:${PORT}`,
-        `http://192.168.132.232:${PORT}`
+        `http://192.168.239.61:${PORT}`
       ];
       
       console.log('\nServer running on:');
