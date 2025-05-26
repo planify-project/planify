@@ -38,17 +38,24 @@ exports.createUserFromFirebase = async (req, res) => {
       });
     }
 
-    // Check if user already exists by Firebase UID
-    let user = await User.findOne({ where: { firebase_uid: uid } });
+    // Check if user already exists by email
+    let user = await User.findOne({ where: { email } });
     
     if (!user) {
-      // Create new user with a dummy password
+      // Create new user
       user = await User.create({
         name: displayName || email.split('@')[0],
         email,
-        firebase_uid: uid,
-        password: 'firebase-auth' // Dummy password for Firebase users
+        password: 'firebase-auth', // Dummy password for Firebase users
+        firebase_uid: uid
       });
+    } else {
+      // Update existing user's Firebase UID if not set
+      if (!user.firebase_uid) {
+        await user.update({
+          firebase_uid: uid
+        });
+      }
     }
 
     console.log('User created/updated successfully:', user.id);

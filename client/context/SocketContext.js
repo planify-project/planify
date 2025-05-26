@@ -63,8 +63,8 @@ export const SocketProvider = ({ children }) => {
       // Initialize socket connection with centralized config
       const newSocket = io(SOCKET_URL, {
         ...SOCKET_CONFIG,
-              query: { userId: dbUserId }
-            });
+        query: { userId: user.uid }
+      });
 
       newSocket.on('connect', () => {
         console.log('Socket connected successfully');
@@ -73,7 +73,7 @@ export const SocketProvider = ({ children }) => {
         setRetryCount(0);
 
         // Join user's room after connection
-            newSocket.emit('joinRoom', `user_${dbUserId}`);
+        newSocket.emit('joinRoom', `user_${user.uid}`);
       });
 
       newSocket.on('disconnect', (reason) => {

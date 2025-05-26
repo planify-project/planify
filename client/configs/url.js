@@ -1,6 +1,6 @@
 // API Configuration
-export const API_HOST = '192.168.239.61';
-export const API_PORT = '3000';
+const API_HOST = process.env.API_HOST || '192.168.14.126';
+const API_PORT = process.env.API_PORT || '3000';
 
 // Base URLs
 export const API_URL = `http://${API_HOST}:${API_PORT}/api`;
@@ -26,7 +26,10 @@ export const SOCKET_CONFIG = {
 export const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${API_URL}${path}`;
+  // Remove any leading /uploads/ if it exists
+  const cleanPath = path.replace(/^\/uploads\//, '');
+  // Use the base URL without /api for static files
+  return `${SOCKET_URL}/uploads/${cleanPath}`;
 };
 
 // Stripe Configuration

@@ -161,37 +161,93 @@ Event.hasMany(Review, { foreignKey: 'event_id' });
 Review.belongsTo(Event, { foreignKey: 'event_id' });
 
 // Sync database with retry logic
-const syncWithRetry = async (retries = 3) => {
-    try {
-        // First sync the User model separately to handle the JSON column
-        await User.sync({ force: true });
-        console.log('User model synchronized successfully.');
+const syncWithRetry = async (model, options = {}) => {
+    const maxRetries = 3;
+    let retries = 0;
 
-    // Then sync all other models
-    await sequelize.sync({ force: true });
-    console.log('All models were synchronized successfully.');
-
-        // Import and run the event spaces seeder
-        const seedEventSpaces = require('./seeds/eventSpaces');
-        await seedEventSpaces();
-        console.log('Event spaces seeded successfully!');
-    } catch (error) {
-        if (retries > 0 && (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_LOCK_DEADLOCK')) {
-            console.log(`Deadlock detected, retrying... (${retries} attempts remaining)`);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            return syncWithRetry(retries - 1);
+    while (retries < maxRetries) {
+        try {
+            await model.sync({
+                force: false, // Changed from true to false to prevent dropping tables
+                alter: true,  // Added alter: true to safely modify tables
+                ...options
+            });
+            console.log(`Successfully synced ${model.name} model`);
+            return;
+        } catch (error) {
+            retries++;
+            console.error(`Error syncing ${model.name} model (attempt ${retries}/${maxRetries}):`, error);
+            
+            if (retries === maxRetries) {
+                console.error(`Failed to sync ${model.name} model after ${maxRetries} attempts`);
+                throw error;
+            }
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
         }
+    }
+};
+
+// Sync all models
+const syncDatabase = async () => {
+    try {
+        // First sync base models
+        await syncWithRetry(ServiceCategory);
+        await syncWithRetry(User);
+        await syncWithRetry(Admin);
+        await syncWithRetry(Agent);
+
+        // Then sync models that depend on base models
+        await syncWithRetry(Service);
+        await syncWithRetry(ServiceMedia);
+        await syncWithRetry(ServiceAvailability);
+        await syncWithRetry(Event);
+        await syncWithRetry(EventService);
+        await syncWithRetry(EventUser);
+        await syncWithRetry(EventGuest);
+        await syncWithRetry(EventSpace);
+
+        // Then sync models that depend on the above
+        await syncWithRetry(Booking);
+        await syncWithRetry(Wishlist);
+        await syncWithRetry(WishlistItem);
+        await syncWithRetry(Message);
+        await syncWithRetry(Review);
+        await syncWithRetry(Feedback);
+        await syncWithRetry(Payment);
+        await syncWithRetry(Offer);
+        await syncWithRetry(Notification);
+        await syncWithRetry(MonthlyReport);
+        await syncWithRetry(AuditLog);
+
+        console.log('Database sync completed successfully');
+    } catch (error) {
         console.error('Error during database sync:', error);
+        throw error;
+    }
+};
+
+// Initialize database
+const initializeDatabase = async () => {
+    try {
+        await testConnection();
+        await syncDatabase();
+        console.log('Database initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize database:', error);
         process.exit(1);
     }
 };
 
-// Run the sync
-// syncWithRetry();
+// Run the initialization
+// initializeDatabase();
 
 // Export all models and sequelize instance
 module.exports = {
     sequelize,
+    syncDatabase,
+    initializeDatabase,
     User,
     Service,
     ServiceCategory,

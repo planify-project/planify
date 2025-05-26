@@ -20,10 +20,9 @@ const reviewRoutes = require('./routes/review.route.js');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
-const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+ const AdminAuthRoutes = require('./routes/adminAuth.routes');
 const bookingRoutes = require('./routes/booking.routes.js');
 
- 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
@@ -34,9 +33,10 @@ app.use(morgan('dev'));
 
 // Configure CORS
 app.use(cors({
-  origin: '*',
+  origin: true, // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Test endpoint
@@ -216,7 +216,7 @@ app.use('/api', stripeRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
-app.use('/api/authadmin',AdminAuthRoutes)
+app.use('/api/authadmin', AdminAuthRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/bookings', bookingRoutes);
 
@@ -232,13 +232,13 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = '0.0.0.0'; // Listen on all interfaces
 
 server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
-    `http://${HOST}:${PORT}`,
-    `http://192.168.239.61:${PORT}`
+    `http://127.0.0.1:${PORT}`,
+    `http://192.168.234.126:${PORT}`
   ];
   
   console.log('\nServer running on:');
@@ -252,7 +252,10 @@ server.listen(PORT, HOST, () => {
   console.log('  - Transports: websocket, polling');
   console.log('  - Path: /socket.io/');
   console.log('  - CORS: enabled for all origins');
+  console.log(`Server running at http://192.168.234.126:${PORT}`);
 });
+
+module.exports = app;
 
 
 

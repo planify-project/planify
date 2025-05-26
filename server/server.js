@@ -15,14 +15,22 @@ const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
-const stripeRoutes = require("./routes/stripeRoutes");
+const stripeRoutes = require("./routes/stripe.routes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
-const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+const AdminAuthRoutes = require('./routes/adminAuth.routes');
 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
+ 
+// Configure CORS
+app.use(cors({
+  origin: ['http://192.168.14.126:3000', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+}));
 
 // Basic middleware
 app.use(express.json());
@@ -32,13 +40,8 @@ app.use(morgan('dev'));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure CORS
-app.use(cors({
-  origin: ['http://192.168.239.61:3000', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// Routes that need raw body parsing for Stripe webhooks
+app.use('/api/webhook', express.raw({type: 'application/json'}));
 
 // Test endpoint
 app.get('/test', (req, res) => {
@@ -169,18 +172,18 @@ io.engine.on("connection_error", (err) => {
 // Make io accessible to routes
 app.set('io', io);
 
-// API Routes
+ // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
-app.use('/api', stripeRoutes);
-app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
-app.use('/api/authadmin',AdminAuthRoutes)
+app.use('/api/admin', AdminAuthRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -194,7 +197,7 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '192.168.239.61';
+const HOST = '0.0.0.0';
 
 const startServer = async () => {
   try {
@@ -202,8 +205,8 @@ const startServer = async () => {
     server.listen(PORT, HOST, () => {
       const urls = [
         `http://localhost:${PORT}`,
-        `http://${HOST}:${PORT}`,
-        `http://192.168.239.61:${PORT}`
+        `http://127.0.0.1:${PORT}`,
+        `http://192.168.14.126:${PORT}`
       ];
       
       console.log('\nServer running on:');

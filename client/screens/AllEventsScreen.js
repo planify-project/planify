@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, Image, TouchableOpacity,
-  StyleSheet, Dimensions, ActivityIndicator, TextInput
+  StyleSheet, Dimensions, ActivityIndicator, TextInput,
+  Modal, Platform, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_BASE } from '../config';
 import { debounce } from 'lodash';
+import EventCard from '../components/EventCard';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Responsive scaling
 const { width } = Dimensions.get('window');
@@ -23,18 +26,16 @@ export default function AllEventsScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const categories = ['All', 'Wedding', 'Birthday', 'Concert'];
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const fetchEvents = async (category, query = '', date = '') => {
+  const fetchEvents = async (query = '', date = '') => {
     setLoading(true);
-    setSelectedCategory(category);
 
     try {
       const params = new URLSearchParams();
-      if (category !== 'All') {
-        params.append('type', category);
-      }
       if (query.trim()) {
         params.append('name', query.trim());
       }
@@ -63,9 +64,9 @@ export default function AllEventsScreen({ navigation }) {
 
   const debouncedSearch = useCallback(
     debounce((text) => {
-      fetchEvents(selectedCategory, text, selectedDate);
+      fetchEvents(text, selectedDate);
     }, 500),
-    [selectedCategory, selectedDate]
+    [selectedDate]
   );
 
   const handleSearchChange = (text) => {
@@ -73,13 +74,36 @@ export default function AllEventsScreen({ navigation }) {
     debouncedSearch(text);
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    fetchEvents(selectedCategory, searchQuery, date);
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setEventDate(selectedDate);
+    }
+  };
+
+  const handleCreateEvent = () => {
+    if (!eventName.trim()) {
+      Alert.alert('Error', 'Please enter an event name');
+      return;
+    }
+
+    // Adjust the date to account for timezone
+    const adjustedDate = new Date(eventDate);
+    adjustedDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+    navigation.navigate('CreateEvent', {
+      eventName: eventName.trim(),
+      date: adjustedDate.toISOString(),
+      eventType: 'social'
+    });
+
+    setShowCreateModal(false);
+    setEventName('');
+    setEventDate(new Date());
   };
 
   useEffect(() => {
-    fetchEvents(selectedCategory, searchQuery, selectedDate);
+    fetchEvents(searchQuery, selectedDate);
   }, []);
 
   const renderEventCard = ({ item }) => (
@@ -122,11 +146,72 @@ export default function AllEventsScreen({ navigation }) {
       {/* Create Event Button */}
       <TouchableOpacity
         style={styles.createEventButton}
-        onPress={() => navigation.navigate('CreateEvent')}
+        onPress={() => setShowCreateModal(true)}
       >
         <Ionicons name="add-circle-outline" size={24} color="#fff" />
         <Text style={styles.createEventText}>Create Event</Text>
       </TouchableOpacity>
+
+      {/* Create Event Modal */}
+      <Modal
+        visible={showCreateModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create New Event</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Event Name"
+              value={eventName}
+              onChangeText={setEventName}
+              placeholderTextColor="#999"
+            />
+
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Ionicons name="calendar" size={20} color="#6C6FD1" />
+              <Text style={styles.dateButtonText}>
+                {eventDate.toLocaleDateString()}
+              </Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={eventDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+            )}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowCreateModal(false);
+                  setEventName('');
+                  setEventDate(new Date());
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleCreateEvent}
+              >
+                <Text style={styles.confirmButtonText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Search Bar */}
       <View style={{ marginBottom: normalize(12) }}>
@@ -151,7 +236,7 @@ export default function AllEventsScreen({ navigation }) {
           />
           {selectedDate ? (
             <TouchableOpacity 
-              onPress={() => handleDateChange('')}
+              onPress={() => handleDateChange(null, '')}
               style={{ marginLeft: 8 }}
             >
               <Ionicons name="close-circle" size={20} color="#999" />
@@ -160,7 +245,7 @@ export default function AllEventsScreen({ navigation }) {
             <TouchableOpacity 
               onPress={() => {
                 const today = new Date().toISOString().split('T')[0];
-                handleDateChange(today);
+                handleDateChange(null, today);
               }}
               style={{ marginLeft: 8 }}
             >
@@ -170,48 +255,21 @@ export default function AllEventsScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Filter Buttons */}
-      <View style={styles.filterContainer}>
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            onPress={() => fetchEvents(cat, searchQuery, selectedDate)}
-            style={[
-              styles.filterButton,
-              selectedCategory === cat && styles.filterButtonActive
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                selectedCategory === cat && styles.filterTextActive
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {/* Event List */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6C6FD1" />
         </View>
       ) : error ? (
-        <View style={[styles.container, styles.centered]}>
+        <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : events.length === 0 ? (
-        <View style={[styles.container, styles.centered]}>
-          <Text style={styles.errorText}>No events found</Text>
         </View>
       ) : (
         <FlatList
           data={events}
-          keyExtractor={(item) => item.id.toString()}
           renderItem={renderEventCard}
-          contentContainerStyle={styles.listContent}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -222,227 +280,183 @@ export default function AllEventsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB', // Slightly lighter background for modern feel
-    padding: 20, // Increased padding for better spacing
-  },
-  searchContainer: {
-    marginBottom: 20, // Increased margin
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16, // More modern rounded corners
-    paddingHorizontal: 18,
-    paddingVertical: 14, // Increased padding for better touch targets
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#E5E7EB', // Subtle border
-  },
-  searchIcon: {
-    marginRight: 14,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827', // Darker text for better readability
-    fontWeight: '500', // Medium weight for better visibility
-  },
-  iconButton: {
-    padding: 6, // Larger touch target
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12, // Increased gap
-    marginBottom: 24, // More breathing room
-  },
-  filterButton: {
-    backgroundColor: '#F3F4F6', // More neutral background
-    paddingVertical: 10, // Taller buttons
-    paddingHorizontal: 18, // Wider buttons
-    borderRadius: 24, // More rounded for modern look
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  filterButtonActive: {
-    backgroundColor: '#6C6FD1',
-    borderColor: '#6C6FD1',
-  },
-  filterText: {
-    color: '#4B5563', // More neutral color when inactive
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
-  listContent: {
-    paddingBottom: 40, // More bottom padding
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24, // More rounded corners for modern look
-    marginBottom: 24, // More space between cards
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 }, // More pronounced shadow
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 7, // Increased elevation
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: 200, // Taller images
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  cardContent: {
-    padding: 20, // More padding inside card
-  },
-  tagContainer: {
-    position: 'absolute',
-    top: 18,
-    left: 18,
-    backgroundColor: 'rgba(108, 111, 209, 0.9)',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-    backdropFilter: 'blur(4px)',
-  },
-  tag: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800', // Extra bold for emphasis
-    letterSpacing: 0.7, // More spacing for readability
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: 14, // Larger title
-    fontWeight: '700',
-    color: '#111827', // Darker for better contrast
-    marginBottom: 10,
-    letterSpacing: 0.3,
-
-    textAlign: 'right', // Align text to the right
-    lineHeight: 26, // Better line height for readability
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  rating: {
-    fontSize: 14,
-    color: '#F59E0B', // Amber color for ratings
-    fontWeight: '700', // Bolder
-    marginLeft: 6,
-    marginRight: 16, // More spacing
-  },
-  attendees: {
-    fontSize: 14,
-    color: '#6B7280', // More neutral gray
-    marginLeft: 6,
-    fontWeight: '500', // Medium weight
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20, // More space before footer
-  },
-  location: {
-    fontSize: 14,
-    color: '#4B5563', // Better contrast
-    marginLeft: 8,
-    fontWeight: '500', // Medium weight
-    flex: 1, // Allow text to wrap
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6, // Add some space at the top
-    paddingTop: 16, // Add padding at the top
-    borderTopWidth: 1, // Add a subtle divider
-    borderTopColor: '#F3F4F6', // Light gray divider
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#6C6FD1',
-  },
-  detailsButton: {
-    backgroundColor: '#6C6FD1',
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  detailsButtonText: {
-    color: '#FFFFFF', // White text on colored background
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.4,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 24, // Better readability
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  emptyText: {
-    color: '#6B7280',
-    fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 24, // Better readability
+    backgroundColor: '#f5f5f5',
+    padding: normalize(16),
   },
   createEventButton: {
-    backgroundColor: '#6C6FD1',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: normalize(12),
-    borderRadius: normalize(12),
+    backgroundColor: '#6C6FD1',
+    padding: normalize(12),
+    borderRadius: normalize(8),
     marginBottom: normalize(16),
-    shadowColor: '#6C6FD1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
   },
   createEventText: {
     color: '#fff',
     fontSize: normalize(16),
     fontWeight: 'bold',
     marginLeft: normalize(8),
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: normalize(12),
+    marginBottom: normalize(16),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: {
+    width: '100%',
+    height: normalize(200),
+    borderTopLeftRadius: normalize(12),
+    borderTopRightRadius: normalize(12),
+  },
+  cardContent: {
+    padding: normalize(16),
+  },
+  tagContainer: {
+    position: 'absolute',
+    top: normalize(16),
+    right: normalize(16),
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: normalize(12),
+    paddingVertical: normalize(6),
+    borderRadius: normalize(16),
+  },
+  tag: {
+    color: '#fff',
+    fontSize: normalize(12),
+    fontWeight: 'bold',
+  },
+  title: {
+    fontSize: normalize(18),
+    fontWeight: 'bold',
+    marginBottom: normalize(8),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: normalize(8),
+  },
+  rating: {
+    marginLeft: normalize(4),
+    marginRight: normalize(12),
+    color: '#666',
+  },
+  attendees: {
+    color: '#666',
+  },
+  location: {
+    color: '#666',
+    marginBottom: normalize(12),
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  price: {
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    color: '#6C6FD1',
+  },
+  detailsButton: {
+    backgroundColor: '#6C6FD1',
+    paddingHorizontal: normalize(16),
+    paddingVertical: normalize(8),
+    borderRadius: normalize(8),
+  },
+  detailsButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#666',
+    fontSize: normalize(16),
+  },
+  listContainer: {
+    paddingBottom: normalize(16),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: normalize(12),
+    padding: normalize(20),
+    width: '90%',
+    maxWidth: normalize(400),
+  },
+  modalTitle: {
+    fontSize: normalize(20),
+    fontWeight: 'bold',
+    marginBottom: normalize(20),
+    textAlign: 'center',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: normalize(8),
+    padding: normalize(12),
+    marginBottom: normalize(16),
+    fontSize: normalize(16),
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: normalize(8),
+    padding: normalize(12),
+    marginBottom: normalize(20),
+  },
+  dateButtonText: {
+    marginLeft: normalize(8),
+    fontSize: normalize(16),
+    color: '#333',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: normalize(12),
+  },
+  modalButton: {
+    flex: 1,
+    padding: normalize(12),
+    borderRadius: normalize(8),
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  confirmButton: {
+    backgroundColor: '#6C6FD1',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
   },
 });
