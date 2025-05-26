@@ -15,9 +15,7 @@ import {
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_BASE } from '../config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from 'firebase/auth';
-import { normalize } from '../utils/scaling';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomAlert from '../components/CustomAlert';
 

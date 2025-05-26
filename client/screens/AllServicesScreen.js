@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { normalize } from '../utils/scaling';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUrl } from '../configs/url';
+// import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const numColumns = 2;
@@ -126,91 +127,316 @@ const AllServicesScreen = ({ navigation }) => {
   );
 };
 
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: normalize(16)
+//   },
+//   listContainer: {
+//     padding: normalize(8)
+//   },
+//   serviceCard: {
+//     flex: 1,
+//     margin: normalize(8),
+//     width: tileSize - normalize(16),
+//     borderRadius: normalize(12),
+//     overflow: 'hidden',
+//     elevation: 3,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84
+//   },
+//   serviceImage: {
+//     width: '100%',
+//     height: tileSize - normalize(16),
+//     resizeMode: 'cover'
+//   },
+//   serviceInfo: {
+//     padding: normalize(12)
+//   },
+//   serviceTitle: {
+//     fontSize: normalize(16),
+//     fontWeight: 'bold',
+//     marginBottom: normalize(4)
+//   },
+//   servicePrice: {
+//     fontSize: normalize(14),
+//     fontWeight: 'bold'
+//   },
+//   emptyContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   emptyText: {
+//     fontSize: 18,
+//     marginBottom: 20,
+//     textAlign: 'center',
+//   },
+//   createButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     padding: normalize(12),
+//     borderRadius: normalize(8),
+//     marginVertical: normalize(16),
+//     marginHorizontal: normalize(16),
+//   },
+//   createButtonIcon: {
+//     marginRight: normalize(8),
+//   },
+//   createButtonText: {
+//     color: '#fff',
+//     fontSize: normalize(16),
+//     fontWeight: 'bold',
+//   },
+//   loadingText: {
+//     fontSize: 16,
+//     textAlign: 'center',
+//     marginTop: 20,
+//   },
+//   errorText: {
+//     fontSize: 16,
+//     textAlign: 'center',
+//     marginTop: 20,
+//     marginBottom: 10,
+//   },
+//   retryButton: {
+//     padding: 10,
+//     borderRadius: 8,
+//     alignSelf: 'center',
+//   },
+//   retryButtonText: {
+//     color: '#fff',
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//   },
+// });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: normalize(16)
+    padding: normalize(16),
+    backgroundColor: '#F8F9FC', // Soft light background
   },
   listContainer: {
-    padding: normalize(8)
+    padding: normalize(4),
+    paddingBottom: normalize(80),
   },
   serviceCard: {
     flex: 1,
     margin: normalize(8),
     width: tileSize - normalize(16),
-    borderRadius: normalize(12),
+    borderRadius: normalize(24), // More rounded corners
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+    shadowColor: '#8F9BB3',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   serviceImage: {
     width: '100%',
-    height: tileSize - normalize(16),
-    resizeMode: 'cover'
+    height: tileSize - normalize(24),
+    resizeMode: 'cover',
+    backgroundColor: '#EDF1F7', // Light gray placeholder
   },
   serviceInfo: {
-    padding: normalize(12)
+    padding: normalize(16),
+    borderTopWidth: 1,
+    borderTopColor: '#EDF1F7',
   },
   serviceTitle: {
-    fontSize: normalize(16),
-    fontWeight: 'bold',
-    marginBottom: normalize(4)
+    fontSize: normalize(15),
+    fontWeight: '700',
+    marginBottom: normalize(6),
+    color: '#222B45',
+    letterSpacing: 0.1,
   },
   servicePrice: {
     fontSize: normalize(14),
-    fontWeight: 'bold'
+    fontWeight: '800',
+    color: '#4A90E2', // Light blue color for price
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: normalize(24),
   },
   emptyText: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: normalize(16),
+    marginBottom: normalize(24),
     textAlign: 'center',
+    color: '#8F9BB3',
+    lineHeight: normalize(24),
   },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: normalize(12),
-    borderRadius: normalize(8),
+    padding: normalize(16),
+    borderRadius: normalize(16),
     marginVertical: normalize(16),
     marginHorizontal: normalize(16),
+    backgroundColor: '#4A90E2', // Light blue for button
+    elevation: 6,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   createButtonIcon: {
-    marginRight: normalize(8),
+    marginRight: normalize(10),
   },
   createButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: normalize(16),
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: normalize(16),
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: normalize(24),
+    color: '#8F9BB3',
   },
   errorText: {
-    fontSize: 16,
+    fontSize: normalize(16),
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: normalize(24),
+    marginBottom: normalize(16),
+    color: '#4A90E2', // Light blue for error text
   },
   retryButton: {
-    padding: 10,
-    borderRadius: 8,
+    padding: normalize(14),
+    paddingHorizontal: normalize(24),
+    borderRadius: normalize(12),
     alignSelf: 'center',
+    backgroundColor: '#4A90E2', // Light blue for retry button
+    elevation: 3,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: normalize(15),
+    fontWeight: '700',
+  },
+  // New styles with a different approach
+  cardWrapper: {
+    borderRadius: normalize(24),
+    marginBottom: normalize(12),
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardImageContainer: {
+    borderRadius: normalize(16),
+    overflow: 'hidden',
+    marginRight: normalize(12),
+  },
+  cardDetails: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  priceTag: {
+    position: 'absolute',
+    top: normalize(12),
+    right: normalize(12),
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: normalize(12),
+    paddingVertical: normalize(6),
+    borderRadius: normalize(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  priceTagText: {
+    color: '#4A90E2', // Light blue for price tag
+    fontWeight: '800',
+    fontSize: normalize(14),
+  },
+  priceTagIcon: {
+    marginRight: normalize(4),
+  },
+  statusBadge: {
+    paddingHorizontal: normalize(8),
+    paddingVertical: normalize(4),
+    borderRadius: normalize(6),
+    backgroundColor: '#4A90E2', // Light blue for status badge
+    alignSelf: 'flex-start',
+    marginTop: normalize(6),
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontSize: normalize(10),
+    fontWeight: '700',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: normalize(6),
+  },
+  ratingText: {
+    fontSize: normalize(12),
+    color: '#8F9BB3',
+    marginLeft: normalize(4),
+  },
+  starIcon: {
+    marginRight: normalize(2),
+  },
+  headerSection: {
+    marginBottom: normalize(20),
+  },
+  headerTitle: {
+    fontSize: normalize(28),
+    fontWeight: '800',
+    color: '#222B45',
+    marginBottom: normalize(6),
+  },
+  headerSubtitle: {
+    fontSize: normalize(15),
+    color: '#8F9BB3',
+    lineHeight: normalize(20),
+  },
+  fabButton: {
+    position: 'absolute',
+    bottom: normalize(24),
+    right: normalize(24),
+    width: normalize(60),
+    height: normalize(60),
+    borderRadius: normalize(30),
+    backgroundColor: '#4A90E2', // Light blue for FAB
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  fabIcon: {
+    color: '#FFFFFF',
+  },
+  cardShadow: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: normalize(24),
+    shadowColor: '#8F9BB3',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 8,
   },
 });
 

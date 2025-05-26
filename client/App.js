@@ -8,7 +8,7 @@ import { SocketProvider } from './context/SocketContext';
 
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Image } from 'react-native';
+import { Image, View, Text } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { STRIPE_PUBLISHABLE_KEY } from './config';
@@ -173,27 +173,6 @@ function HomeStack() {
         options={{ ...screenHeaderOptions, title: 'Join Event' }}
       />
       <Stack.Screen
-        name="Agent Chat"
-        component={AgentChatScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="Agent List"
-        component={AgentListScreen}
-        options={screenHeaderOptions}
-      />
-      <Stack.Screen
-        name="AgentProfile"
-        component={AgentProfileScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "Agent Profile",
-          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-        }}
-      />
-      <Stack.Screen
         name="AllServices"
         component={AllServicesScreen}
         options={{
@@ -241,6 +220,17 @@ function HomeStack() {
         name="ServicesScreen"
         component={ServicesScreen}
         options={{ ...headerOptions, title: 'Services' }}
+      />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Event Details",
+          headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+        }}
       />
     </Stack.Navigator>
   );
@@ -464,12 +454,9 @@ const AppContent = () => {
 
   useEffect(() => {
     if (user) {
-      // Initialize socket connection when user is logged in
       initializeSocket(user.id);
     }
-
     return () => {
-      // Cleanup socket connection when component unmounts
       disconnectSocket();
     };
   }, [user]);
@@ -513,25 +500,37 @@ const AppContent = () => {
           }}
         />
         <Stack.Screen
-          name="EventDetail"
-          component={EventDetailScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Event Details",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-          }}
-        />
-        <Stack.Screen
           name="Chat"
           component={ChatScreen}
-          options={{
-            headerShown: true,
-            headerTitle: "Chat",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-            headerTintColor: '#fff',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          options={({ route }) => {
+            console.log('Chat Screen Route Params:', route.params);
+            return {
+              headerShown: true,
+              headerTitle: () => (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Image
+                    source={{ 
+                      uri: route.params?.recipientProfilePic || 'https://via.placeholder.com/40',
+                      cache: 'reload'
+                    }}
+                    style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: 20, 
+                      marginRight: 10,
+                      backgroundColor: '#f0f0f0'
+                    }}
+                    onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
+                  />
+                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
+                    {route.params?.recipientName || 'Chat'}
+                  </Text>
+                </View>
+              ),
+              headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+              headerTintColor: '#fff',
+              headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+            };
           }}
         />
         <Stack.Screen
@@ -659,7 +658,7 @@ export default function App() {
                       options={{
                         headerShown: true,
                         headerTitle: "Payment",
-                        headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
                         headerTintColor: '#fff',
                         headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                       }}
@@ -670,7 +669,7 @@ export default function App() {
                       options={{
                         headerShown: true,
                         headerTitle: "Payment Success",
-                        headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
                         headerTintColor: '#fff',
                         headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
                       }}
@@ -681,38 +680,37 @@ export default function App() {
                       options={{ ...headerOptions, headerTitle: "Payment Failed" }}
                     />
                     <Stack.Screen
-                      name="EventDetail"
-                      component={EventDetailScreen}
-                      options={{ ...headerOptions, headerTitle: "Event Details" }}
-                    />
-                    <Stack.Screen
                       name="Chat"
                       component={ChatScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment Failed",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="EventDetail"
-                      component={EventDetailScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Event Details",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="FullScreenMap"
-                      component={FullScreenMap}
-                      options={{
-                        headerShown: false,
-                        presentation: 'fullScreenModal'
+                      options={({ route }) => {
+                        console.log('Chat Screen Route Params:', route.params);
+                        return {
+                          headerShown: true,
+                          headerTitle: () => (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <Image
+                                source={{ 
+                                  uri: route.params?.recipientProfilePic || 'https://via.placeholder.com/40',
+                                  cache: 'reload'
+                                }}
+                                style={{ 
+                                  width: 40, 
+                                  height: 40, 
+                                  borderRadius: 20, 
+                                  marginRight: 10,
+                                  backgroundColor: '#f0f0f0'
+                                }}
+                                onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
+                              />
+                              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
+                                {route.params?.recipientName || 'Chat'}
+                              </Text>
+                            </View>
+                          ),
+                          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+                          headerTintColor: '#fff',
+                          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                        };
                       }}
                     />
                     <Stack.Screen
@@ -757,6 +755,14 @@ export default function App() {
                         headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
                         headerTintColor: '#fff',
                         headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+                      }}
+                    />
+                    <Stack.Screen
+                      name="FullScreenMap"
+                      component={FullScreenMap}
+                      options={{
+                        headerShown: false,
+                        presentation: 'fullScreenModal'
                       }}
                     />
                   </Stack.Navigator>

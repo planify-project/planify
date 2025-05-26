@@ -24,9 +24,7 @@ const SOCKET_BASE = API_BASE.replace('/api', '');
 
 export default function Chat({ route, navigation }) {
   const { recipientId, recipientName, recipientProfilePic } = route.params;
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [reportModalVisible, setReportModalVisible] = useState(false);
-  const [reportReason, setReportReason] = useState('');
+  console.log('Chat Screen - Route Params:', { recipientId, recipientName, recipientProfilePic });
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,20 +54,21 @@ export default function Chat({ route, navigation }) {
       headerTitle: () => (
         <View style={styles.headerTitle}>
           <Image
-            source={{ uri: recipientProfilePic || 'https://via.placeholder.com/40' }}
+            source={{ 
+              uri: recipientProfilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent((recipientName || 'U')[0])}&background=E5E5E5&color=666666&size=40`,
+              cache: 'reload'
+            }}
             style={styles.headerImage}
+            onError={(e) => console.log('Header image error:', e.nativeEvent.error)}
           />
           <Text style={styles.headerName}>{recipientName}</Text>
         </View>
       ),
-      headerRight: () => (
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => setIsDropdownVisible(true)}
-        >
-          <Ionicons name="information-circle" size={28} color="#EFD13D" />
-        </TouchableOpacity>
-      ),
+      headerStyle: { 
+        backgroundColor: '#5D5FEE', 
+        height: 80 
+      },
+      headerTintColor: '#fff',
     });
 
     let isMounted = true;
@@ -358,36 +357,6 @@ export default function Chat({ route, navigation }) {
     </View>
   );
 
-  const submitReport = async () => {
-    try {
-      const finalReason = reportReason === 'other' ? customReason : reportReason;
-      
-      if (!finalReason) {
-        Alert.alert('Error', 'Please select or enter a reason for reporting');
-        return;
-      }
-
-      if (!currentUserId) {
-        Alert.alert('Error', 'You must be logged in to report a user');
-        return;
-      }
-
-      await axios.post(`${API_BASE}/report/createReport`, {
-        reason: finalReason,
-        userId: currentUserId,
-        reportedUserId: recipientId,
-        itemType: 'user'
-      });
-
-      Alert.alert('Success', 'Thank you for your report. We will review it shortly.');
-      setReportModalVisible(false);
-      setReportReason('');
-      setCustomReason('');
-    } catch (error) {
-      console.error('Error submitting report:', error);
-      Alert.alert('Error', 'Failed to submit report. Please try again.');
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -410,7 +379,7 @@ export default function Chat({ route, navigation }) {
             inverted={false}
             onContentSizeChange={scrollToBottom}
             onLayout={scrollToBottom}
-            ListHeaderComponent={renderUserHeader}
+
             showsVerticalScrollIndicator={false}
             extraData={messages}
           />
@@ -433,116 +402,8 @@ export default function Chat({ route, navigation }) {
         </>
       )}
 
-      <Modal
-        visible={isDropdownVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsDropdownVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1} 
-          onPress={() => setIsDropdownVisible(false)}
-        >
-          <View style={styles.dropdownMenu}>
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => {
-                setIsDropdownVisible(false);
-                navigation.navigate('OtherUser', { userId: recipientId });
-              }}
-            >
-              <Ionicons name="person-outline" size={20} color="#333" />
-              <Text style={styles.dropdownText}>View Profile</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => {
-                setIsDropdownVisible(false);
-                setReportModalVisible(true);
-              }}
-            >
-              <Ionicons name="warning-outline" size={20} color="#FF6B6B" />
-              <Text style={styles.dropdownText}>Report User</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
-      <Modal
-        visible={reportModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setReportModalVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1} 
-          onPress={() => setReportModalVisible(false)}
-        >
-          <View style={styles.reportModalContent}>
-            <Text style={styles.reportModalTitle}>Report User</Text>
-            <Text style={styles.reportModalSubtitle}>Why are you reporting this user?</Text>
 
-            <TouchableOpacity 
-              style={[styles.reportOption, reportReason === 'inappropriate' && styles.reportOptionSelected]}
-              onPress={() => setReportReason('inappropriate')}
-            >
-              <Text style={styles.reportOptionText}>Inappropriate Behavior</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.reportOption, reportReason === 'spam' && styles.reportOptionSelected]}
-              onPress={() => setReportReason('spam')}
-            >
-              <Text style={styles.reportOptionText}>Spam or Scam</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.reportOption, reportReason === 'harassment' && styles.reportOptionSelected]}
-              onPress={() => setReportReason('harassment')}
-            >
-              <Text style={styles.reportOptionText}>Harassment</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.reportOption, reportReason === 'other' && styles.reportOptionSelected]}
-              onPress={() => setReportReason('other')}
-            >
-              <Text style={styles.reportOptionText}>Other</Text>
-            </TouchableOpacity>
-
-            {reportReason === 'other' && (
-              <TextInput
-                style={styles.reportCustomInput}
-                placeholder="Please specify the reason"
-                value={customReason}
-                onChangeText={setCustomReason}
-                multiline
-              />
-            )}
-
-            <TouchableOpacity 
-              style={styles.reportSubmitButton} 
-              onPress={submitReport}
-            >
-              <Text style={styles.reportSubmitButtonText}>Submit Report</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.reportCancelButton}
-              onPress={() => {
-                setReportModalVisible(false);
-                setReportReason('');
-                setCustomReason('');
-              }}
-            >
-              <Text style={styles.reportCancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -550,7 +411,7 @@ export default function Chat({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f9f9f9',
   },
   headerTitle: {
     flexDirection: 'row',
@@ -565,6 +426,7 @@ const styles = StyleSheet.create({
   headerName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
   },
   messagesList: {
     padding: 16,
@@ -574,18 +436,25 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   currentUserMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#EFD13D',
+    backgroundColor: '#fff',
+    borderTopRightRadius: 4,
   },
   otherUserMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: '#8d8ff3',
+    borderTopLeftRadius: 4,
   },
   messageText: {
     fontSize: 16,
-    color: '#000',
+    color: '#333',
   },
   timestamp: {
     fontSize: 12,
@@ -598,24 +467,35 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#eee',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   input: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f5f5',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     maxHeight: 100,
+    fontSize: 16,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EFD13D',
+    backgroundColor: '#8d8ff3',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   messageStatus: {
     fontSize: 12,
@@ -627,18 +507,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 32,
     marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   userAvatar: {
     width: 90,
     height: 90,
     borderRadius: 45,
     marginBottom: 12,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#f0f0f0',
+    borderWidth: 3,
+    borderColor: '#8d8ff3',
   },
   userName: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#111',
+    color: '#333',
     textAlign: 'center',
   },
   headerButton: {
@@ -648,103 +538,6 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 8,
-    minWidth: 180,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-  },
-  dropdownText: {
-    fontSize: 16,
-    marginLeft: 12,
-    color: '#333',
-  },
-  reportModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    width: '90%',
-    alignSelf: 'center',
-    maxWidth: 400,
-    marginTop: 'auto',
-    marginBottom: 'auto',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  reportModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-  },
-  reportModalSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-  },
-  reportOption: {
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: '#f5f5f5',
-    marginBottom: 10,
-  },
-  reportOptionSelected: {
-    backgroundColor: '#EFD13D20',
-    borderColor: '#EFD13D',
-    borderWidth: 1,
-  },
-  reportOptionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  reportCustomInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 10,
-    marginBottom: 20,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  reportSubmitButton: {
-    backgroundColor: '#EFD13D',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  reportSubmitButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  reportCancelButton: {
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  reportCancelButtonText: {
-    color: '#FF6B6B',
-    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,

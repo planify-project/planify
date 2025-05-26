@@ -76,15 +76,15 @@ module.exports = {
                 });
             }
 
-            // Find existing conversation
-            const existingConversation = await Conversation.findOne({
-                where: {
-                    members: {
-                        [Op.or]: [
-                            sequelize.literal(`JSON_CONTAINS(members, '["${senderId}", "${receiverId}"]')`),
-                            sequelize.literal(`JSON_CONTAINS(members, '["${receiverId}", "${senderId}"]')`)
-                        ]
-                    }
+            // Get all conversations and filter in JavaScript
+            const allConversations = await Conversation.findAll();
+            const existingConversation = allConversations.find(conv => {
+                try {
+                    const members = Array.isArray(conv.members) ? conv.members : JSON.parse(conv.members);
+                    return members.includes(senderId) && members.includes(receiverId);
+                } catch (e) {
+                    console.error('Error parsing members for conversation', conv.id, ':', e);
+                    return false;
                 }
             });
             
@@ -113,6 +113,7 @@ module.exports = {
             const createdConversation = await Conversation.findByPk(newConversation.id, {
                 include: [{
                     model: User,
+                    as: 'participants',
                     attributes: ['id', 'name', 'email', 'profilePic']
                 }]
             });

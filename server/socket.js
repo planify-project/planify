@@ -1,5 +1,4 @@
 const socketIO = require('socket.io');
-const { User } = require('./database');
 
 let io;
 

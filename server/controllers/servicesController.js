@@ -147,7 +147,7 @@ class ServicesController {
       const { title, description, price, service_type, location } = req.body;
       
       // Validate required fields
-      if (!type || !description || !price) {
+      if (!title || !description || !price) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields'
@@ -176,7 +176,7 @@ class ServicesController {
       const image_url = req.file ? `/uploads/services/${req.file.filename}` : null;
 
       console.log('Creating service with data:', {
-        type,
+        title,
         description,
         price,
         image_url,
@@ -186,7 +186,7 @@ class ServicesController {
       });
 
       const service = await Service.create({
-        type,
+        title,
         description,
         price,
         image_url,

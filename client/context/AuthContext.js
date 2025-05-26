@@ -31,36 +31,9 @@ export const AuthProvider = ({ children }) => {
     // Monitor authentication state changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                try {
-                    // Get the Firebase token
-                    const token = await currentUser.getIdToken();
-                    
-                    // Try to get or create the user in our database
-                    const response = await axios.post(`${API_BASE}/users/firebase`, {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName || currentUser.email.split('@')[0]
-                    }, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.data.success) {
-                        // Store both Firebase user and our database user
-                        setUser({
-                            ...currentUser,
-                            dbUser: response.data.data
-                        });
-                    } else {
-                        console.error('Failed to create/fetch user in database:', response.data);
+            if (currentUser) {                  
                         setUser(currentUser);
-                    }
-                } catch (error) {
-                    console.error('Error syncing user with database:', error);
-                    setUser(currentUser);
-                }
+                   
             } else {
                 setUser(null);
             }

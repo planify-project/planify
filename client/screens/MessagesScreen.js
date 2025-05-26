@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -50,10 +50,11 @@ export default function MessagesScreen({ navigation }) {
             const otherUserId = members.find(id => id !== user.uid);
             if (!otherUserId) return null;
 
-            const userResponse = await axios.get(`${API_BASE}/users/${otherUserId}`);
+            const userResponse = await axios.get(`${API_BASE}/users/firebase/${otherUserId}`);
+            console.log('User data received:', userResponse.data);
             return {
               ...conv,
-              otherUser: userResponse.data
+              otherUser: userResponse.data.data
             };
           } catch (error) {
             console.error('Error fetching user details:', error);
@@ -86,11 +87,13 @@ export default function MessagesScreen({ navigation }) {
         onPress={() => navigation.navigate('Chat', {
           recipientId: item.otherUser.id,
           recipientName: item.otherUser.name || 'Unknown User',
-          recipientProfilePic: item.otherUser.profilePic
+          recipientProfilePic: item.otherUser.image
         })}
       >
         <Image
-          source={{ uri: item.otherUser.profilePic || 'https://via.placeholder.com/50' }}
+          source={{ 
+            uri: item.otherUser.image || `https://ui-avatars.com/api/?name=${encodeURIComponent((item.otherUser.name || 'U')[0])}&background=E5E5E5&color=666666&size=50`
+          }}
           style={styles.avatar}
         />
         <View style={styles.conversationInfo}>
@@ -114,10 +117,8 @@ export default function MessagesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#C7F9CC" />
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
-      </View>
+
+   
       {conversations.length > 0 ? (
         <FlatList
           data={conversations}
@@ -143,23 +144,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : 16,
-    paddingBottom: 16,
-    backgroundColor: '#C7F9CC', // Light green header
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#00C44F', // Green title
-    textAlign: 'left',
   },
   loadingContainer: {
     flex: 1,

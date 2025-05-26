@@ -1,5 +1,4 @@
 const { faker } = require('@faker-js/faker');
-const mongoose = require('mongoose');
 const EventSpace = require('../models/eventSpace');
 
 const generateTunisianEventSpace = () => ({

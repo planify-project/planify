@@ -300,49 +300,6 @@ export default function ServiceDetailScreen({ route, navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      
-      {/* Animated Header */}
-      <Animated.View style={[styles.header, { height: headerHeight }]}>
-        <Animated.Image
-          source={{ uri: imageUrl || 'https://picsum.photos/300/300' }}
-          style={[styles.headerImage, { opacity: imageOpacity }]}
-          onError={(e) => {
-            console.error('Image loading error:', {
-              serviceId: service.id,
-              imageUrl: imageUrl,
-              error: e.nativeEvent
-            });
-          }}
-        />
-        <LinearGradient
-          colors={['rgba(0,0,0,0.6)', 'transparent']}
-          style={styles.headerGradient}
-        />
-        
-        {/* Back button */}
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        
-        {/* Animated Title */}
-        <Animated.View 
-          style={[
-            styles.headerTitleContainer, 
-            { 
-              opacity: titleOpacity,
-              transform: [{ scale: titleScale }]
-            }
-          ]}
-        >
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {service.title}
-          </Text>
-        </Animated.View>
-      </Animated.View>
-
       <Animated.ScrollView
         contentContainerStyle={styles.scrollViewContent}
         scrollEventThrottle={16}
