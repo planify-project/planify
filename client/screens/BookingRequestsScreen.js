@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  RefreshControl
+} from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth';
 import api from '../configs/api';
 import { useSocket } from '../context/SocketContext';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 export default function BookingRequestsScreen() {
@@ -12,6 +21,7 @@ export default function BookingRequestsScreen() {
   const navigation = useNavigation();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const auth = getAuth();
   const { socket } = useSocket();
 
@@ -97,27 +107,39 @@ export default function BookingRequestsScreen() {
       Alert.alert('Error', 'Failed to load booking requests');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleBookingResponse = async (bookingId, status) => {
+  const handleAccept = async (bookingId) => {
     try {
-      const response = await api.put(`/bookings/${bookingId}`, { status });
+      const response = await api.put(`/bookings/${bookingId}/respond`, {
+        response: 'accepted'
+      });
+
       if (response.data.success) {
-        // Notify the user through socket
-        if (socket) {
-          socket.emit('bookingResponse', {
-            bookingId,
-            status,
-            message: `Your booking request has been ${status === 'accepted' ? 'accepted' : 'rejected'}`
-          });
-        }
-        // Refresh the bookings list
-        loadBookings();
+        Alert.alert('Success', 'Booking request accepted');
+        loadBookings(); // Refresh the list
       }
     } catch (error) {
-      console.error('Error responding to booking:', error);
-      Alert.alert('Error', 'Failed to respond to booking request');
+      console.error('Error accepting booking:', error);
+      Alert.alert('Error', 'Failed to accept booking request');
+    }
+  };
+
+  const handleReject = async (bookingId) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}/respond`, {
+        response: 'rejected'
+      });
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Booking request rejected');
+        loadBookings(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      Alert.alert('Error', 'Failed to reject booking request');
     }
   };
 
@@ -158,38 +180,38 @@ export default function BookingRequestsScreen() {
         </Text>
       </View>
 
-      <View style={styles.actionButtons}>
-        {item.status === 'pending' ? (
-          <>
-            <TouchableOpacity
-              style={[styles.button, styles.acceptButton]}
-              onPress={() => handleBookingResponse(item.id, 'accepted')}
-            >
-              <Text style={styles.buttonText}>Accept</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.rejectButton]}
-              onPress={() => handleBookingResponse(item.id, 'rejected')}
-            >
-              <Text style={styles.buttonText}>Reject</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
+      {item.status === 'pending' && (
+        <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.button, styles.chatButton]}
-            onPress={() => handleChatPress(item)}
+            style={[styles.actionButton, styles.acceptButton]}
+            onPress={() => handleAccept(item.id)}
           >
-            <Ionicons name="chatbubble-outline" size={20} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Chat</Text>
+            <Ionicons name="checkmark" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Accept</Text>
           </TouchableOpacity>
-        )}
-      </View>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={() => handleReject(item.id)}
+          >
+            <Ionicons name="close" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <TouchableOpacity
+        style={styles.chatButton}
+        onPress={() => handleChatPress(item)}
+      >
+        <Ionicons name="chatbubble-outline" size={20} color={theme.primary} />
+        <Text style={[styles.chatButtonText, { color: theme.primary }]}>Chat with Customer</Text>
+      </TouchableOpacity>
     </View>
   );
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
-      <View style={[styles.container, styles.centered, { backgroundColor: theme.background }]}>
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
@@ -197,20 +219,30 @@ export default function BookingRequestsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {bookings.length === 0 ? (
-        <View style={[styles.centered, { backgroundColor: theme.background }]}>
-          <Text style={[styles.emptyText, { color: theme.text }]}>No booking requests yet</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={bookings}
-          renderItem={renderBookingItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          refreshing={loading}
-          onRefresh={loadBookings}
-        />
-      )}
+      <FlatList
+        data={bookings}
+        renderItem={renderBookingItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              loadBookings();
+            }}
+            colors={[theme.primary]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="calendar-outline" size={48} color={theme.textSecondary} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+              No booking requests yet
+            </Text>
+          </View>
+        }
+      />
     </View>
   );
 }
@@ -231,11 +263,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   bookingHeader: {
     flexDirection: 'row',
@@ -249,28 +281,31 @@ const styles = StyleSheet.create({
   },
   status: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   bookingDetails: {
-    marginBottom: 16,
+    gap: 8,
   },
   detailText: {
     fontSize: 14,
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 16,
+    gap: 12,
   },
-  button: {
+  actionButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 12,
     borderRadius: 8,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    gap: 8,
   },
   acceptButton: {
     backgroundColor: '#4CAF50',
@@ -278,17 +313,31 @@ const styles = StyleSheet.create({
   rejectButton: {
     backgroundColor: '#F44336',
   },
-  chatButton: {
-    backgroundColor: '#6C63FF',
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
+  actionButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  chatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    gap: 8,
+  },
+  chatButtonText: {
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
   },
   emptyText: {
+    marginTop: 16,
     fontSize: 16,
     textAlign: 'center',
   },

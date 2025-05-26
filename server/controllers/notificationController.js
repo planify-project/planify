@@ -114,12 +114,23 @@ const getNotificationById = async (req, res) => {
 const createNotification = async (req, res) => {
   try {
     console.log('1. Creating notification with data:', req.body);
+
+    // احرص على وجود userId، وإلا ردّ خطأ
+    if (!req.body.userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing userId in notification data'
+      });
+    }
+
     const notification = await Notification.create(req.body);
+
     console.log('2. Created notification:', notification.toJSON());
     res.json({
       success: true,
       data: notification
     });
+
   } catch (err) {
     console.error('Error creating notification:', err);
     res.status(500).json({ 
@@ -129,6 +140,7 @@ const createNotification = async (req, res) => {
     });
   }
 };
+
 
 const updateNotification = async (req, res) => {
   try {
