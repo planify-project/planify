@@ -4,6 +4,8 @@ import { getAuth } from 'firebase/auth';
 import api from '../configs/api';
 import { useAuth } from './AuthContext';
 import { SOCKET_URL, SOCKET_CONFIG } from '../config';
+import NetInfo from '@react-native-community/netinfo';
+import { Alert } from 'react-native';
 
 export const SocketContext = createContext();
 

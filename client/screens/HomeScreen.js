@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert, View, Image, Dimensions } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { AuthContext } from '../context/AuthContext';
 import HomeHeader from '../components/home/HomeHeader';
@@ -13,12 +13,9 @@ import { normalize } from '../utils/scaling';
 import axios from 'axios';
 import { API_BASE } from '../config'; // Make sure this points to your backend
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useTheme } from '../context/ThemeContext';
-
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const { theme } = useTheme();
   const [location, setLocation] = useState(null);
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -172,10 +169,6 @@ export default function HomeScreen() {
         onCreateEvent={handleCreateEvent}
       />
 
-      <CreateEventButton
-        onPress={handleCreateEventPress}
-      />
-
       <HomeTabs
         activeTab={activeTab}
         onTabPress={(tabId) => {
@@ -183,7 +176,7 @@ export default function HomeScreen() {
           if (tabId === 'events') {
             navigation.navigate('AllEvents');
           } else if (tabId === 'services') {
-            navigation.navigate('AllServices');
+            navigation.navigate('AllServicesScreen');
           }
         }}
         navigation={navigation}
@@ -192,6 +185,17 @@ export default function HomeScreen() {
       <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
 
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
+
+      <TouchableOpacity
+        style={styles.allEventsButton}
+        onPress={() => navigation.navigate('ServicesTab'
+          , {
+            screen: 'AllServicesScreen'
+          }
+        )}
+      >
+        <Text style={styles.allEventsButtonText}>Explore All Events</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -203,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9'
   },
   allEventsButton: {
-    backgroundColor: '#4f78f1',
+    backgroundColor: '#8d8ff3',
     padding: normalize(12),
     borderRadius: normalize(8),
     alignItems: 'center',

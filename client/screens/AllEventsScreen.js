@@ -120,6 +120,15 @@ export default function AllEventsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Create Event Button */}
+      <TouchableOpacity
+        style={styles.createEventButton}
+        onPress={() => navigation.navigate('CreateEvent')}
+      >
+        <Ionicons name="add-circle-outline" size={24} color="#fff" />
+        <Text style={styles.createEventText}>Create Event</Text>
+      </TouchableOpacity>
+
       {/* Search Bar */}
       <View style={{ marginBottom: normalize(12) }}>
         <View style={{
@@ -188,7 +197,7 @@ export default function AllEventsScreen({ navigation }) {
       {/* Event List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4f78f1" />
+          <ActivityIndicator size="large" color="#6C6FD1" />
         </View>
       ) : error ? (
         <View style={[styles.container, styles.centered]}>
@@ -214,121 +223,174 @@ export default function AllEventsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    padding: normalize(16),
+    backgroundColor: '#F9FAFB', // Slightly lighter background for modern feel
+    padding: 20, // Increased padding for better spacing
+  },
+  searchContainer: {
+    marginBottom: 20, // Increased margin
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16, // More modern rounded corners
+    paddingHorizontal: 18,
+    paddingVertical: 14, // Increased padding for better touch targets
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // Subtle border
+  },
+  searchIcon: {
+    marginRight: 14,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827', // Darker text for better readability
+    fontWeight: '500', // Medium weight for better visibility
+  },
+  iconButton: {
+    padding: 6, // Larger touch target
   },
   filterContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: normalize(8),
-    marginBottom: normalize(16),
+    gap: 12, // Increased gap
+    marginBottom: 24, // More breathing room
   },
   filterButton: {
-    backgroundColor: '#E0E7FF',
-    paddingVertical: normalize(6),
-    paddingHorizontal: normalize(16),
-    borderRadius: normalize(20),
+    backgroundColor: '#F3F4F6', // More neutral background
+    paddingVertical: 10, // Taller buttons
+    paddingHorizontal: 18, // Wider buttons
+    borderRadius: 24, // More rounded for modern look
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   filterButtonActive: {
-    backgroundColor: '#4338CA',
+    backgroundColor: '#6C6FD1',
+    borderColor: '#6C6FD1',
   },
   filterText: {
-    color: '#4338CA',
+    color: '#4B5563', // More neutral color when inactive
     fontWeight: '600',
-    fontSize: normalize(14),
+    fontSize: 14,
   },
   filterTextActive: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
   listContent: {
-    paddingBottom: normalize(30),
+    paddingBottom: 40, // More bottom padding
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: normalize(18),
-    marginBottom: normalize(20),
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24, // More rounded corners for modern look
+    marginBottom: 24, // More space between cards
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: normalize(8),
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 }, // More pronounced shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 7, // Increased elevation
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: normalize(180),
-    borderTopLeftRadius: normalize(18),
-    borderTopRightRadius: normalize(18),
+    height: 200, // Taller images
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   cardContent: {
-    padding: normalize(16),
+    padding: 20, // More padding inside card
   },
   tagContainer: {
     position: 'absolute',
-    top: normalize(14),
-    left: normalize(14),
-    backgroundColor: '#4338CA',
-    borderRadius: normalize(6),
-    paddingHorizontal: normalize(10),
-    paddingVertical: normalize(4),
+    top: 18,
+    left: 18,
+    backgroundColor: 'rgba(108, 111, 209, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+    backdropFilter: 'blur(4px)',
   },
   tag: {
-    color: '#fff',
-    fontSize: normalize(11),
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800', // Extra bold for emphasis
+    letterSpacing: 0.7, // More spacing for readability
     textTransform: 'uppercase',
   },
   title: {
-    fontSize: normalize(18),
+    fontSize: 14, // Larger title
     fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: normalize(4),
-    textAlign: 'right',
+    color: '#111827', // Darker for better contrast
+    marginBottom: 10,
     letterSpacing: 0.3,
+
+    textAlign: 'right', // Align text to the right
+    lineHeight: 26, // Better line height for readability
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: normalize(6),
+    marginBottom: 12,
   },
   rating: {
-    fontSize: normalize(13),
-    color: '#FBBF24',
-    fontWeight: '500',
-    marginLeft: normalize(4),
-    marginRight: normalize(10),
+    fontSize: 14,
+    color: '#F59E0B', // Amber color for ratings
+    fontWeight: '700', // Bolder
+    marginLeft: 6,
+    marginRight: 16, // More spacing
   },
   attendees: {
-    fontSize: normalize(13),
-    color: '#475569',
-    fontStyle: 'italic',
+    fontSize: 14,
+    color: '#6B7280', // More neutral gray
+    marginLeft: 6,
+    fontWeight: '500', // Medium weight
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20, // More space before footer
   },
   location: {
-    fontSize: normalize(13),
-    color: '#334155',
-    marginTop: normalize(2),
-    marginBottom: normalize(10),
+    fontSize: 14,
+    color: '#4B5563', // Better contrast
+    marginLeft: 8,
+    fontWeight: '500', // Medium weight
+    flex: 1, // Allow text to wrap
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 6, // Add some space at the top
+    paddingTop: 16, // Add padding at the top
+    borderTopWidth: 1, // Add a subtle divider
+    borderTopColor: '#F3F4F6', // Light gray divider
   },
   price: {
-    fontSize: normalize(15),
-    fontWeight: '600',
-    color: '#4338CA',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#6C6FD1',
   },
   detailsButton: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: normalize(12),
-    paddingHorizontal: normalize(14),
-    paddingVertical: normalize(8),
+    backgroundColor: '#6C6FD1',
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
   detailsButtonText: {
-    color: '#4338CA',
-    fontSize: normalize(13),
+    color: '#FFFFFF', // White text on colored background
+    fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.4,
   },
@@ -336,16 +398,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
   errorText: {
     color: '#DC2626',
-    fontSize: normalize(15),
+    fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 24, // Better readability
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 24, // Better readability
+  },
+  createEventButton: {
+    backgroundColor: '#6C6FD1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: normalize(12),
+    borderRadius: normalize(12),
+    marginBottom: normalize(16),
+    shadowColor: '#6C6FD1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  createEventText: {
+    color: '#fff',
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    marginLeft: normalize(8),
   },
 });

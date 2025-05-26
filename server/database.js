@@ -97,6 +97,8 @@ Service.hasMany(Booking, { foreignKey: 'serviceId' });
 Booking.belongsTo(Service, { foreignKey: 'serviceId' });
 Event.hasMany(Booking, { foreignKey: 'event_id' });
 Booking.belongsTo(Event, { foreignKey: 'event_id' });
+Booking.hasMany(Notification, { foreignKey: 'booking_id' });
+Notification.belongsTo(Booking, { foreignKey: 'booking_id' });
 
 
 // User and Wishlist relationships
@@ -168,17 +170,16 @@ Conversation.belongsToMany(User, {
 // Sync database with retry logic
 const syncWithRetry = async () => {
     try {
-        // First sync the Conversation model
-        await Conversation.sync({ alter: true });
-        console.log('Conversation model synchronized successfully');
-        
-        // Then sync the Message model
-        await Message.sync({ alter: true });
-        console.log('Message model synchronized successfully');
-        
-        // Finally sync all other models
-        await sequelize.sync({ alter: true });
-        console.log('All models synchronized successfully');
+
+
+    // Then sync all other models
+    await sequelize.sync({ force: true });
+    console.log('All models were synchronized successfully.');
+
+        // Import and run the event spaces seeder
+        const seedEventSpaces = require('./seeds/eventSpaces');
+        await seedEventSpaces();
+        console.log('Event spaces seeded successfully!');
     } catch (error) {
         console.error('Error synchronizing database:', error);
         if (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_JSON_USED_AS_KEY') {

@@ -14,13 +14,15 @@ const eventsRouter = require('./routes/events');
 const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const servicesRouter = require('./routes/services.js');
-const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
 const authRoutes = require('./routes/auth.routes');
 const reviewRoutes = require('./routes/review.route.js');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+const bookingRoutes = require('./routes/booking.routes.js');
+
  
 // Create Express app and HTTP server
 const app = express();
@@ -202,18 +204,21 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/api/users', userRouter);
+// API Routes
 app.use('/api/events', eventsRouter);
+app.use('/api/users', userRouter);
 app.use('/api/agents', agentRoutes);
 app.use('/api/services', servicesRouter);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api', stripeRoutes);
+app.use('/api/stripe', stripeRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/bookings', bookingRouter);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
 app.use('/api/authadmin',AdminAuthRoutes)
 app.use('/api/chat', chatRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -233,7 +238,7 @@ server.listen(PORT, HOST, () => {
   const urls = [
     `http://localhost:${PORT}`,
     `http://${HOST}:${PORT}`,
-    `http://192.168.152.126:${PORT}`
+    `http://192.168.132.68:${PORT}`
   ];
   
   console.log('\nServer running on:');

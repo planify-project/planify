@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: normalize(16),
     fontWeight: 'bold',
-    color: '#5D5FEE',
+    color: '#8d8ff3',
   },
 });
 

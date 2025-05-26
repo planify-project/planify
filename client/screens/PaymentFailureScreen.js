@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#F6F7FB',
+    backgroundColor: '#6C6FD1',
   },
   title: {
     fontSize: 24,
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#5D5FEE',
+    backgroundColor: '#8d8ff3',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',

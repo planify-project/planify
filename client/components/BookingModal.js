@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Modal, 
   View, 
@@ -7,7 +7,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Alert,
-  ScrollView 
+  ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,19 +29,69 @@ export default function BookingModal({
 }) {
   const { theme } = useTheme();
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const submissionLockRef = useRef(false);
+  const lastSubmissionTimeRef = useRef(0);
+  const SUBMISSION_COOLDOWN = 2000; // 2 seconds cooldown between submissions
+
+  // Reset form and locks when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setSelectedDate('');
+      setSpace('');
+      setPhone('');
+      setShowCalendar(false);
+      setIsConfirming(false);
+      submissionLockRef.current = false;
+      lastSubmissionTimeRef.current = 0;
+    }
+  }, [visible]);
+
+  // Prevent interaction while submitting
+  useEffect(() => {
+    if (isSubmitting) {
+      submissionLockRef.current = true;
+    } else {
+      // Add a small delay before unlocking to prevent rapid re-submissions
+      const timeout = setTimeout(() => {
+        submissionLockRef.current = false;
+      }, SUBMISSION_COOLDOWN);
+      return () => clearTimeout(timeout);
+    }
+  }, [isSubmitting]);
 
   const handleDateSelect = (day) => {
+    if (submissionLockRef.current) return;
     setSelectedDate(day.dateString);
     setShowCalendar(false);
   };
 
   const handlePhoneChange = (text) => {
+    if (submissionLockRef.current) return;
     // Only allow numbers and limit to 8 digits
     const cleaned = text.replace(/[^0-9]/g, '').slice(0, 8);
     setPhoneNumber(cleaned);
   };
 
-  const handleConfirm = () => {
+  const handleSpaceChange = (text) => {
+    if (submissionLockRef.current) return;
+    setSpace(text);
+  };
+
+  const handleConfirm = async () => {
+    // Prevent multiple submissions
+    if (submissionLockRef.current || isConfirming || isSubmitting) {
+      console.log('Submission blocked - already in progress');
+      return;
+    }
+
+    // Check cooldown
+    const now = Date.now();
+    if (now - lastSubmissionTimeRef.current < SUBMISSION_COOLDOWN) {
+      console.log('Submission blocked - cooldown period');
+      return;
+    }
+
     // Validate phone number
     if (phoneNumber.length !== 8) {
       Alert.alert('Error', 'Phone number must be exactly 8 digits');
@@ -85,22 +136,22 @@ export default function BookingModal({
               </Text>
             </TouchableOpacity>
 
-            {showCalendar && (
-              <Calendar
-                onDayPress={handleDateSelect}
-                markedDates={{
-                  [selectedDate]: { selected: true, selectedColor: theme.primary }
-                }}
-                minDate={new Date().toISOString().split('T')[0]}
-                theme={{
-                  selectedDayBackgroundColor: theme.primary,
-                  selectedDayTextColor: '#ffffff',
-                  todayTextColor: theme.primary,
-                  arrowColor: theme.primary,
-                }}
-                style={styles.calendar}
-              />
-            )}
+      {showCalendar && !submissionLockRef.current && (
+        <Calendar
+          onDayPress={handleDateSelect}
+          markedDates={{
+            [selectedDate]: { selected: true, selectedColor: theme.primary }
+          }}
+          minDate={new Date().toISOString().split('T')[0]}
+          theme={{
+            selectedDayBackgroundColor: theme.primary,
+            selectedDayTextColor: '#ffffff',
+            todayTextColor: theme.primary,
+            arrowColor: theme.primary,
+          }}
+          style={styles.calendar}
+        />
+      )}
 
             {/* Space/Venue Input */}
             <Text style={[styles.label, { color: theme.text }]}>Venue/Space</Text>
@@ -134,7 +185,11 @@ export default function BookingModal({
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: theme.primary }]}
+              style={[
+                styles.button, 
+                { backgroundColor: theme.primary },
+                (submissionLockRef.current || isConfirming || isSubmitting) && styles.buttonDisabled
+              ]}
               onPress={handleConfirm}
               disabled={loading}
             >
@@ -214,5 +269,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  disabledInput: {
+    opacity: 0.6,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
