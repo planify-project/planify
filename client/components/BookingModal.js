@@ -104,7 +104,12 @@ export default function BookingModal({
       return;
     }
 
-    onSubmit();
+    setIsConfirming(true);
+    try {
+      await onSubmit();
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -129,6 +134,7 @@ export default function BookingModal({
             <TouchableOpacity
               style={[styles.dateButton, { backgroundColor: theme.background }]}
               onPress={() => setShowCalendar(!showCalendar)}
+              disabled={loading}
             >
               <Ionicons name="calendar-outline" size={20} color={theme.text} />
               <Text style={[styles.dateText, { color: theme.text }]}>
@@ -136,22 +142,22 @@ export default function BookingModal({
               </Text>
             </TouchableOpacity>
 
-      {showCalendar && !submissionLockRef.current && (
-        <Calendar
-          onDayPress={handleDateSelect}
-          markedDates={{
-            [selectedDate]: { selected: true, selectedColor: theme.primary }
-          }}
-          minDate={new Date().toISOString().split('T')[0]}
-          theme={{
-            selectedDayBackgroundColor: theme.primary,
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: theme.primary,
-            arrowColor: theme.primary,
-          }}
-          style={styles.calendar}
-        />
-      )}
+            {showCalendar && !submissionLockRef.current && (
+              <Calendar
+                onDayPress={handleDateSelect}
+                markedDates={{
+                  [selectedDate]: { selected: true, selectedColor: theme.primary }
+                }}
+                minDate={new Date().toISOString().split('T')[0]}
+                theme={{
+                  selectedDayBackgroundColor: theme.primary,
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: theme.primary,
+                  arrowColor: theme.primary,
+                }}
+                style={styles.calendar}
+              />
+            )}
 
             {/* Space/Venue Input */}
             <Text style={[styles.label, { color: theme.text }]}>Venue/Space</Text>
@@ -160,7 +166,8 @@ export default function BookingModal({
               placeholder="Enter venue or space details"
               placeholderTextColor={theme.textSecondary}
               value={selectedSpace}
-              onChangeText={setSelectedSpace}
+              onChangeText={handleSpaceChange}
+              editable={!loading}
             />
 
             {/* Phone Input */}
@@ -173,6 +180,7 @@ export default function BookingModal({
               onChangeText={handlePhoneChange}
               keyboardType="phone-pad"
               maxLength={8}
+              editable={!loading}
             />
           </ScrollView>
 
@@ -193,9 +201,11 @@ export default function BookingModal({
               onPress={handleConfirm}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
-                {loading ? 'Processing...' : 'Confirm'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Confirm</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

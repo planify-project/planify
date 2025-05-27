@@ -90,7 +90,7 @@ export default function ServiceDetailScreen({ route, navigation }) {
     checkProvider();
   }, [auth.currentUser, service.provider]);
 
-  const imageUrl = getImageUrl(service.image_url);
+  const imageUrl = service.imageUrl ? getImageUrl(service.imageUrl) : null;
 
   const handleDelete = async () => {
     Alert.alert(
@@ -265,13 +265,50 @@ export default function ServiceDetailScreen({ route, navigation }) {
           type: 'info'
         });
         setAlertVisible(true);
+
+        // Refresh service data
+        const fetchService = async () => {
+          try {
+            const response = await api.get(`/services/${service.id}`);
+            if (response.data.success) {
+              navigation.setParams({ service: response.data.data });
+            }
+          } catch (error) {
+            console.error('Error refreshing service:', error);
+          }
+        };
+        fetchService();
       });
 
       return () => {
         socket.off('bookingResponse');
       };
     }
-  }, [socket]);
+  }, [socket, service.id, navigation]);
+
+  // Add a new useEffect for handling new notifications
+  useEffect(() => {
+    if (socket) {
+      socket.on('newNotification', (data) => {
+        // Refresh service data for any new notification
+        const fetchService = async () => {
+          try {
+            const response = await api.get(`/services/${service.id}`);
+            if (response.data.success) {
+              navigation.setParams({ service: response.data.data });
+            }
+          } catch (error) {
+            console.error('Error refreshing service:', error);
+          }
+        };
+        fetchService();
+      });
+
+      return () => {
+        socket.off('newNotification');
+      };
+    }
+  }, [socket, service.id, navigation]);
 
   const handlePayment = () => {
     navigation.dispatch(
@@ -279,7 +316,8 @@ export default function ServiceDetailScreen({ route, navigation }) {
         name: 'Payment',
         params: {
           amount: service.price,
-          eventId: null
+          eventId: null,
+          serviceId: service.id
         }
       })
     );

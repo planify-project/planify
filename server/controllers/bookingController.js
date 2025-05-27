@@ -377,11 +377,74 @@ const respondToBooking = async (req, res) => {
   }
 };
 
+const getUserBookings = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('Getting bookings for user:', userId);
+
+    const bookings = await Booking.findAll({
+      where: { userId },
+      include: [
+        { 
+          model: Service,
+          include: [{ model: User, as: 'provider', attributes: ['id', 'name', 'email'] }]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch user bookings",
+      error: error.message 
+    });
+  }
+};
+
+const getProviderBookings = async (req, res) => {
+  try {
+    const providerId = req.params.providerId;
+    console.log('Getting bookings for provider:', providerId);
+
+    const bookings = await Booking.findAll({
+      include: [
+        { 
+          model: Service,
+          where: { provider_id: providerId },
+          include: [{ model: User, as: 'provider', attributes: ['id', 'name', 'email'] }]
+        },
+        { model: User, attributes: ['id', 'name', 'email'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (error) {
+    console.error("Error fetching provider bookings:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch provider bookings",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createBooking,
   getBookings,
   getBookingById,
   updateBooking,
   deleteBooking,
-  respondToBooking
+  respondToBooking,
+  getUserBookings,
+  getProviderBookings
 };

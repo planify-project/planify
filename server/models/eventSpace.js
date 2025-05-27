@@ -11,7 +11,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true
+      allowNull: true,
+      defaultValue: ''
     },
     location: {
       type: DataTypes.STRING,
@@ -24,26 +25,31 @@ module.exports = (sequelize, DataTypes) => {
     },
     price: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+      allowNull: false,
+      defaultValue: 0.00
     },
     amenities: {
       type: DataTypes.JSON,
-      allowNull: true
+      allowNull: true,
+      defaultValue: {}
     },
     images: {
       type: DataTypes.JSON,
-      allowNull: true
+      allowNull: true,
+      defaultValue: []
     },
     availability: {
       type: DataTypes.JSON,
-      allowNull: true
+      allowNull: true,
+      defaultValue: {}
     },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     }
   }, {
-    timestamps: true
+    timestamps: true,
+    tableName: 'event_spaces'
   });
 
   return EventSpace;

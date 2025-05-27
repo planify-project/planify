@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomAlert from '../components/CustomAlert';
 
@@ -50,17 +50,28 @@ export default function JoinEventScreen({ route, navigation }) {
   };
 
   const handleConfirm = () => {
-    // Reset form fields
-    setAttendees(1);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setShowModal(false);
-    navigation.navigate('Root', { screen: 'Home' });
-  };
+     // Validate required fields
+    if (!name || !email || !phone) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
 
-  const handleRegistration = () => {
-    if (validateFields()) {
+    // Check if event is paid
+    const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+    if (price > 0) {
+      // Navigate to payment screen
+      navigation.navigate('Payment', {
+        amount: price * attendees,
+        eventId: event.id,
+        registrationData: {
+          name,
+          email,
+          phone,
+          attendees
+        }
+      });
+    } else {
+      // For free events only, show success modal
       setShowModal(true);
       Animated.spring(scale, {
         toValue: 1,
@@ -70,6 +81,18 @@ export default function JoinEventScreen({ route, navigation }) {
     }
   };
 
+  const handleRegistration = () => {
+    if (validateFields()) {
+      // For free events only
+      setShowModal(true);
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true
+      }).start();
+    }
+  };
+ 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.eventHeader}>
@@ -179,7 +202,7 @@ export default function JoinEventScreen({ route, navigation }) {
 
       <TouchableOpacity 
         style={styles.confirmButton}
-        onPress={handleRegistration}
+         onPress={handleRegistration}
       >
         <Text style={styles.confirmButtonText}>Confirm Registration</Text>
       </TouchableOpacity>
@@ -228,8 +251,27 @@ export default function JoinEventScreen({ route, navigation }) {
             </View>
 
             <TouchableOpacity 
-              style={[styles.doneButton, { backgroundColor: '#6C6FD1' }]}
-              onPress={handleConfirm}
+               style={[styles.doneButton, { backgroundColor: '#6C6FD1' }]}
+              onPress={() => {
+                setShowModal(false);
+                const price = parseFloat(String(event.price || event.ticketPrice).replace(/[^\d.]/g, ''));
+                if (price > 0) {
+                  // Navigate to payment screen for paid events
+                  navigation.navigate('Payment', {
+                    amount: price * attendees,
+                    eventId: event.id,
+                    registrationData: {
+                      name,
+                      email,
+                      phone,
+                      attendees
+                    }
+                  });
+                } else {
+                  // Go back for free events
+                  navigation.goBack();
+                }
+              }}
             >
               <Text style={styles.doneButtonText}>Done</Text>
             </TouchableOpacity>

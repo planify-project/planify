@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,20 +12,46 @@ import {
   StatusBar,
   SafeAreaView,
   Animated,
+  RefreshControl
 } from 'react-native';
 import { getAuth, signOut } from 'firebase/auth';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext';
+import axios from 'axios';
+import { API_BASE } from '../config';
+import { normalize } from '../utils/scaling';
+import CustomAlert from '../components/CustomAlert';
 
 const { width, height } = Dimensions.get('window');
 const HEADER_HEIGHT = height * 0.32;
 
-const ProfileScreen = ({ navigation }) => {
-  const [user, setUser] = useState(null);
+// API configuration
+const api = axios.create({
+  baseURL: API_BASE,
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+const ProfileScreen = () => {
+  const navigation = useNavigation();
+  const { user, signOut: authSignOut } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [servicesCount, setServicesCount] = useState(0);
+  const [bookingsCount, setBookingsCount] = useState(0);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'error'
+  });
   const scrollY = new Animated.Value(0);
-  const auth = getAuth();
 
   // Animation values
   const headerHeight = scrollY.interpolate({
@@ -58,28 +84,86 @@ const ProfileScreen = ({ navigation }) => {
     extrapolate: 'clamp',
   });
 
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUser({
-        name: currentUser.displayName || 'Alex Johnson',
-        email: currentUser.email || 'alex.johnson@example.com',
-        photoURL: currentUser.photoURL || 'https://randomuser.me/api/portraits/men/32.jpg',
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Get user data from our database
+      const userResponse = await api.get(`/users/firebase/${currentUser.uid}`);
+      if (!userResponse.data || !userResponse.data.data) {
+        throw new Error('User data not found');
+      }
+      const dbUser = userResponse.data.data;
+
+      // Fetch services count
+      try {
+        const servicesResponse = await api.get(`/services/provider/${dbUser.id}`);
+        setServicesCount(servicesResponse.data.length || 0);
+      } catch (error) {
+        console.error('Error fetching services count:', error);
+        setServicesCount(0);
+      }
+
+      // Fetch bookings count
+      try {
+        // Get bookings where user is the client
+        const clientBookingsResponse = await api.get(`/bookings/user/${dbUser.id}`);
+        const clientBookings = clientBookingsResponse.data.data || [];
+
+        // Get bookings where user is the service provider
+        const providerBookingsResponse = await api.get(`/bookings/provider/${dbUser.id}`);
+        const providerBookings = providerBookingsResponse.data.data || [];
+
+        // Set total bookings count
+        setBookingsCount(clientBookings.length + providerBookings.length);
+      } catch (error) {
+        console.error('Error fetching bookings count:', error);
+        setBookingsCount(0);
+      }
+
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setAlertConfig({
+        title: 'Error',
+        message: 'Failed to load profile data. Please try again.',
+        type: 'error'
       });
+      setAlertVisible(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchUserData().finally(() => setRefreshing(false));
   }, []);
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await authSignOut();
       navigation.reset({
         index: 0,
         routes: [{ name: 'Auth' }],
       });
     } catch (error) {
       console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to sign out');
+      setAlertConfig({
+        title: 'Error',
+        message: 'Failed to sign out. Please try again.',
+        type: 'error'
+      });
+      setAlertVisible(true);
     }
   };
 
@@ -135,7 +219,7 @@ const ProfileScreen = ({ navigation }) => {
           >
             <View style={styles.avatarContainer}>
               <Image
-                source={{ uri: user.photoURL }}
+                source={{ uri: user?.photoURL || 'https://via.placeholder.com/100' }}
                 style={styles.avatar}
               />
               <TouchableOpacity style={styles.editAvatarButton}>
@@ -154,8 +238,8 @@ const ProfileScreen = ({ navigation }) => {
                 },
               ]}
             >
-              <Text style={styles.name}>{user.name}</Text>
-              <Text style={styles.email}>{user.email}</Text>
+              <Text style={styles.name}>{user?.displayName || 'User'}</Text>
+              <Text style={styles.email}>{user?.email}</Text>
             </Animated.View>
           </Animated.View>
         </LinearGradient>
@@ -171,6 +255,13 @@ const ProfileScreen = ({ navigation }) => {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#8D8FF3']}
+          />
+        }
       >
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
@@ -178,7 +269,7 @@ const ProfileScreen = ({ navigation }) => {
             <View style={[styles.statIconContainer, { backgroundColor: 'rgba(108, 92, 231, 0.1)' }]}>
               <Feather name="briefcase" size={20} color="#6C5CE7" />
             </View>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{servicesCount}</Text>
             <Text style={styles.statLabel}>Services</Text>
           </View>
           
@@ -186,7 +277,7 @@ const ProfileScreen = ({ navigation }) => {
             <View style={[styles.statIconContainer, { backgroundColor: 'rgba(0, 184, 148, 0.1)' }]}>
               <Feather name="calendar" size={20} color="#00B894" />
             </View>
-            <Text style={styles.statNumber}>8</Text>
+            <Text style={styles.statNumber}>{bookingsCount}</Text>
             <Text style={styles.statLabel}>Bookings</Text>
           </View>
           
@@ -225,39 +316,6 @@ const ProfileScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* App Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Settings</Text>
-          
-          {renderMenuItem(
-            "briefcase-outline", 
-            "My Services", 
-            "Manage your service offerings",
-            () => navigation.navigate('MyServices')
-          )}
-          
-          {renderMenuItem(
-            "calendar-outline", 
-            "My Bookings", 
-            "View your upcoming appointments",
-            () => navigation.navigate('MyBookings')
-          )}
-          
-          {renderMenuItem(
-            "wallet-outline", 
-            "Payment Methods", 
-            "Manage your payment options",
-            () => navigation.navigate('PaymentMethods')
-          )}
-          
-          {renderMenuItem(
-            "moon-outline", 
-            "Dark Mode", 
-            "Change app appearance",
-            () => navigation.navigate('AppearanceSettings')
-          )}
-        </View>
-
         {/* Support Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
@@ -283,6 +341,7 @@ const ProfileScreen = ({ navigation }) => {
           onPress={handleSignOut}
           activeOpacity={0.8}
         >
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
         
@@ -290,6 +349,21 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.versionText}>Version 1.0.0</Text>
         </View>
       </Animated.ScrollView>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        close={() => setAlertVisible(false)}
+        buttons={[
+          {
+            text: 'OK',
+            onPress: () => setAlertVisible(false),
+            style: 'primary'
+          }
+        ]}
+      />
     </SafeAreaView>
   );
 };

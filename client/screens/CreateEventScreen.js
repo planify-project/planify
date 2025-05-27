@@ -78,6 +78,7 @@ export default function CreateEventScreen({ navigation, route }) {
     message: '',
     type: 'error'
   });
+  const [createdEvent, setCreatedEvent] = useState(null);
 
   const fetchData = async (type) => {
     try {
@@ -419,20 +420,16 @@ export default function CreateEventScreen({ navigation, route }) {
       console.log('Sending event data:', eventData);
       const response = await api.post('/events', eventData);
 
-      if (response.data.success) {
+      if (response.data && response.data.event) {
+        setCreatedEvent(response.data.event);
         setAlertConfig({
           title: 'Success',
           message: 'Your event has been created successfully!',
           type: 'success'
         });
         setAlertVisible(true);
-        navigation.navigate('Schedule', {
-          refresh: true,
-          newEvent: response.data.data,
-          selectedDate: route.params.date
-        });
       } else {
-        throw new Error(response.data.message || 'Failed to create event');
+        throw new Error('Failed to create event');
       }
     } catch (error) {
       console.error('Error creating event:', error.response?.data || error.message);
@@ -550,8 +547,13 @@ export default function CreateEventScreen({ navigation, route }) {
             text: 'OK',
             onPress: () => {
               setAlertVisible(false);
-              if (alertConfig.type === 'success') {
-                // Additional navigation or cleanup if needed
+              if (alertConfig.type === 'success' && createdEvent) {
+                // Navigate to Schedule screen after user acknowledges the success message
+                navigation.navigate('Schedule', {
+                  refresh: true,
+                  newEvent: createdEvent,
+                  selectedDate: route.params.date
+                });
               }
             },
             style: alertConfig.type === 'success' ? 'success' : 'primary'

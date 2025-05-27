@@ -82,7 +82,7 @@ class ServicesController {
           'description', 
           'price', 
           'service_type', 
-          'image_url', 
+          'imageUrl', 
           'provider_id', 
           'location',
           'is_active',
@@ -92,6 +92,7 @@ class ServicesController {
       });
 
       console.log(`Found ${services.length} services`);
+      console.log('First service data:', services[0]?.toJSON());
       res.status(200).json(services);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -144,22 +145,13 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const { title, description, price, service_type, location } = req.body;
+      const { title, description, price, provider_id } = req.body;
       
       // Validate required fields
       if (!title || !description || !price) {
         return res.status(400).json({
           success: false,
           message: 'Missing required fields'
-        });
-      }
-
-      // Get user ID from request body or query
-      const provider_id = req.body.provider_id || req.query.provider_id;
-      if (!provider_id) {
-        return res.status(400).json({
-          success: false,
-          message: 'Provider ID is required'
         });
       }
 
@@ -173,15 +165,13 @@ class ServicesController {
       }
 
       // Get image URL from uploaded file
-      const image_url = req.file ? `/uploads/services/${req.file.filename}` : null;
+      const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
 
       console.log('Creating service with data:', {
         title,
         description,
         price,
-        image_url,
-        service_type,
-        location,
+        imageUrl,
         provider_id
       });
 
@@ -189,9 +179,7 @@ class ServicesController {
         title,
         description,
         price,
-        image_url,
-        service_type: service_type || 'general',
-        location,
+        imageUrl,
         provider_id,
         is_active: true
       });

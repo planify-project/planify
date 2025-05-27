@@ -15,16 +15,24 @@ const userRouter = require('./routes/user.route');
 const agentRoutes = require('./routes/agentRoutes');
 const bookingRouter = require('./routes/booking.routes.js');
 const notificationRoutes = require('./routes/notificationRoutes');
-const stripeRoutes = require("./routes/stripeRoutes");
+const stripeRoutes = require("./routes/stripe.routes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
-const AdminAuthRoutes = require('./routes/AdminAuth.routes');
+const AdminAuthRoutes = require('./routes/adminAuth.routes');
 const messageRoutes = require('./routes/message.routes');
 const conversationRoutes = require('./routes/conversation.routes');
 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
+ 
+// Configure CORS
+app.use(cors({
+  origin: ['http://192.168.14.126:3000', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+}));
 
 // Basic middleware
 app.use(express.json());
@@ -204,18 +212,18 @@ io.engine.on("connection_error", (err) => {
 // Make io accessible to routes
 app.set('io', io);
 
-// API Routes
+ // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/agents', agentRoutes);
-app.use('/api', stripeRoutes);
-app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api', stripeRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
-app.use('/api/authadmin',AdminAuthRoutes)
+app.use('/api/admin', AdminAuthRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);                          
 

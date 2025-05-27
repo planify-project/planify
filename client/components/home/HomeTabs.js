@@ -7,12 +7,12 @@ const HomeTabs = ({ activeTab, onTabPress, navigation }) => {
   const tabs = [
     { id: 'events', label: 'Events', screen: 'AllEvents' },
     { id: 'spaces', label: 'Event Spaces', screen: 'EventSpaces' },
-    { id: 'services', label: 'Services', screen: 'AllServicesScreen' },
+    { id: 'services', label: 'Services', screen: 'AllServices' },
   ];
 
   const handleTabPress = (index, screen) => {
     onTabPress(index);
-    if (screen === 'AllServicesScreen') {
+    if (screen === 'AllServices') {
       navigation.navigate('Services');
     } else {
       navigation.navigate(screen);

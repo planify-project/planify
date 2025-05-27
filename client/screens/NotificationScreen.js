@@ -3,37 +3,37 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { SocketContext } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../configs/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const NotificationScreen = () => {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { socket, notifications, setNotifications } = useContext(SocketContext);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (socket) {
-      // Listen for new notifications
       socket.on('newBooking', (data) => {
         console.log('Received new booking notification:', data);
         setNotifications(prev => [data.notification, ...prev]);
       });
 
-      // Listen for booking responses
       socket.on('bookingResponse', (data) => {
         console.log('Received booking response notification:', data);
         setNotifications(prev => [data.notification, ...prev]);
       });
 
-      // Listen for deleted notifications
       socket.on('notificationDeleted', (data) => {
         console.log('Notification deleted:', data);
         setNotifications(prev => prev.filter(n => n.id !== data.notificationId));
       });
 
-      // Listen for dismissed notifications
       socket.on('notificationDismissed', (data) => {
         console.log('Notification dismissed:', data);
         setNotifications(prev => 
@@ -58,37 +58,22 @@ const NotificationScreen = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('1. Starting to fetch notifications...');
       
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        console.error('2. No authenticated user found in Firebase');
-        throw new Error('No authenticated user found');
+      if (!user?.dbUser?.id) {
+        throw new Error('No user data found');
       }
 
-      // First get the user's database ID
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
-      if (!userResponse.data.success || !userResponse.data.data?.id) {
-        throw new Error('Failed to get user data');
+      // Fetch notifications based on user type
+      let response;
+      if (user.dbUser.isProvider) {
+        // For providers, fetch notifications related to their services
+        response = await api.get(`/notifications/provider/${user.dbUser.id}`);
+      } else {
+        // For regular users, fetch their personal notifications
+        response = await api.get(`/notifications/user/${user.dbUser.id}`);
       }
-
-      const dbUserId = userResponse.data.data.id;
-      console.log('3. Database user ID:', dbUserId);
-
-      // Add timestamp to prevent caching
-      const timestamp = new Date().getTime();
-      const response = await api.get(`/notifications/user/${dbUserId}?_t=${timestamp}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-
-      console.log('4. Notifications response:', response.data);
 
       if (response.data.success) {
-        console.log('5. Setting notifications:', response.data.data);
         setNotifications(response.data.data);
       } else {
         throw new Error('Failed to fetch notifications');
@@ -102,10 +87,13 @@ const NotificationScreen = () => {
     }
   };
 
+  // Initial fetch
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
   const handleDeleteNotification = async (notification) => {
     try {
-      console.log('Starting to delete notification:', notification);
-      
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
@@ -118,61 +106,70 @@ const NotificationScreen = () => {
       }
 
       const dbUserId = userResponse.data.data.id;
-      console.log('Got database user ID:', dbUserId);
       
-      // Optimistically remove from UI
-      console.log('Removing notification from UI');
-      setNotifications(prev => {
-        const filtered = prev.filter(n => n.id !== notification.id);
-        console.log('Updated notifications after removal:', filtered);
-        return filtered;
-      });
+      setNotifications(prev => prev.filter(n => n.id !== notification.id));
       
-      // Delete the notification
-      console.log('Sending delete request to server');
       const response = await api.delete(`/notifications/${notification.id}`, {
         data: { userId: dbUserId }
       });
       
-      console.log('Server response:', response.data);
-      
-      // Only show error if the server explicitly indicates failure
-      if (response.data && response.data.success === false) {
-        console.log('Delete failed, restoring notification');
-        // If delete failed, restore the notification
-        setNotifications(prev => {
-          const restored = [...prev, notification];
-          console.log('Restored notifications:', restored);
-          return restored;
-        });
+      if (!response.data.success) {
+        setNotifications(prev => [...prev, notification]);
         throw new Error(response.data.message || 'Failed to delete notification');
       }
-
-      // If we get here, the deletion was successful
-      console.log('Delete successful');
-      
     } catch (error) {
-      // Only show error alert if it's not a successful deletion
-      if (error.message !== 'No error') {
-        console.error('Error deleting notification:', error);
-        Alert.alert(
-          'Error',
-          error.message || 'Failed to delete notification. Please try again.'
-        );
+      console.error('Error deleting notification:', error);
+      Alert.alert('Error', error.message || 'Failed to delete notification');
+    }
+  };
+
+  const handleAcceptBooking = async (notification) => {
+    try {
+      const response = await api.put(`/bookings/${notification.itemId}/respond`, {
+        response: 'accepted'
+      });
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Booking request accepted');
+        handleDeleteNotification(notification);
       }
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      Alert.alert('Error', 'Failed to accept booking request');
+    }
+  };
+
+  const handleRejectBooking = async (notification) => {
+    try {
+      const response = await api.put(`/bookings/${notification.itemId}/respond`, {
+        response: 'rejected'
+      });
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Booking request rejected');
+        handleDeleteNotification(notification);
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      Alert.alert('Error', 'Failed to reject booking request');
     }
   };
 
   const handleNotificationPress = (notification) => {
-    if (notification.type === 'booking_request' || notification.type === 'booking_response') {
+    if (notification.type === 'booking_request') {
       Alert.alert(
-        notification.type === 'booking_request' ? 'Booking Request' : 'Booking Response',
+        'Booking Request',
         notification.message,
         [
           {
-            text: 'Delete',
+            text: 'Accept',
+            style: 'default',
+            onPress: () => handleAcceptBooking(notification)
+          },
+          {
+            text: 'Reject',
             style: 'destructive',
-            onPress: () => handleDeleteNotification(notification)
+            onPress: () => handleRejectBooking(notification)
           },
           {
             text: 'Cancel',
@@ -180,90 +177,19 @@ const NotificationScreen = () => {
           }
         ]
       );
-    } else if (notification.type === 'booking_cancelled') {
-      // Navigate to the booking details
-      navigation.navigate('BookingDetails', { bookingId: notification.booking_id });
-    }
-  };
-
-  const handleDismissNotification = async (notificationId) => {
-    try {
-      console.log('Starting to dismiss notification:', notificationId);
-      
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('No authenticated user found');
-      }
-
-      const userResponse = await api.get(`/users/firebase/${user.uid}`);
-      if (!userResponse.data.success || !userResponse.data.data?.id) {
-        throw new Error('Failed to get user data');
-      }
-
-      const dbUserId = userResponse.data.data.id;
-      console.log('Got database user ID:', dbUserId);
-      
-      // Optimistically update the UI
-      console.log('Updating UI optimistically');
-      setNotifications(prev => {
-        const updated = prev.map(n => 
-          n.id === notificationId 
-            ? { ...n, is_read: true }
-            : n
-        );
-        console.log('Updated notifications:', updated);
-        return updated;
-      });
-      
-      console.log('Sending dismiss request to server');
-      const response = await api.put(`/notifications/${notificationId}/dismiss`, {
-        userId: dbUserId
-      });
-      
-      console.log('Server response:', response.data);
-      
-      if (!response.data.success) {
-        console.log('Dismiss failed, reverting UI');
-        // If the dismiss failed, revert the UI change
-        setNotifications(prev => 
-          prev.map(n => 
-            n.id === notificationId 
-              ? { ...n, is_read: false }
-              : n
-          )
-        );
-        throw new Error(response.data.message || 'Failed to dismiss notification');
-      }
-      
-      // Force a refresh of notifications to ensure sync
-      console.log('Dismiss successful, refreshing notifications');
-      fetchNotifications();
-      
-    } catch (error) {
-      console.error('Error dismissing notification:', error);
+    } else if (notification.type === 'booking_response') {
       Alert.alert(
-        'Error',
-        error.message || 'Failed to dismiss notification. Please try again.'
+        'Booking Response',
+        notification.message,
+        [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => handleDeleteNotification(notification)
+          }
+        ]
       );
     }
-  };
-
-  // Initial fetch and setup refresh interval
-  useEffect(() => {
-    fetchNotifications();
-    
-    // Refresh notifications every 30 seconds
-    const refreshInterval = setInterval(fetchNotifications, 30000);
-    
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchNotifications();
   };
 
   const renderNotification = ({ item }) => {
@@ -275,10 +201,6 @@ const NotificationScreen = () => {
           return 'checkmark-circle';
         case 'booking_cancelled':
           return 'close-circle';
-        case 'message':
-          return 'chatbubble';
-        case 'review':
-          return 'star';
         default:
           return 'notifications';
       }
@@ -292,77 +214,75 @@ const NotificationScreen = () => {
           return '#2196F3';
         case 'booking_cancelled':
           return '#FF3B30';
-        case 'message':
-          return '#2196F3';
-        case 'review':
-          return '#FFC107';
         default:
           return '#757575';
       }
     };
 
     return (
-      <View style={styles.notificationContainer}>
-        <TouchableOpacity
-          style={[styles.notificationItem, { borderLeftColor: getColor() }]}
-          onPress={() => handleNotificationPress(item)}
-        >
-          <View style={styles.notificationIcon}>
-            <Ionicons name={getIcon()} size={24} color={getColor()} />
-          </View>
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationTitle}>{item.title}</Text>
-            <Text style={styles.notificationMessage}>{item.message}</Text>
-            <Text style={styles.notificationTime}>
-              {new Date(item.created_at || item.createdAt).toLocaleString()}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        
-        {(item.type === 'booking_request' || item.type === 'booking_response') && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteNotification(item)}
-          >
-            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-          </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.notificationItem, { 
+          backgroundColor: theme.card,
+          borderLeftColor: getColor(),
+          opacity: item.is_read ? 0.7 : 1
+        }]}
+        onPress={() => handleNotificationPress(item)}
+      >
+        <View style={styles.notificationIcon}>
+          <Ionicons name={getIcon()} size={24} color={getColor()} />
+        </View>
+        <View style={styles.notificationContent}>
+          <Text style={[styles.notificationTitle, { color: theme.text }]}>
+            {item.title}
+          </Text>
+          <Text style={[styles.notificationMessage, { color: theme.textSecondary }]}>
+            {item.message}
+          </Text>
+          <Text style={[styles.notificationTime, { color: theme.textTertiary }]}>
+            {new Date(item.created_at).toLocaleString()}
+          </Text>
+        </View>
+        <View style={styles.notificationActions}>
+        {!item.is_read && (
+          <View style={[styles.unreadDot, { backgroundColor: getColor() }]} />
         )}
-        
-        {item.type === 'booking_cancelled' && (
           <TouchableOpacity
-            style={styles.dismissButton}
-            onPress={() => handleDismissNotification(item.id)}
+            style={[styles.deleteButton, { backgroundColor: theme.card }]}
+            onPress={() => {
+              Alert.alert(
+                'Delete Notification',
+                'Are you sure you want to delete this notification?',
+                [
+                  {
+                    text: 'Cancel',
+                    style: 'cancel'
+                  },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => handleDeleteNotification(item)
+                  }
+                ]
+              );
+            }}
           >
-            <Ionicons name="close-circle-outline" size={20} color="#757575" />
+            <Ionicons name="trash-outline" size={20} color={theme.textSecondary} />
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      </TouchableOpacity>
     );
   };
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading notifications...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Ionicons name="alert-circle" size={48} color="#ff3b30" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
         data={notifications}
         renderItem={renderNotification}
@@ -371,15 +291,20 @@ const NotificationScreen = () => {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#0000ff']}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchNotifications();
+            }}
+            colors={[theme.primary]}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-off" size={64} color="#757575" />
-            <Text style={styles.emptyText}>No notifications yet</Text>
-            <Text style={styles.emptySubText}>
+            <Ionicons name="notifications-off" size={64} color={theme.textSecondary} />
+            <Text style={[styles.emptyText, { color: theme.text }]}>
+              No notifications yet
+            </Text>
+            <Text style={[styles.emptySubText, { color: theme.textSecondary }]}>
               You'll see your notifications here when you receive them
             </Text>
           </View>
@@ -392,23 +317,15 @@ const NotificationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5', 
   },
   listContainer: {
     padding: 16,
-    flexGrow: 1,
-  },
-  notificationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
   },
   notificationItem: {
-    flex: 1,
     flexDirection: 'row',
-    backgroundColor: 'white',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -430,41 +347,37 @@ const styles = StyleSheet.create({
   },
   notificationMessage: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   notificationTime: {
     fontSize: 12,
-    color: '#999',
+  },
+  notificationActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    position: 'absolute',
+    top: 16,
+    right: 16,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#ff3b30',
-    textAlign: 'center',
-  },
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
@@ -475,36 +388,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginTop: 16,
   },
   emptySubText: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     marginTop: 8,
-  },
-  deleteButton: {
-    padding: 12,
-    marginLeft: 8,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  dismissButton: {
-    padding: 12,
-    marginLeft: 8,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
 });
 

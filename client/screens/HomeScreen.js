@@ -105,9 +105,9 @@ export default function HomeScreen() {
   const handleCreateEvent = () => {
     if (eventName && selectedDate) {
       setCreateEventModalVisible(false);
-      navigation.navigate('CreateEvent', {
-        eventName: eventName,
-        date: selectedDate
+      navigation.navigate('CreateEvent', { 
+        eventName: eventName, 
+        date: selectedDate 
       });
       // Reset form
       setEventName('');
@@ -138,7 +138,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
-      <HomeHeader
+      <HomeHeader 
         loading={loading}
         city={city}
         errorMsg={errorMsg}
@@ -155,7 +155,7 @@ export default function HomeScreen() {
         onUseCurrentLocation={getLocation}
       />
 
-      <CreateEventModal
+      <CreateEventModal 
         visible={createEventModalVisible}
         eventName={eventName}
         selectedDate={selectedDate}
@@ -176,23 +176,21 @@ export default function HomeScreen() {
           if (tabId === 'events') {
             navigation.navigate('AllEvents');
           } else if (tabId === 'services') {
-            navigation.navigate('AllServicesScreen');
+            navigation.navigate('AllServices');
           }
         }}
         navigation={navigation}
       />
 
       <NearbyEvents events={publicEvents} navigation={navigation} loading={loading} />
-
+      
       <PopularEvents events={publicEvents} navigation={navigation} loading={loading} />
 
       <TouchableOpacity
         style={styles.allEventsButton}
-        onPress={() => navigation.navigate('ServicesTab'
-          , {
-            screen: 'AllServicesScreen'
-          }
-        )}
+        onPress={() => navigation.navigate('ServicesTab', {
+          screen: 'AllServices'
+        })}
       >
         <Text style={styles.allEventsButtonText}>Explore All Events</Text>
       </TouchableOpacity>

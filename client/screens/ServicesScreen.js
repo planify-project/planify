@@ -6,6 +6,7 @@ import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { getImageUrl } from '../configs/url';
 
 export default function ServicesScreen() {
   const { theme } = useTheme();
@@ -56,7 +57,7 @@ export default function ServicesScreen() {
       }
       
       console.log('Services fetched:', response.data);
-      setServices(response.data.data);
+      setServices(response.data);
     } catch (error) {
       console.error('Error fetching services:', error);
       setError('Failed to load services. Please try again.');
@@ -172,12 +173,14 @@ export default function ServicesScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Image
-              source={{ uri: item.imageUrl || 'https://picsum.photos/300/300' }}
+              source={{ uri: getImageUrl(item.image_url) || 'https://picsum.photos/300/300' }}
               style={styles.serviceImage}
               resizeMode="cover"
             />
             <View style={styles.serviceContent}>
-              <Text style={styles.serviceName}>{item.description}</Text>
+              <Text style={styles.serviceName}>{item.title}</Text>
+              <Text style={styles.serviceDescription}>{item.description}</Text>
+              <Text style={styles.servicePrice}>${item.price}</Text>
               <TouchableOpacity
                 style={styles.reserveBtn}
                 onPress={() => {
@@ -194,7 +197,7 @@ export default function ServicesScreen() {
       <Modal visible={bookingModalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Book: {selectedService?.description}</Text>
+            <Text style={styles.modalTitle}>Book: {selectedService?.title}</Text>
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Date</Text>
@@ -349,6 +352,16 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
     marginBottom: 4,
   },
+  serviceDescription: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    marginBottom: 4,
+  },
+  servicePrice: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    marginBottom: 4,
+  },
   detailsContainer: {
     marginBottom: 12,
   },
@@ -477,18 +490,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   bookingRequestsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 8,
+    gap: 8,
   },
   bookingRequestsText: {
     color: '#fff',
-    marginLeft: 8,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   container: {
     flex: 1,

@@ -192,12 +192,14 @@ const syncWithRetry = async () => {
     }
 };
 
-// Run the sync
-// syncWithRetry();
+// Run the initialization
+// initializeDatabase();
 
 // Export all models and sequelize instance
 module.exports = {
     sequelize,
+    syncDatabase,
+    initializeDatabase,
     User,
     Service,
     ServiceCategory,

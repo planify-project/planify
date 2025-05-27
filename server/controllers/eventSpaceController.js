@@ -1,5 +1,7 @@
 const { EventSpace, Booking } = require('../database');
 const { Op } = require('sequelize');
+const path = require('path');
+const seedEventSpaces = require('../seed/event__space.seed');
 
 exports.getAllEventSpaces = async (req, res) => {
   try {
@@ -29,18 +31,91 @@ exports.getEventSpaceById = async (req, res) => {
 exports.createEventSpace = async (req, res) => {
   try {
     console.log('Received data to create:', req.body);
-    const eventSpace = await EventSpace.create(req.body);
+    console.log('Received files:', req.files);
+
+    // Validate required fields
+    const requiredFields = ['name', 'location', 'price'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Get image URLs from uploaded files
+    const imageUrls = req.files ? req.files.map(file => `/uploads/event-spaces/${file.filename}`) : [];
+
+    // Parse amenities safely
+    let amenities = {};
+    try {
+      amenities = req.body.amenities ? JSON.parse(req.body.amenities) : {};
+    } catch (e) {
+      console.error('Error parsing amenities:', e);
+      amenities = {};
+    }
+
+    // Parse availability safely
+    let availability = {};
+    try {
+      availability = req.body.availability ? JSON.parse(req.body.availability) : {};
+    } catch (e) {
+      console.error('Error parsing availability:', e);
+      availability = {};
+    }
+
+    // Ensure price is a valid number
+    const price = parseFloat(req.body.price);
+    if (isNaN(price) || price < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Price must be a valid positive number'
+      });
+    }
+
+    // Ensure capacity is a valid number
+    const capacity = parseInt(req.body.capacity) || 0;
+    if (isNaN(capacity) || capacity < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Capacity must be a valid positive number'
+      });
+    }
+
+    const eventSpaceData = {
+      name: req.body.name.trim(),
+      description: (req.body.description || '').trim(),
+      location: req.body.location.trim(),
+      price: price,
+      capacity: capacity,
+      images: imageUrls,
+      amenities: amenities,
+      availability: availability,
+      isActive: true
+    };
+
+    console.log('Creating event space with data:', eventSpaceData);
+
+    const eventSpace = await EventSpace.create(eventSpaceData);
+    
     res.status(201).json({
       success: true,
       message: 'Event space created successfully',
-      data: eventSpace,
+      data: eventSpace
     });
   } catch (error) {
-    console.error('🔥 Sequelize error:', error);
+    console.error('🔥 Error creating event space:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      errors: error.errors
+    });
     res.status(500).json({
       success: false,
       message: 'Failed to create event space',
-      error: error.message,
+      error: error.message
     });
   }
 };
@@ -51,7 +126,22 @@ exports.updateEventSpace = async (req, res) => {
     if (!eventSpace) {
       return res.status(404).json({ error: 'Event space not found' });
     }
-    await eventSpace.update(req.body);
+
+    // Get image URLs from uploaded files
+    const newImageUrls = req.files ? req.files.map(file => `/uploads/event-spaces/${file.filename}`) : [];
+    
+    // Combine existing images with new ones if any
+    const updatedImages = newImageUrls.length > 0 ? newImageUrls : eventSpace.images;
+
+    const updateData = {
+      ...req.body,
+      images: updatedImages,
+      amenities: JSON.parse(req.body.amenities || '{}'),
+      price: parseFloat(req.body.price),
+      capacity: parseInt(req.body.capacity) || eventSpace.capacity
+    };
+
+    await eventSpace.update(updateData);
     res.json(eventSpace);
   } catch (error) {
     console.error('Error updating event space:', error);
@@ -82,20 +172,11 @@ exports.checkAvailability = async (req, res) => {
     // Get all confirmed bookings for this space within the date range
     const bookings = await Booking.findAll({
       where: {
-        eventSpaceId: id,
+        event_id: id,
         status: 'confirmed',
-        [Op.or]: [
-          {
-            startDate: {
-              [Op.between]: [startDate, endDate]
-            }
-          },
-          {
-            endDate: {
-              [Op.between]: [startDate, endDate]
-            }
-          }
-        ]
+        date: {
+          [Op.between]: [startDate, endDate]
+        }
       }
     });
 
@@ -107,9 +188,8 @@ exports.checkAvailability = async (req, res) => {
     while (currentDate <= lastDate) {
       const dateString = currentDate.toISOString().split('T')[0];
       const isBooked = bookings.some(booking => {
-        const bookingStart = new Date(booking.startDate);
-        const bookingEnd = new Date(booking.endDate);
-        return currentDate >= bookingStart && currentDate <= bookingEnd;
+        const bookingDate = new Date(booking.date);
+        return dateString === bookingDate.toISOString().split('T')[0];
       });
 
       availabilityMap[dateString] = {

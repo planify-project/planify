@@ -5,6 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from './context/ThemeContext';
 import { SocketProvider } from './context/SocketContext';
+import { NotificationProvider, useNotifications } from './context/NotificationContext';
+import Toast from './components/Toast';
 
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -46,6 +48,7 @@ import PaymentFailureScreen from './screens/PaymentFailureScreen';
 import FullScreenMap from './screens/FullScreenMap';
 import MyServicesScreen from './screens/MyServicesScreen';
 import ServicesScreen from './screens/ServicesScreen';
+import NearbyEventsScreen from './screens/NearbyEventsScreen';
 import MessagesScreen from './screens/MessagesScreen';
 
 import { AuthProvider, AuthContext, useAuth } from './context/AuthContext';
@@ -101,6 +104,17 @@ function HomeStack() {
           ),
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#22223B',
+        }}
+      />
+      <Stack.Screen
+        name="NearbyEvents"
+        component={NearbyEventsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Nearby Events",
+          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
         }}
       />
       <Stack.Screen
@@ -451,6 +465,7 @@ function MainTabs() {
 
 const AppContent = () => {
   const { user } = useAuth();
+  const { toast, hideToast } = useNotifications();
 
   useEffect(() => {
     if (user) {
@@ -472,7 +487,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -483,7 +498,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment Success",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -494,7 +509,7 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Payment Failed",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -509,14 +524,14 @@ const AppContent = () => {
               headerTitle: () => (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Image
-                    source={{ 
+                    source={{
                       uri: route.params?.recipientProfilePic || 'https://via.placeholder.com/40',
                       cache: 'reload'
                     }}
-                    style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 20, 
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
                       marginRight: 10,
                       backgroundColor: '#f0f0f0'
                     }}
@@ -534,12 +549,31 @@ const AppContent = () => {
           }}
         />
         <Stack.Screen
+          name="EventDetail"
+          component={EventDetailScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Event Details",
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen
+          name="FullScreenMap"
+          component={FullScreenMap}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal'
+          }}
+        />
+        <Stack.Screen
           name="AllEvents"
           component={AllEventsScreen}
           options={{
             headerShown: true,
             headerTitle: "All Events",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -550,7 +584,18 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Join Event",
-            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen
+          name="Review"
+          component={ReviewScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Write a Review",
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
@@ -561,6 +606,17 @@ const AppContent = () => {
           options={{
             headerShown: true,
             headerTitle: "Edit Profile",
+            headerStyle: { backgroundColor: '#6C6FD1', height: 80 },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
+          }}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{
+            headerShown: true,
+            headerTitle: "Chat",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -571,7 +627,7 @@ const AppContent = () => {
           component={AllServicesScreen}
           options={{
             headerShown: true,
-            headerTitle: "My Services",
+            headerTitle: "All Services",
             headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
@@ -614,17 +670,21 @@ const AppContent = () => {
           name="Notifications"
           component={NotificationScreen}
           options={{
-            title: 'Notifications',
-            headerStyle: {
-              backgroundColor: '#f4511e',
-            },
+            headerShown: true,
+            headerTitle: "Notifications",
+            headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
             headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
           }}
         />
       </Stack.Navigator>
+      <Toast
+        visible={toast.visible}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </NavigationContainer>
   );
 };
@@ -646,129 +706,13 @@ export default function App() {
       <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
         <ThemeProvider>
           <SocketProvider>
-            <AuthProvider>
-              <WishlistProvider>
-                <NavigationContainer>
-                  <Stack.Navigator screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="Root" component={MainTabs} />
-                    <Stack.Screen name="Auth" component={AuthNavigator} />
-                    <Stack.Screen
-                      name="Payment"
-                      component={PaymentScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="PaymentSuccess"
-                      component={PaymentSuccessScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Payment Success",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="PaymentFailure"
-                      component={PaymentFailureScreen}
-                      options={{ ...headerOptions, headerTitle: "Payment Failed" }}
-                    />
-                    <Stack.Screen
-                      name="Chat"
-                      component={ChatScreen}
-                      options={({ route }) => {
-                        console.log('Chat Screen Route Params:', route.params);
-                        return {
-                          headerShown: true,
-                          headerTitle: () => (
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                              <Image
-                                source={{ 
-                                  uri: route.params?.recipientProfilePic || 'https://via.placeholder.com/40',
-                                  cache: 'reload'
-                                }}
-                                style={{ 
-                                  width: 40, 
-                                  height: 40, 
-                                  borderRadius: 20, 
-                                  marginRight: 10,
-                                  backgroundColor: '#f0f0f0'
-                                }}
-                                onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
-                              />
-                              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
-                                {route.params?.recipientName || 'Chat'}
-                              </Text>
-                            </View>
-                          ),
-                          headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                          headerTintColor: '#fff',
-                          headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                        };
-                      }}
-                    />
-                    <Stack.Screen
-                      name="AllEvents"
-                      component={AllEventsScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "All Events",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="JoinEvent"
-                      component={JoinEventWrapper}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Join Event",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="Review"
-                      component={ReviewScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Write a Review",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="EditProfile"
-                      component={EditProfileScreen}
-                      options={{
-                        headerShown: true,
-                        headerTitle: "Edit Profile",
-                        headerStyle: { backgroundColor: '#5D5FEE', height: 80 },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold', fontSize: 22 }
-                      }}
-                    />
-                    <Stack.Screen
-                      name="FullScreenMap"
-                      component={FullScreenMap}
-                      options={{
-                        headerShown: false,
-                        presentation: 'fullScreenModal'
-                      }}
-                    />
-                  </Stack.Navigator>
-                </NavigationContainer>
-              </WishlistProvider>
-            </AuthProvider>
+            <NotificationProvider>
+              <AuthProvider>
+                <WishlistProvider>
+                  <AppContent />
+                </WishlistProvider>
+              </AuthProvider>
+            </NotificationProvider>
           </SocketProvider>
         </ThemeProvider>
       </StripeProvider>
