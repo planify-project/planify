@@ -91,6 +91,11 @@ export default function ServiceDetailScreen({ route, navigation }) {
   }, [auth.currentUser, service.provider]);
 
   const imageUrl = service.imageUrl ? getImageUrl(service.imageUrl) : null;
+  console.log('Service Image URL:', {
+    original: service.imageUrl,
+    processed: imageUrl,
+    fullService: service
+  });
 
   const handleDelete = async () => {
     Alert.alert(
@@ -338,6 +343,22 @@ export default function ServiceDetailScreen({ route, navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      
+      {/* Header Image Section */}
+      <Animated.View style={[styles.header, { height: headerHeight }]}>
+        <Animated.Image
+          source={{ uri: imageUrl || 'https://picsum.photos/800/600' }}
+          style={[styles.headerImage, { opacity: imageOpacity }]}
+        />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.7)', 'transparent']}
+          style={styles.headerGradient}
+        />
+        <Animated.View style={[styles.headerTitleContainer, { opacity: titleOpacity, transform: [{ scale: titleScale }] }]}>
+          <Text style={styles.headerTitle}>{service.title}</Text>
+        </Animated.View>
+      </Animated.View>
+
       <Animated.ScrollView
         contentContainerStyle={styles.scrollViewContent}
         scrollEventThrottle={16}
@@ -425,11 +446,11 @@ export default function ServiceDetailScreen({ route, navigation }) {
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.button, { backgroundColor: theme.error }]}
+                  style={[styles.deleteButton, { backgroundColor: '#fff' }]}
                   onPress={handleDelete}
                 >
-                  <Ionicons name="trash-outline" size={22} color="#fff" />
-                  <Text style={styles.buttonText}>Delete</Text>
+                  <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                  <Text style={[styles.deleteButtonText, { color: '#FF3B30' }]}>Delete</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -443,11 +464,11 @@ export default function ServiceDetailScreen({ route, navigation }) {
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.button, { backgroundColor: theme.secondary }]}
+                  style={[styles.messageButton, { backgroundColor: '#fff' }]}
                   onPress={handleChat}
                 >
-                  <Ionicons name="chatbubble-outline" size={22} color="#fff" />
-                  <Text style={styles.buttonText}>Message</Text>
+                  <Ionicons name="chatbubble-ellipses" size={22} color="#666" />
+                  <Text style={[styles.messageButtonText, { color: '#666' }]}>Message</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -648,20 +669,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
     flex: 0.48,
-    elevation: 3,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   buttonText: {
     color: '#fff',
-    marginLeft: 8,
+    marginLeft: 10,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    flex: 0.48,
+    elevation: 0,
+    borderWidth: 0,
+  },
+  messageButtonText: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    flex: 0.48,
+    elevation: 0,
+    borderWidth: 0,
+  },
+  deleteButtonText: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
 });

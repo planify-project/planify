@@ -2,7 +2,7 @@
 export * from './configs/url';
 
 // API and Socket configuration
-const LOCAL_IP = '192.168.1.13'; // Replace with your local IP address
+const LOCAL_IP = '192.168.1.12'; // Replace with your local IP address
 const PORT = 3000;
 export const API_BASE = `http://${LOCAL_IP}:${PORT}/api`;
 export const SOCKET_URL = `http://${LOCAL_IP}:${PORT}`;

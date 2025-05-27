@@ -198,8 +198,6 @@ const syncWithRetry = async () => {
 // Export all models and sequelize instance
 module.exports = {
     sequelize,
-    syncDatabase,
-    initializeDatabase,
     User,
     Service,
     ServiceCategory,

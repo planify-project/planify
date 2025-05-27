@@ -12,7 +12,14 @@ router.get('/provider/:providerId', ServicesController.getServicesByProvider);
 router.get('/:id', ServicesController.getServiceById);
 
 // POST /api/services
-router.post('/', ServicesController.upload, ServicesController.createService);
+router.post('/', (req, res, next) => {
+  // Only use multer if there's a file in the request
+  if (req.headers['content-type']?.includes('multipart/form-data')) {
+    ServicesController.upload(req, res, next);
+  } else {
+    next();
+  }
+}, ServicesController.createService);
 
 // PUT /api/services/:id
 router.put('/:id', ServicesController.upload, ServicesController.updateService);

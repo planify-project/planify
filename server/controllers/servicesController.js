@@ -145,7 +145,7 @@ class ServicesController {
 
   static async createService(req, res) {
     try {
-      const { title, description, price, provider_id } = req.body;
+      const { title, description, price, provider_id, image } = req.body;
       
       // Validate required fields
       if (!title || !description || !price) {
@@ -164,8 +164,15 @@ class ServicesController {
         });
       }
 
-      // Get image URL from uploaded file
-      const imageUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
+      // Get image URL from either uploaded file or Cloudinary URL
+      let imageUrl = null;
+      if (req.file) {
+        // If file was uploaded through multer
+        imageUrl = `/uploads/services/${req.file.filename}`;
+      } else if (image) {
+        // If Cloudinary URL was provided
+        imageUrl = image;
+      }
 
       console.log('Creating service with data:', {
         title,

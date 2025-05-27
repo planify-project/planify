@@ -49,49 +49,47 @@ export default function AddServiceScreen({ navigation }) {
   }, []);
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        setAlertConfig({
+          title: 'Permission Required',
+          message: 'Sorry, we need camera roll permissions to make this work!',
+          type: 'error'
+        });
+        setAlertVisible(true);
+        return;
+      }
+
+      console.log('Launching image picker...');
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      console.log('Image picker result:', result);
+
+      if (!result.canceled) {
+        console.log('Image selected:', result.assets[0]);
+        setImage({
+          uri: result.assets[0].uri,
+          type: result.assets[0].mimeType || 'image/jpeg',
+          name: result.assets[0].fileName || 'photo.jpg'
+        });
+      } else {
+        console.log('Image picking was canceled');
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
       setAlertConfig({
-        title: 'Permission Required',
-        message: 'Sorry, we need camera roll permissions to make this work!',
+        title: 'Error',
+        message: 'Failed to pick image. Please try again.',
         type: 'error'
       });
       setAlertVisible(true);
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setImage({
-        uri: result.assets[0].uri,
-        type: 'image/jpeg',
-        name: 'photo.jpg'
-      });
-    }
-  };
-
-  const ensureUserExists = async () => {
-    try {
-      const response = await api.post(`/get-one/`, {
-        uid: Auth.currentUser.uid,
-        email: Auth.currentUser.email,
-        displayName: Auth.currentUser.displayName
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data.data;
-    } catch (error) {
-      console.error('Error ensuring user exists:', error);
-      throw error;
     }
   };
 
@@ -131,42 +129,80 @@ export default function AddServiceScreen({ navigation }) {
 
     // Validate image
     if (!image) {
-      Alert.alert('Error', 'Please select an image for your service');
+      setAlertConfig({
+        title: 'Image Required',
+        message: 'Please select an image for your service',
+        type: 'error'
+      });
+      setAlertVisible(true);
       return;
     }
  
     try {
       setLoading(true);
       
+      // Upload image to Cloudinary first
       const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('price', priceNum.toString());
-      formData.append('provider_id', user.uid);
-      
-      // Add image to formData
-      formData.append('image', {
+      formData.append('file', {
         uri: image.uri,
-        type: 'image/jpeg',
-        name: 'photo.jpg'
+        type: image.type,
+        name: image.name
+      });
+      formData.append('upload_preset', 'planify');
+
+      console.log('Starting Cloudinary upload with data:', {
+        uri: image.uri,
+        type: image.type,
+        name: image.name
       });
 
-      // Get the Firebase ID token
-      const token = await Auth.currentUser.getIdToken();
+      const cloudinaryResponse = await fetch(
+        'https://api.cloudinary.com/v1_1/dc3rbhdae/image/upload',
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
-      console.log('Creating service with data:', {
+      console.log('Cloudinary response status:', cloudinaryResponse.status);
+      
+      if (!cloudinaryResponse.ok) {
+        const errorData = await cloudinaryResponse.text();
+        console.error('Cloudinary upload failed:', errorData);
+        throw new Error('Failed to upload image to Cloudinary');
+      }
+
+      const cloudinaryData = await cloudinaryResponse.json();
+      console.log('Cloudinary upload successful:', cloudinaryData);
+      
+      const imageUrl = cloudinaryData.secure_url;
+      console.log('Image URL from Cloudinary:', imageUrl);
+      
+      // Create service with the Cloudinary URL
+      const serviceData = {
         title,
         description,
         price: priceNum,
         provider_id: user.uid,
-        image: image.uri
-      });
+        image: imageUrl
+      };
 
-      const response = await api.post('/services', formData, {
+      // Get the Firebase ID token
+      const token = await Auth.currentUser.getIdToken();
+      console.log('Firebase token obtained');
+
+      console.log('Creating service with data:', serviceData);
+
+      const response = await api.post('/services', serviceData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        timeout: 30000
       });
 
       console.log('Service creation response:', response.data);
@@ -180,13 +216,26 @@ export default function AddServiceScreen({ navigation }) {
         setAlertVisible(true);
         // Navigation will be handled in the alert button press
       } else {
+        console.error('Service creation failed:', response.data);
         throw new Error(response.data.message || 'Failed to create service');
       }
     } catch (error) {
       console.error('Error creating service:', error);
+      let errorMessage = 'Failed to create service. Please try again.';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please check your internet connection and try again.';
+      } else if (!error.response) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       setAlertConfig({
         title: 'Error',
-        message: error.response?.data?.message || error.message || 'Failed to create service. Please try again.',
+        message: errorMessage,
         type: 'error'
       });
       setAlertVisible(true);

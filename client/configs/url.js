@@ -1,5 +1,5 @@
 // API Configuration
-const API_HOST = process.env.API_HOST || '192.168.14.126';
+const API_HOST = process.env.API_HOST || '192.168.1.12';
 const API_PORT = process.env.API_PORT || '3000';
 
 // Base URLs

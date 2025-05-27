@@ -239,7 +239,7 @@ app.use((err, req, res, next) => {
 
 // Sync database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = '192.168.1.13';
+const HOST = '192.168.1.12';
 
 const startServer = async () => {
   try {
@@ -248,7 +248,7 @@ const startServer = async () => {
       const urls = [
         `http://localhost:${PORT}`,
         `http://${HOST}:${PORT}`,
-        `http://192.168.1.13:${PORT}`
+        `http://192.168.1.12:${PORT}`
       ];
       
       console.log('\nServer running on:');

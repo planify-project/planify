@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE } from '../config';
+import { API_BASE } from './url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
@@ -15,6 +15,11 @@ api.interceptors.request.use(
   async (config) => {
     // Log the full URL being requested
     console.log('Making request to:', `${config.baseURL}${config.url}`);
+    console.log('Request config:', {
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
     return config;
   },
   (error) => {
@@ -30,7 +35,10 @@ api.interceptors.response.use(
     console.error('API Error:', {
       status: error.response?.status,
       message: error.message,
-      url: error.config?.url
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      data: error.response?.data,
+      headers: error.config?.headers
     });
     return Promise.reject(error);
   }

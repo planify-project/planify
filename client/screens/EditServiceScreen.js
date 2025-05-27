@@ -30,7 +30,6 @@ export default function EditServiceScreen({ route, navigation }) {
   const [title, setTitle] = useState(service.title);
   const [description, setDescription] = useState(service.description);
   const [price, setPrice] = useState(service.price.toString());
-  const [serviceType, setServiceType] = useState(service.serviceType);
   const [image, setImage] = useState(service.imageUrl);
   const [loading, setLoading] = useState(false);
   const auth = getAuth();
@@ -65,7 +64,7 @@ export default function EditServiceScreen({ route, navigation }) {
   };
 
   const handleUpdate = async () => {
-    if (!title || !description || !price || !serviceType) {
+    if (!title || !description || !price) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -78,7 +77,6 @@ export default function EditServiceScreen({ route, navigation }) {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('price', price);
-      formData.append('serviceType', serviceType);
       
       if (image && image.startsWith('file://')) {
         const imageUri = image;
@@ -166,31 +164,20 @@ export default function EditServiceScreen({ route, navigation }) {
           />
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Service Type</Text>
-          <TextInput
-            style={styles.input}
-            value={serviceType}
-            onChangeText={setServiceType}
-            placeholder="Enter service type"
-            placeholderTextColor="#888"
-          />
-        </View>
-
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: '#4f78f1' }]}
             onPress={() => navigation.goBack()}
-        >
+          >
             <Ionicons name="close-outline" size={20} color="#fff" />
             <Text style={styles.actionButtonText}>Cancel</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: '#4f78f1' }]}
             onPress={handleUpdate}
-          disabled={loading}
-        >
+            disabled={loading}
+          >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -199,7 +186,7 @@ export default function EditServiceScreen({ route, navigation }) {
                 <Text style={styles.actionButtonText}>Save Changes</Text>
               </>
             )}
-        </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>

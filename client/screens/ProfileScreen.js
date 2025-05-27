@@ -22,7 +22,6 @@ import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import { API_BASE } from '../config';
-import { normalize } from '../utils/scaling';
 import CustomAlert from '../components/CustomAlert';
 
 const { width, height } = Dimensions.get('window');
