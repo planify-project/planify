@@ -5,6 +5,7 @@ import Pagination from "../../components/user_management/Pagination";
 import EditModal from "../../modals/user/BanModal";
 import DeleteModal from "../../modals/user/DeleteModal";
 import { ThemeProviderContext } from "../../contexts/theme-context";
+import { API_BASE } from "../../configs/url";
 
 const UserManagementPage = () => {
     const { theme } = useContext(ThemeProviderContext);
@@ -13,6 +14,8 @@ const UserManagementPage = () => {
     const [filters, setFilters] = useState({ provider: "", status: "", rating: "" });
     const [currentPage, setCurrentPage] = useState(1);
     const [modalState, setModalState] = useState({ show: false, mode: "", selectedItem: null, deleteId: null });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const itemsPerPage = 8;
 
     useEffect(() => {
@@ -20,8 +23,10 @@ const UserManagementPage = () => {
     }, []);
     
     const fetchData = async () => {
+        setLoading(true);
+        setError(null);
         try {
-            const res = await axios.get("http://localhost:3000/api/users/getall");
+            const res = await axios.get(`${API_BASE}/users/getall`);
             // Map 'image' to 'profilePic' for table compatibility
             const mappedData = res.data.map(user => ({
                 ...user,
@@ -30,7 +35,11 @@ const UserManagementPage = () => {
             const sortedData = mappedData.sort((a, b) => a.id.localeCompare(b.id));
             setData(sortedData);
         } catch (err) {
-            console.log("Error fetching data:", err);
+            console.error("Error fetching users:", err);
+            setError("Failed to load users. Please try again later.");
+            setData([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,22 +66,24 @@ const UserManagementPage = () => {
 
     const handleBand = async (updatedUser) => {
         try {
-            await axios.put(`http://localhost:3000/api/users/ban/${updatedUser.id}`);
+            await axios.put(`${API_BASE}/users/ban/${updatedUser.id}`);
             // Toggle isBanned locally for immediate UI update
             setData((prev) => prev.map((item) => (item.id === updatedUser.id ? { ...item, isBanned: !item.isBanned } : item)));
             handleCancel();
         } catch (error) {
-            console.log("Error updating data:", error);
+            console.error("Error banning user:", error);
+            setError("Failed to ban user. Please try again.");
         }
     };
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`http://localhost:3000/api/users/delete/${modalState.deleteId}`);
+            await axios.delete(`${API_BASE}/users/delete/${modalState.deleteId}`);
             setData((prev) => prev.filter((item) => item.id !== modalState.deleteId));
             handleCancel();
         } catch (error) {
-            console.log(error);
+            console.error("Error deleting user:", error);
+            setError("Failed to delete user. Please try again.");
         }
     };
 
@@ -94,6 +105,13 @@ const UserManagementPage = () => {
         <div className={`min-h-screen p-6 ${theme.startsWith("dark") ? "bg-gray-900" : "bg-[#f5f9f6]"}`}>
             <div className="mx-auto max-w-7xl">
                 <h1 className={`mb-6 text-3xl font-bold ${theme.startsWith("dark") ? "text-blue-300" : "text-blue-700"}`}>User Management</h1>
+
+                {error && (
+                    <div className={`mb-4 p-4 rounded-lg ${theme.startsWith("dark") ? "bg-red-900/20 text-red-300" : "bg-red-50 text-red-600"}`}>
+                        {error}
+                    </div>
+                )}
+
                 {/* Search and Filters */}
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <input
@@ -107,7 +125,7 @@ const UserManagementPage = () => {
                         <select
                             value={filters.provider || ""}
                             onChange={(e) => handleFilterChange("provider", e.target.value)}
-                            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                            className={`rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${theme.startsWith("dark") ? "bg-gray-800 text-white border-gray-600" : "bg-white text-gray-900 border-gray-300"}`}
                         >
                             <option value="">All Users</option>
                             {uniqueProviders.map((prov, idx) => (
@@ -122,7 +140,7 @@ const UserManagementPage = () => {
                         <select
                             value={filters.status}
                             onChange={(e) => handleFilterChange("status", e.target.value)}
-                            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                            className={`rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${theme.startsWith("dark") ? "bg-gray-800 text-white border-gray-600" : "bg-white text-gray-900 border-gray-300"}`}
                         >
                             <option value="">Status</option>
                             {uniqueStatuses.map((status, idx) => (
@@ -137,7 +155,7 @@ const UserManagementPage = () => {
                         <select
                             value={filters.rating}
                             onChange={(e) => handleFilterChange("rating", e.target.value)}
-                            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                            className={`rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${theme.startsWith("dark") ? "bg-gray-800 text-white border-gray-600" : "bg-white text-gray-900 border-gray-300"}`}
                         >
                             <option value="">All Ratings</option>
                             <option value="4">4+ Stars</option>
@@ -153,16 +171,24 @@ const UserManagementPage = () => {
                         </button>
                     </div>
                 </div>
-                <UserTable
-                    items={currentItems}
-                    onEdit={handleBan}
-                    onDelete={confirmDelete}
-                />
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                />
+
+                {loading ? (
+                    <div className="text-center py-10 text-lg text-blue-500">Loading users...</div>
+                ) : (
+                    <>
+                        <UserTable
+                            items={currentItems}
+                            onEdit={handleBan}
+                            onDelete={confirmDelete}
+                        />
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </>
+                )}
+
                 {/* Modal */}
                 {modalState.show && modalState.mode === "ban" && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

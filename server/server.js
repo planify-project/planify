@@ -18,22 +18,15 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const stripeRoutes = require("./routes/stripe.routes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
-const AdminAuthRoutes = require('./routes/adminAuth.routes');
+const AdminAuthRoutes = require('./routes/AdminAuth.routes');
 const messageRoutes = require('./routes/message.routes');
 const conversationRoutes = require('./routes/conversation.routes');
+const paymentRoutes = require('./routes/payments');
 
 // Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
  
-// Configure CORS
-app.use(cors({
-  origin: ['http://192.168.14.126:3000', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: true
-}));
-
 // Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,8 +37,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure CORS
 app.use(cors({
-  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
-  origin: ['http://192.168.132.68:3000', 'http://localhost:3000'],
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
@@ -212,8 +204,11 @@ io.engine.on("connection_error", (err) => {
 // Make io accessible to routes
 app.set('io', io);
 
- // API Routes
+// API Routes
+console.log('Registering API routes...');
 app.use('/api/auth', authRoutes);
+app.use('/api/authadmin', AdminAuthRoutes);
+console.log('AdminAuth routes registered at /api/authadmin');
 app.use('/api/services', serviceRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/events', eventsRouter);
@@ -223,9 +218,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api', stripeRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/event-spaces', eventSpaceRoutes);
-app.use('/api/admin', AdminAuthRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/conversations', conversationRoutes);                          
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/payments', paymentRoutes);                          
 
 // Error handling middleware
 app.use((err, req, res, next) => {

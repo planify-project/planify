@@ -6,6 +6,7 @@ import EventEditModal from '../../modals/events/EventEditModal';
 import EventUpdateConfirmModal from '../../modals/events/EventUpdateConfirmModal';
 import EventDeleteModal from '../../modals/events/EventDeleteModal';
 import axios from 'axios';
+import { API_BASE } from '../../configs/url';
 
 const Events = () => {
   const { theme } = useContext(ThemeProviderContext);
@@ -15,6 +16,7 @@ const Events = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalMode, setModalMode] = useState('');
+  const [error, setError] = useState(null);
 
   const [locationFilter, setLocationFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -29,6 +31,7 @@ const Events = () => {
   // Fetch events from backend with pagination and filters
   const fetchData = async (page = 1) => {
     setLoading(true);
+    setError(null);
     try {
       const params = {
         page,
@@ -38,15 +41,16 @@ const Events = () => {
       if (locationFilter) params.location = locationFilter;
       if (statusFilter) params.status = statusFilter;
       if (typeFilter) params.type = typeFilter;
-      const res = await axios.get('http://localhost:3000/api/events/getAll', { params });
+      const res = await axios.get(`${API_BASE}/events/getAll`, { params });
       setData(res.data.events || []);
       setTotalPages(res.data.totalPages || 1);
       setCurrentPage(res.data.page || 1);
     } catch (err) {
+      console.error('Error fetching events:', err);
+      setError('Failed to load events. Please try again later.');
       setData([]);
       setTotalPages(1);
       setCurrentPage(1);
-      console.log('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
@@ -56,9 +60,10 @@ const Events = () => {
   useEffect(() => {
     const fetchTypes = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/events/types');
+        const res = await axios.get(`${API_BASE}/events/types`);
         setAllTypes(res.data.types || []);
       } catch (err) {
+        console.error('Error fetching event types:', err);
         setAllTypes([]);
       }
     };
@@ -79,13 +84,14 @@ const Events = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/events/${deleteId}`);
-      fetchData(currentPage);
+      await axios.delete(`${API_BASE}/events/${deleteId}`);
+      await fetchData(currentPage);
       setShowModal(false);
       setDeleteId(null);
       setModalMode('');
     } catch (error) {
-      console.log(error);
+      console.error('Error deleting event:', error);
+      setError('Failed to delete event. Please try again.');
     }
   };
 
@@ -113,13 +119,14 @@ const Events = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:3000/api/events/admin-update/${selectedItem.id}`, selectedItem);
-      fetchData(currentPage);
+      await axios.put(`${API_BASE}/events/admin-update/${selectedItem.id}`, selectedItem);
+      await fetchData(currentPage);
       setShowModal(false);
       setSelectedItem(null);
       setModalMode('');
     } catch (error) {
-      console.log('Error updating data:', error);
+      console.error('Error updating event:', error);
+      setError('Failed to update event. Please try again.');
     }
   };
 
@@ -136,6 +143,12 @@ const Events = () => {
     <div className={`min-h-screen p-6 ${theme.startsWith('dark') ? 'bg-gray-900' : 'bg-[#f5f9f6]'}`}>
       <div className="max-w-7xl mx-auto">
         <h1 className={`text-3xl font-bold mb-6 ${theme.startsWith('dark') ? 'text-blue-300' : 'text-blue-700'}`}>Events</h1>
+
+        {error && (
+          <div className={`mb-4 p-4 rounded-lg ${theme.startsWith('dark') ? 'bg-red-900/20 text-red-300' : 'bg-red-50 text-red-600'}`}>
+            {error}
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

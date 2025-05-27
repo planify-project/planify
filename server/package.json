@@ -12,6 +12,7 @@
     "seed:services": "node seeds/services.js",
     "seed:eventSpaces": "node seed/event__space.seed.js",
     "seed:payments": "node seeds/payments.js",
+    "seed:recentPayments": "node seeds/recentPayments.js",
     "seed:messages": "node seeds/message.js"
   },
   "dependencies": {

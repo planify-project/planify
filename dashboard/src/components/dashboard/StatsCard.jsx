@@ -1,15 +1,21 @@
-import React, { useContext } from "react";
-import { ThemeProviderContext } from "../../contexts/theme-context";
+import React from 'react';
 
 const StatsCard = ({ label, value, change, positive }) => {
-  const { theme } = useContext(ThemeProviderContext);
-  return (
-    <div className={`${theme.startsWith('dark') ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} p-4 rounded-xl shadow text-center `}>
-      <p className="text-gray-500 text-sm dark:text-gray-400 text-center">{label}</p>
-      <h3 className="text-xl font-semibold">{value}</h3>
-      <p className={`text-sm ${positive ? "text-green-500" : "text-red-500"}`}>{change}%</p>
-    </div>
-  );
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow">
+            <div className="flex flex-col">
+                <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+                <span className="text-2xl font-semibold mt-2">{value}</span>
+                {change !== undefined && (
+                    <div className="flex items-center mt-2">
+                        <span className={`text-sm ${positive ? 'text-green-500' : 'text-red-500'}`}>
+                            {positive ? '↑' : '↓'} {change}%
+                        </span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default StatsCard;

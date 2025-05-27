@@ -56,12 +56,17 @@ export const AuthProvider = ({ children }) => {
       }
   
       if (user) {
-          await updateProfile(user, {
+          // Update Firebase profile
+          await updateProfile(auth.currentUser, {
               displayName: name,
               photoURL: imageUrl || user.photoURL,
           });
   
-          // ✅ Force user state update for immediate UI change
+          // Get new token after profile update
+          const token = await auth.currentUser.getIdToken();
+          localStorage.setItem("token", token);
+  
+          // Update local user state
           const updatedUser = {
               ...user,
               displayName: name,
@@ -69,6 +74,7 @@ export const AuthProvider = ({ children }) => {
           };
           setUser(updatedUser);
   
+          // Update backend
           await axios.put(`${API_BASE}/authadmin/update-profile`, {
               id: user.uid,
               name,

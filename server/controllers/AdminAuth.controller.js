@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcryptjs');
 const { Admin } = require('../database');
 const { updateUser } = require('./user.controller');
@@ -54,13 +53,16 @@ module.exports = {
     },
     updateUser: async (req, res) => {
         try {
+            console.log('Update profile request received:', req.body);
             const { id, name, email, image } = req.body;
             // Find user by id
             const user = await Admin.findByPk(id);
             if (!user) {
+                console.log('User not found with id:', id);
                 return res.status(404).json({ message: 'User not found' });
             }
 
+            console.log('Updating user:', { id, name, image });
             await Admin.update({ name, image }
                 , {
                     where: { id },
@@ -69,6 +71,7 @@ module.exports = {
 
             res.status(200).json({ message: 'User updated successfully', user });
         } catch (error) {
+            console.error('Error updating user:', error);
             res.status(500).json({ message: 'Internal server error', error: error.message });
         }
     },

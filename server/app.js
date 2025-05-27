@@ -20,7 +20,6 @@ const reviewRoutes = require('./routes/review.route.js');
 const stripeRoutes = require("./routes/stripeRoutes");
 const wishlistRoutes = require('./routes/wishlist.route');
 const eventSpaceRoutes = require('./routes/eventSpaceRoutes');
- const AdminAuthRoutes = require('./routes/adminAuth.routes');
 const bookingRoutes = require('./routes/booking.routes.js');
 
 // Create Express app and HTTP server

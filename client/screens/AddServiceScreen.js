@@ -50,35 +50,35 @@ export default function AddServiceScreen({ navigation }) {
 
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        setAlertConfig({
-          title: 'Permission Required',
-          message: 'Sorry, we need camera roll permissions to make this work!',
-          type: 'error'
-        });
-        setAlertVisible(true);
-        return;
-      }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      setAlertConfig({
+        title: 'Permission Required',
+        message: 'Sorry, we need camera roll permissions to make this work!',
+        type: 'error'
+      });
+      setAlertVisible(true);
+      return;
+    }
 
       console.log('Launching image picker...');
-      const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
 
       console.log('Image picker result:', result);
 
-      if (!result.canceled) {
+    if (!result.canceled) {
         console.log('Image selected:', result.assets[0]);
-        setImage({
-          uri: result.assets[0].uri,
+      setImage({
+        uri: result.assets[0].uri,
           type: result.assets[0].mimeType || 'image/jpeg',
           name: result.assets[0].fileName || 'photo.jpg'
-        });
+      });
       } else {
         console.log('Image picking was canceled');
       }

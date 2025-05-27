@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { Payment } = require('../database');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { getRevenue, getPayments, updatePaymentStatus } = require('../controllers/paymentController');
+
+// Get all payments
+router.get('/', getPayments);
+
+// Get revenue statistics
+router.get('/revenue', getRevenue);
+
+// Update payment status
+router.put('/:id/status', updatePaymentStatus);
 
 // Create payment record
 router.post('/', async (req, res) => {

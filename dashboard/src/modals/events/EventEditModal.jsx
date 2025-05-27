@@ -12,47 +12,47 @@ const EventEditModal = ({ selectedItem, uniqueStatuses, handleCancel, confirmUpd
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Name</label>
         <input
           type="text"
-          value={selectedItem.name || ''}
+          value={selectedItem?.name ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, name: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Description</label>
         <textarea
-          value={selectedItem.description || ''}
+          value={selectedItem?.description ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, description: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Start Date</label>
         <input
           type="date"
-          value={selectedItem.startDate ? new Date(selectedItem.startDate).toISOString().split('T')[0] : ''}
+          value={selectedItem?.startDate ? new Date(selectedItem.startDate).toISOString().split('T')[0] : ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, startDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>End Date</label>
         <input
           type="date"
-          value={selectedItem.endDate ? new Date(selectedItem.endDate).toISOString().split('T')[0] : ''}
+          value={selectedItem?.endDate ? new Date(selectedItem.endDate).toISOString().split('T')[0] : ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, endDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Location</label>
         <input
           type="text"
-          value={selectedItem.location || ''}
+          value={selectedItem?.location ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, location: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Type</label>
         <input
           type="text"
-          value={selectedItem.type || ''}
+          value={selectedItem?.type ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, type: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Status</label>
         <select
-          value={selectedItem.status || ''}
+          value={selectedItem?.status ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, status: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         >
@@ -63,7 +63,7 @@ const EventEditModal = ({ selectedItem, uniqueStatuses, handleCancel, confirmUpd
         <label className={`block ${theme.startsWith('dark') ? 'text-gray-300' : 'text-gray-700'}`}>Participators</label>
         <input
           type="text"
-          value={selectedItem.participators || ''}
+          value={selectedItem?.participators ?? ''}
           onChange={(e) => setSelectedItem({ ...selectedItem, participators: e.target.value })}
           className={`w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 ${theme.startsWith('dark') ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-50 text-gray-900 border-gray-300'}`}
         />
@@ -71,7 +71,7 @@ const EventEditModal = ({ selectedItem, uniqueStatuses, handleCancel, confirmUpd
           <input
             type="checkbox"
             id="isApproved"
-            checked={selectedItem.isApproved}
+            checked={selectedItem?.isApproved ?? false}
             onChange={() => setSelectedItem({ ...selectedItem, isApproved: !selectedItem.isApproved })}
             className="mr-2"
           />

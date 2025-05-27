@@ -2,10 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import StatsCard from "../../components/dashboard/StatsCard";
 import ProductSalesChart from "../../components/dashboard/ProductSalesChart";
 import ProductCategoryPie from "../../components/dashboard/ProductCategoryPie";
-import SalesByCountry from "../../components/dashboard/SalesByCountry";
 import { ThemeProviderContext } from "../../contexts/theme-context";
-import { fetchUserStats } from "../../api/user";
 import { API_BASE } from "../../configs/url";
+import axios from "axios";
 
 const Dashboard = () => {
     const { theme } = useContext(ThemeProviderContext);
@@ -16,6 +15,12 @@ const Dashboard = () => {
     });
 
     const [orderStats, setOrderStats] = useState({
+        total: 0,
+        change: 0,
+        positive: true,
+    });
+
+    const [revenueStats, setRevenueStats] = useState({
         total: 0,
         change: 0,
         positive: true,
@@ -32,83 +37,98 @@ const Dashboard = () => {
     useEffect(() => {
         getStats();
         getOrderStats();
+        getRevenueStats();
         fetchEventsByMonth();
         fetchEventStatusDistribution();
     }, []);
 
     const getStats = async () => {
         try {
-            const data = await fetchUserStats();
+            const res = await axios.get(`${API_BASE}/users/traffic/monthly`);
             setUserStats({
-                totalCustomers: data.totalCustomers,
-                change: data.change,
-                positive: data.positive,
+                totalCustomers: res.data.totalCustomers || 0,
+                change: res.data.change || 0,
+                positive: res.data.positive ?? true,
             });
         } catch (err) {
+            console.error("Error fetching user stats:", err);
             setUserStats({ totalCustomers: 0, change: 0, positive: true });
         }
     };
 
     const getOrderStats = async () => {
         try {
-            const res = await fetch(`${API_BASE}/events/events-this-month`);
-            const data = await res.json();
+            const res = await axios.get(`${API_BASE}/events/events-this-month`);
             setOrderStats({
-                total: data.total,
-                change: data.change,
-                positive: data.positive,
+                total: res.data.total || 0,
+                change: res.data.change || 0,
+                positive: res.data.positive ?? true,
             });
         } catch (err) {
+            console.error("Error fetching order stats:", err);
             setOrderStats({ total: 0, change: 0, positive: true });
+        }
+    };
+
+    const getRevenueStats = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/payments/revenue`);
+            setRevenueStats({
+                total: res.data.totalRevenue || 0,
+                change: res.data.revenueChange || 0,
+                positive: res.data.revenuePositive ?? true,
+            });
+        } catch (err) {
+            console.error("Error fetching revenue stats:", err);
+            setRevenueStats({ total: 0, change: 0, positive: true });
         }
     };
 
     const fetchEventsByMonth = async () => {
         try {
             const [privRes, pubRes] = await Promise.all([
-                fetch(`${API_BASE}/events/private-events-this-year`),
-                fetch(`${API_BASE}/events/public-events-this-year`)
+                axios.get(`${API_BASE}/events/private-events-this-year`),
+                axios.get(`${API_BASE}/events/public-events-this-year`)
             ]);
-            const privData = await privRes.json();
-            const pubData = await pubRes.json();
+            const privData = privRes.data;
+            const pubData = pubRes.data;
             const privCounts = Array(12).fill(0);
-            privData.months.forEach(e => {
+            privData.months?.forEach(e => {
                 const d = new Date(e.month);
-                privCounts[d.getMonth()] = e.count;
+                privCounts[d.getMonth()] = e.count || 0;
             });
             const pubCounts = Array(12).fill(0);
-            pubData.months.forEach(e => {
+            pubData.months?.forEach(e => {
                 const d = new Date(e.month);
-                pubCounts[d.getMonth()] = e.count;
+                pubCounts[d.getMonth()] = e.count || 0;
             });
             setPrivateEvents(privCounts);
             setPublicEvents(pubCounts);
         } catch (err) {
-            // fallback: keep zeros
+            console.error("Error fetching events by month:", err);
         }
     };
 
     const fetchEventStatusDistribution = async () => {
         try {
-            const res = await fetch(`${API_BASE}/events/event-status-distribution`);
-            const data = await res.json();
-            // Ensure order matches the status array
+            const res = await axios.get(`${API_BASE}/events/event-status-distribution`);
+            const data = res.data;
             const statuses = ["pending", "approved", "rejected", "cancelled", "completed"];
             const values = statuses.map(status => {
-                const found = data.find(d => d.status === status);
-                return found ? found.count : 0;
+                const found = data?.find(d => d.status === status);
+                return found?.count || 0;
             });
             setEventStatus(statuses);
             setEventStatusValues(values);
         } catch (err) {
-            // fallback: keep zeros
+            console.error("Error fetching event status distribution:", err);
         }
     };
 
     const stats = [
-        { label: "Total customers", value: userStats.totalCustomers.toLocaleString(), change: userStats.change, positive: userStats.positive },
-        { label: "Total revenue", value: "3,465 M د.ت", change: 0.5, positive: true },
-        { label: "Total events", value: orderStats.total.toLocaleString(), change: orderStats.change, positive: orderStats.positive },
+        { label: "Total customers", value: (userStats.totalCustomers || 0).toLocaleString(), change: userStats.change || 0, positive: userStats.positive },
+        { label: "Total revenue", value: `${(revenueStats.total || 0).toLocaleString()} د.ت`, change: revenueStats.change || 0, positive: revenueStats.positive },
+        { label: "Total events", value: (orderStats.total || 0).toLocaleString(), change: orderStats.change || 0, positive: orderStats.positive },
         { label: "Total returns", value: "1,789", change: 0.12, positive: true },
     ];
 
